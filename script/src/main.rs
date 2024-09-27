@@ -1,22 +1,32 @@
+mod utils;
+
 use std::{env, time::Instant};
 
 use anyhow::Result;
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use op_succinct_host_utils::{
     fetcher::{CacheMode, OPSuccinctDataFetcher, RPCMode},
     get_proof_stdin,
-    stats::ExecutionStats,
     witnessgen::WitnessGenExecutor,
     ProgramType,
 };
-use sp1_sdk::{utils, ProverClient};
+use sp1_sdk::{utils as sdk_utils, ProverClient};
 
 pub const SINGLE_BLOCK_ELF: &[u8] = include_bytes!("../../program/elf/fault-proof-elf");
+
+#[derive(ValueEnum, Debug, Clone, PartialEq)]
+#[clap(rename_all = "kebab-case")]
+enum Method {
+    /// Native-execute the guest program.
+    Execute,
+    /// Generate a proof.
+    Prove,
+}
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    /// Start block number.
+    /// L2 block number for derivation.
     #[arg(short, long)]
     l2_block: u64,
 
@@ -25,8 +35,8 @@ struct Args {
     use_cache: bool,
 
     /// Generate proof.
-    #[arg(short, long)]
-    prove: bool,
+    #[arg(short, long, default_value = "execute")]
+    method: Method,
 }
 
 /// Execute the OP Succinct program for a single block.
@@ -34,7 +44,7 @@ struct Args {
 async fn main() -> Result<()> {
     dotenv::dotenv().ok();
     let args = Args::parse();
-    utils::setup_logger();
+    sdk_utils::setup_logger();
 
     let data_fetcher = OPSuccinctDataFetcher {
         l2_rpc: env::var("L2_RPC").expect("L2_RPC is not set."),
@@ -60,9 +70,24 @@ async fn main() -> Result<()> {
     // Get the stdin for the block.
     let sp1_stdin = get_proof_stdin(&host_cli)?;
 
+    let l2_chain_id = data_fetcher.get_chain_id(RPCMode::L2).await.unwrap();
     let prover = ProverClient::new();
 
-    if args.prove {
+    match args.method {
+        Method::Execute => {
+            let start_time = Instant::now();
+            let (_, report) = prover.execute(SINGLE_BLOCK_ELF, sp1_stdin).run().unwrap();
+            let execution_duration = start_time.elapsed();
+
+            utils::report_execution(
+                &data_fetcher,
+                &report,
+                execution_duration,
+                l2_chain_id,
+                args.l2_block,
+            );
+        }
+        Method::Prove => {
         // If the prove flag is set, generate a proof.
         let (pk, _) = prover.setup(SINGLE_BLOCK_ELF);
 
@@ -75,32 +100,10 @@ async fn main() -> Result<()> {
         if !std::path::Path::new(&proof_dir).exists() {
             std::fs::create_dir_all(&proof_dir)?;
         }
-        proof.save(format!("{}/{}.bin", proof_dir, args.l2_block)).expect("Failed to save proof");
-    } else {
-        let start_time = Instant::now();
-        let (_, report) = prover.execute(SINGLE_BLOCK_ELF, sp1_stdin).run().unwrap();
-        let execution_duration = start_time.elapsed();
-
-        let l2_chain_id = data_fetcher.get_chain_id(RPCMode::L2).await.unwrap();
-        let report_path = format!("execution-reports/single/{}/{}.csv", l2_chain_id, args.l2_block);
-
-        // Create the report directory if it doesn't exist.
-        let report_dir = format!("execution-reports/single/{}", l2_chain_id);
-        if !std::path::Path::new(&report_dir).exists() {
-            std::fs::create_dir_all(&report_dir)?;
+            proof
+                .save(format!("{}/{}.bin", proof_dir, args.l2_block))
+                .expect("Failed to save proof");
         }
-
-        let mut stats = ExecutionStats::default();
-        stats.add_block_data(&data_fetcher, args.l2_block, args.l2_block).await;
-        stats.add_report_data(&report, execution_duration);
-        stats.add_aggregate_data();
-        println!("Execution Stats: \n{:?}", stats);
-
-        // Write to CSV.
-        let mut csv_writer = csv::Writer::from_path(report_path)?;
-        csv_writer.serialize(&stats)?;
-        csv_writer.flush()?;
     }
-
     Ok(())
 }
