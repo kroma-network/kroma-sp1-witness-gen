@@ -2510,7 +2510,7 @@ dependencies = [
 
 [[package]]
 name = "fault-proof"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "alloy-consensus",
  "cfg-if",
@@ -2518,7 +2518,6 @@ dependencies = [
  "kona-executor",
  "kona-primitives",
  "op-alloy-genesis",
- "op-alloy-rpc-types-engine",
  "op-succinct-client-utils",
  "serde_json",
  "sp1-zkvm",
@@ -3603,6 +3602,16 @@ dependencies = [
  "sha2",
  "thiserror 1.0.64 (git+https://github.com/quartiq/thiserror?branch=no-std)",
  "tracing",
+]
+
+[[package]]
+name = "kroma-witnessgen"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "kona-host",
+ "tokio",
 ]
 
 [[package]]
