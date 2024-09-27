@@ -13,7 +13,7 @@ homepage = "https://github.com/kroma-network/kroma-sp1-prover"
 anyhow = { version = "1.0.86", default-features = false }
 cargo_metadata = "0.18.1"
 cfg-if = "1.0.0"
-clap = "4.5.9"
+clap = { version = "4.5.9", features = ["derive", "env"] }
 csv = "1.3.0"
 dotenv = "0.15.0"
 serde_json = { version = "1.0.117", default-features = false }

@@ -23,3 +23,7 @@ op-succinct-host-utils.workspace = true
 [build-dependencies]
 cargo_metadata.workspace = true
 sp1-build.workspace = true
+
+[features]
+default = ["kroma"]
+kroma = []
