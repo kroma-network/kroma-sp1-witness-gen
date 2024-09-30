@@ -14,6 +14,7 @@ use op_succinct_host_utils::{
     ProgramType,
 };
 use sp1_sdk::{utils as sdk_utils, ProverClient};
+use utils::{get_l1_origin_of, get_output_at};
 
 pub const SINGLE_BLOCK_ELF: &[u8] = include_bytes!("../../program/elf/fault-proof-elf");
 
@@ -24,6 +25,8 @@ enum Method {
     Execute,
     /// Generate a proof.
     Prove,
+    /// Generate testing data.
+    Test,
 }
 
 #[derive(Parser, Debug)]
@@ -105,6 +108,16 @@ async fn main() -> Result<()> {
     let prover = ProverClient::new();
 
     match args.method {
+        Method::Test => {
+            let output_root = get_output_at(&data_fetcher, args.l2_block);
+            let parent_output_root = get_output_at(&data_fetcher, args.l2_block - 1);
+            let (l1_origin_hash, l1_origin_number) = get_l1_origin_of(&data_fetcher, args.l2_block);
+
+            println!("output_root: {:?}", output_root);
+            println!("parent_output_root: {:?}", parent_output_root);
+            println!("l1_origin_hash: {:?}", l1_origin_hash);
+            println!("l1_origin_number: {:?}", l1_origin_number);
+        }
         Method::Execute => {
             let start_time = Instant::now();
             let (_, report) = prover.execute(SINGLE_BLOCK_ELF, sp1_stdin).run().unwrap();

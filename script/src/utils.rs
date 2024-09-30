@@ -1,8 +1,12 @@
 use std::{env, path::PathBuf, str::FromStr};
 
-use alloy_primitives::B256;
+use alloy_primitives::{hex::FromHex, B256};
 use alloy_provider::Provider;
-use op_succinct_host_utils::{fetcher::OPSuccinctDataFetcher, stats::ExecutionStats};
+use op_succinct_host_utils::{
+    fetcher::{OPSuccinctDataFetcher, RPCMode},
+    stats::ExecutionStats,
+};
+use serde_json::Value;
 use sp1_sdk::{block_on, ExecutionReport};
 
 const REPORT_DIR: &str = "execution-reports";
@@ -47,4 +51,35 @@ pub fn get_l1_block_hash(block_number: u64) -> B256 {
     })
     .unwrap();
     l1_head_block.header.hash
+}
+
+fn get_output_at_impl(data_fetcher: &OPSuccinctDataFetcher, block_number: u64) -> Value {
+    let block_number_hex = format!("0x{:x}", block_number);
+    let result: Value = block_on(async {
+        data_fetcher
+            .fetch_rpc_data(
+                RPCMode::L2Node,
+                "optimism_outputAtBlock",
+                vec![block_number_hex.into()],
+            )
+            .await
+    })
+    .unwrap();
+    result
+}
+
+pub fn get_output_at(data_fetcher: &OPSuccinctDataFetcher, block_number: u64) -> B256 {
+    let result = get_output_at_impl(data_fetcher, block_number);
+    let output_root = result["outputRoot"].as_str().unwrap().to_string();
+    B256::from_hex(output_root).unwrap()
+}
+
+pub fn get_l1_origin_of(data_fetcher: &OPSuccinctDataFetcher, block_number: u64) -> (B256, u64) {
+    let result = get_output_at_impl(data_fetcher, block_number);
+    let l1_origin = &result["blockRef"]["l1origin"];
+
+    let origin_hash = B256::from_hex(l1_origin["hash"].as_str().unwrap()).unwrap();
+    let origin_number = l1_origin["number"].as_u64().unwrap();
+
+    (origin_hash, origin_number)
 }
