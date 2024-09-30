@@ -1,5 +1,7 @@
-use std::{path::PathBuf, str::FromStr};
+use std::{env, path::PathBuf, str::FromStr};
 
+use alloy_primitives::B256;
+use alloy_provider::Provider;
 use op_succinct_host_utils::{fetcher::OPSuccinctDataFetcher, stats::ExecutionStats};
 use sp1_sdk::{block_on, ExecutionReport};
 
@@ -29,4 +31,20 @@ pub fn report_execution(
     let mut csv_writer = csv::Writer::from_path(report_path).unwrap();
     csv_writer.serialize(&stats).unwrap();
     csv_writer.flush().unwrap();
+}
+
+pub fn get_l1_block_hash(block_number: u64) -> B256 {
+    let data_fetcher = OPSuccinctDataFetcher {
+        l1_rpc: env::var("L1_RPC").expect("L1_RPC is not set."),
+        ..Default::default()
+    };
+    let l1_provider = data_fetcher.l1_provider;
+    let l1_head_block = block_on(async move {
+        l1_provider
+            .get_block_by_number(block_number.into(), false)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Block not found for block number {}", block_number))
+    })
+    .unwrap();
+    l1_head_block.header.hash
 }

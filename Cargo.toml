@@ -22,6 +22,7 @@ tokio = { version = "1.37.0", features = ["full"] }
 # ethreum
 alloy-consensus = { version = "0.3.6", default-features = false }
 alloy-primitives = { version = "0.8", default-features = false }
+alloy-provider = { version = "0.3.6", default-features = false }
 
 # optimism
 op-alloy-genesis = { version = "0.2.12", default-features = false }
