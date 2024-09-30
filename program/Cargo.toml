@@ -21,6 +21,7 @@ op-alloy-genesis.workspace = true
 kona-primitives.workspace = true
 kona-executor.workspace = true
 kona-client.workspace = true
+kona-derive.workspace = true
 
 # sp1
 sp1-zkvm = { workspace = true }

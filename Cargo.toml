@@ -33,6 +33,7 @@ kona-primitives = { git = "https://github.com/anton-rs/kona", rev = "5d0e211ca1c
 kona-executor = { git = "https://github.com/anton-rs/kona", rev = "5d0e211ca1c271377fe184729761bcb217f1f60a" }
 kona-client = { git = "https://github.com/anton-rs/kona", rev = "5d0e211ca1c271377fe184729761bcb217f1f60a" }
 kona-host = { git = "https://github.com/anton-rs/kona", rev = "5d0e211ca1c271377fe184729761bcb217f1f60a" }
+kona-derive = { git = "https://github.com/anton-rs/kona", rev = "5d0e211ca1c271377fe184729761bcb217f1f60a" }
 
 # sp1
 sp1-sdk = { version = "3.0.0-rc1" }
