@@ -5821,6 +5821,7 @@ dependencies = [
  "csv",
  "dotenv",
  "op-succinct-host-utils",
+ "serde_json",
  "sp1-build",
  "sp1-sdk",
  "tokio",

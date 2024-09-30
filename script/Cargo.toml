@@ -13,6 +13,7 @@ cfg-if.workspace = true
 clap.workspace = true
 csv.workspace = true
 dotenv.workspace = true
+serde_json.workspace = true
 tokio.workspace = true
 
 # ethreum
