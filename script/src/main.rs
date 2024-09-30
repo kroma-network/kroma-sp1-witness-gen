@@ -1,7 +1,10 @@
+#![allow(unused_mut)]
 mod utils;
 
 use std::{env, time::Instant};
 
+#[cfg(feature = "kroma")]
+use alloy_primitives::B256;
 use anyhow::Result;
 use clap::{Parser, ValueEnum};
 use op_succinct_host_utils::{
@@ -30,6 +33,16 @@ struct Args {
     #[arg(short, long)]
     l2_block: u64,
 
+    /// L1 head hash (optional).
+    #[cfg(feature = "kroma")]
+    #[arg(short, long)]
+    l1_head_hash: Option<B256>,
+
+    /// L1 head hash (optional).
+    #[cfg(feature = "kroma")]
+    #[arg(short, long)]
+    l1_head_number: Option<u64>,
+
     /// Skip running native execution.
     #[arg(short, long)]
     use_cache: bool,
@@ -39,11 +52,26 @@ struct Args {
     method: Method,
 }
 
+#[cfg(feature = "kroma")]
+impl Args {
+    fn get_l1_head_hash(&mut self) -> B256 {
+        if self.l1_head_hash.is_none() && self.l1_head_number.is_none() {
+            panic!("Missing L1 Head Hash or Number");
+        }
+        if self.l1_head_hash.is_some() {
+            self.l1_head_hash.unwrap()
+        } else {
+            self.l1_head_hash = Some(utils::get_l1_block_hash(self.l1_head_number.unwrap()));
+            self.l1_head_hash.unwrap()
+        }
+    }
+}
+
 /// Execute the OP Succinct program for a single block.
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv::dotenv().ok();
-    let args = Args::parse();
+    let mut args = Args::parse();
     sdk_utils::setup_logger();
 
     let data_fetcher = OPSuccinctDataFetcher {
@@ -55,9 +83,14 @@ async fn main() -> Result<()> {
 
     let cache_mode = if args.use_cache { CacheMode::KeepCache } else { CacheMode::DeleteCache };
 
-    let host_cli = data_fetcher
+    let mut host_cli = data_fetcher
         .get_host_cli_args(l2_safe_head, args.l2_block, ProgramType::Single, cache_mode)
         .await?;
+    #[cfg(feature = "kroma")]
+    {
+        host_cli.l1_head = args.get_l1_head_hash();
+        println!("L1 head hash has been changed");
+    }
 
     // By default, re-run the native execution unless the user passes `--use-cache`.
     if !args.use_cache {
@@ -88,18 +121,18 @@ async fn main() -> Result<()> {
             );
         }
         Method::Prove => {
-        // If the prove flag is set, generate a proof.
-        let (pk, _) = prover.setup(SINGLE_BLOCK_ELF);
+            // If the prove flag is set, generate a proof.
+            let (pk, _) = prover.setup(SINGLE_BLOCK_ELF);
 
-        // Generate proofs in PLONK mode for on-chain verification.
-        let proof = prover.prove(&pk, sp1_stdin).plonk().run().unwrap();
+            // Generate proofs in PLONK mode for on-chain verification.
+            let proof = prover.prove(&pk, sp1_stdin).plonk().run().unwrap();
 
-        // Create a proof directory for the chain ID if it doesn't exist.
-        let proof_dir =
-            format!("data/{}/proofs", data_fetcher.get_chain_id(RPCMode::L2).await.unwrap());
-        if !std::path::Path::new(&proof_dir).exists() {
-            std::fs::create_dir_all(&proof_dir)?;
-        }
+            // Create a proof directory for the chain ID if it doesn't exist.
+            let proof_dir =
+                format!("data/{}/proofs", data_fetcher.get_chain_id(RPCMode::L2).await.unwrap());
+            if !std::path::Path::new(&proof_dir).exists() {
+                std::fs::create_dir_all(&proof_dir)?;
+            }
             proof
                 .save(format!("{}/{}.bin", proof_dir, args.l2_block))
                 .expect("Failed to save proof");

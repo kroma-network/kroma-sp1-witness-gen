@@ -9,10 +9,15 @@ homepage.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+cfg-if.workspace = true
 clap.workspace = true
 csv.workspace = true
 dotenv.workspace = true
 tokio.workspace = true
+
+# ethreum
+alloy-primitives.workspace = true
+alloy-provider.workspace = true
 
 # sp1
 sp1-sdk.workspace = true
@@ -23,3 +28,6 @@ op-succinct-host-utils.workspace = true
 [build-dependencies]
 cargo_metadata.workspace = true
 sp1-build.workspace = true
+
+[features]
+kroma = []
