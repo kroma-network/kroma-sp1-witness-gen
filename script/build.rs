@@ -49,6 +49,7 @@ fn build_zkvm_program(program_path: &str, program_name: &str, out_dir: &str) {
         BuildArgs {
             output_directory: out_dir.to_string(),
             elf_name: format!("{}-elf", program_name),
+            features: vec!["kroma".to_string()],
             ..Default::default()
         },
     );

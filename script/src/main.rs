@@ -57,14 +57,15 @@ struct Args {
 
 #[cfg(feature = "kroma")]
 impl Args {
-    fn get_l1_head_hash(&self) -> B256 {
+    fn get_l1_head_hash(&mut self) -> B256 {
         if self.l1_head_hash.is_none() && self.l1_head_number.is_none() {
             panic!("Missing L1 Head Hash or Number");
         }
         if self.l1_head_hash.is_some() {
             self.l1_head_hash.unwrap()
         } else {
-            utils::get_l1_block_hash(self.l1_head_number.unwrap())
+            self.l1_head_hash = Some(utils::get_l1_block_hash(self.l1_head_number.unwrap()));
+            self.l1_head_hash.unwrap()
         }
     }
 }
@@ -73,7 +74,7 @@ impl Args {
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv::dotenv().ok();
-    let args = Args::parse();
+    let mut args = Args::parse();
     sdk_utils::setup_logger();
 
     let data_fetcher = OPSuccinctDataFetcher {
@@ -120,8 +121,16 @@ async fn main() -> Result<()> {
         }
         Method::Execute => {
             let start_time = Instant::now();
-            let (_, report) = prover.execute(SINGLE_BLOCK_ELF, sp1_stdin).run().unwrap();
+            let (mut public_values, report) =
+                prover.execute(SINGLE_BLOCK_ELF, sp1_stdin).run().unwrap();
             let execution_duration = start_time.elapsed();
+
+            let output_root = public_values.read::<B256>();
+            let expected_output_root = get_output_at(&data_fetcher, args.l2_block);
+            assert_eq!(output_root, expected_output_root);
+
+            let l1_head = public_values.read::<B256>();
+            assert_eq!(l1_head, args.l1_head_hash.unwrap());
 
             utils::report_execution(
                 &data_fetcher,
