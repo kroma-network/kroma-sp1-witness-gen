@@ -33,6 +33,12 @@ cfg_if! {
     }
 }
 
+cfg_if! {
+    if #[cfg(feature = "kroma")] {
+        use kona_derive::traits::ChainProvider;
+    }
+}
+
 fn main() {
     cfg_if! {
         if #[cfg(all(target_os = "zkvm", feature = "kroma"))] {
@@ -89,7 +95,7 @@ fn main() {
             }
         }
 
-        let l1_provider = OracleL1ChainProvider::new(boot.clone(), oracle.clone());
+        let mut l1_provider = OracleL1ChainProvider::new(boot.clone(), oracle.clone());
         let l2_provider = OracleL2ChainProvider::new(boot.clone(), oracle.clone());
         let beacon = OracleBlobProvider::new(oracle.clone());
 
@@ -102,12 +108,30 @@ fn main() {
             boot.as_ref(),
             oracle.as_ref(),
             beacon,
-            l1_provider,
+            l1_provider.clone(),
             l2_provider.clone(),
         )
         .await
         .unwrap();
         println!("cycle-tracker-end: derivation-instantiation");
+
+        #[cfg(feature = "kroma")]
+        {
+            println!("cycle-tracker-start: check-l1-connectivity");
+            let l1_origin = driver.l2_safe_head().l1_origin;
+            let mut current_header = l1_provider.header_by_hash(boot.l1_head).await.unwrap();
+
+            let loop_num = current_header.number - l1_origin.number;
+            for _ in 0..loop_num {
+                let parent_header =
+                    l1_provider.header_by_hash(current_header.parent_hash).await.unwrap();
+                assert_eq!(parent_header.hash_slow(), current_header.parent_hash);
+                current_header = parent_header;
+            }
+            assert_eq!(current_header.hash_slow(), l1_origin.hash);
+            assert_eq!(current_header.number, l1_origin.number);
+            println!("cycle-tracker-end: check-l1-connectivity");
+        }
 
         println!("cycle-tracker-start: produce-output");
         let (number, output_root) = driver

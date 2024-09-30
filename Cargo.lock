@@ -459,7 +459,9 @@ dependencies = [
  "alloy-eips",
  "alloy-primitives 0.8.3",
  "alloy-rlp",
+ "alloy-serde",
  "derive_more 1.0.0",
+ "serde",
 ]
 
 [[package]]
@@ -2513,6 +2515,7 @@ dependencies = [
  "alloy-consensus",
  "cfg-if",
  "kona-client",
+ "kona-derive",
  "kona-executor",
  "kona-primitives",
  "op-alloy-genesis",
@@ -3500,6 +3503,7 @@ dependencies = [
  "op-alloy-protocol",
  "op-alloy-rpc-types-engine",
  "reqwest 0.12.7",
+ "serde",
  "thiserror 1.0.63",
  "tracing",
  "unsigned-varint",
@@ -4163,10 +4167,12 @@ dependencies = [
  "alloy-eips",
  "alloy-primitives 0.8.3",
  "alloy-rpc-types-engine",
+ "alloy-serde",
  "derive_more 1.0.0",
  "op-alloy-consensus",
  "op-alloy-genesis",
  "op-alloy-protocol",
+ "serde",
 ]
 
 [[package]]
