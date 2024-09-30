@@ -34,6 +34,14 @@ cfg_if! {
 }
 
 fn main() {
+    cfg_if! {
+        if #[cfg(all(target_os = "zkvm", feature = "kroma"))] {
+            println!("Configuration: target_os(zkvm), feature(kroma)");
+        } else {
+            println!("Configuration: target_os(native)");
+        }
+    }
+
     op_succinct_client_utils::block_on(async move {
         ////////////////////////////////////////////////////////////////
         //                          PROLOGUE                          //
@@ -50,6 +58,7 @@ fn main() {
                 // the rollup_config_bytes with a hash of those bytes (rollupConfigHash). Securely
                 // hashes the rollup config bytes.
                 let boot_info_struct = BootInfoStruct::from(boot_info_with_bytes_config.clone());
+                #[cfg(not(feature = "kroma"))]
                 sp1_zkvm::io::commit::<BootInfoStruct>(&boot_info_struct);
 
                 let rollup_config: RollupConfig = serde_json::from_slice(&boot_info_with_bytes_config.rollup_config_bytes).expect("failed to parse rollup config");
@@ -119,6 +128,14 @@ fn main() {
         assert_eq!(number, boot.l2_claim_block);
         assert_eq!(output_root, boot.l2_claim);
 
-        println!("Validated derivation and STF. Output Root: {}", output_root);
+        cfg_if! {
+            if #[cfg(all(target_os = "zkvm", feature = "kroma"))] {
+                sp1_zkvm::io::commit(&output_root);
+                sp1_zkvm::io::commit(&boot.l1_head);
+                println!("Validated derivation and STF. Output Root: {} | L1 Head: {}", output_root, boot.l1_head);
+            } else {
+                println!("Validated derivation and STF. Output Root: {}", output_root);
+            }
+        }
     });
 }

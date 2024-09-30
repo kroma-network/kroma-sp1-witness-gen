@@ -5820,6 +5820,7 @@ dependencies = [
  "clap",
  "csv",
  "dotenv",
+ "op-succinct-client-utils",
  "op-succinct-host-utils",
  "serde_json",
  "sp1-build",

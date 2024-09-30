@@ -43,12 +43,18 @@ fn build_native_host_runner() {
 
 /// Build a program for the zkVM.
 #[allow(dead_code)]
-fn build_zkvm_program(program_path: &str, program_name: &str, out_dir: &str) {
+fn build_zkvm_program(
+    program_path: &str,
+    program_name: &str,
+    out_dir: &str,
+    features: Vec<String>,
+) {
     build_program_with_args(
         program_path,
         BuildArgs {
             output_directory: out_dir.to_string(),
             elf_name: format!("{}-elf", program_name),
+            features,
             ..Default::default()
         },
     );
@@ -60,7 +66,13 @@ fn main() {
     // for range being built.
     build_native_program(program_name);
 
-    build_zkvm_program("../program", program_name, "program/elf");
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "kroma")] {
+            build_zkvm_program("../program", program_name, "program/elf", vec!["kroma".to_string()]);
+        } else {
+            build_zkvm_program("../program", program_name, "program/elf", vec!["".to_string()]);
+        }
+    }
 
     // Note: Don't comment this out, because the Docker program depends on the native host runner
     // being built.

@@ -27,3 +27,6 @@ sp1-zkvm = { workspace = true }
 
 # op-succinct
 op-succinct-client-utils.workspace = true
+
+[features]
+kroma = []

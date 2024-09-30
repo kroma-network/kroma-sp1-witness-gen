@@ -25,9 +25,11 @@ sp1-sdk.workspace = true
 
 # op-succinct
 op-succinct-host-utils.workspace = true
+op-succinct-client-utils.workspace = true
 
 [build-dependencies]
 cargo_metadata.workspace = true
+cfg-if.workspace = true
 sp1-build.workspace = true
 
 [features]

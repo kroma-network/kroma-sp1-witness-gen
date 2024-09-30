@@ -3,9 +3,8 @@ mod utils;
 
 use std::{env, time::Instant};
 
-#[cfg(feature = "kroma")]
-use alloy_primitives::B256;
 use anyhow::Result;
+use cfg_if::cfg_if;
 use clap::{Parser, ValueEnum};
 use op_succinct_host_utils::{
     fetcher::{CacheMode, OPSuccinctDataFetcher, RPCMode},
@@ -15,6 +14,13 @@ use op_succinct_host_utils::{
 };
 use sp1_sdk::{utils as sdk_utils, ProverClient};
 use utils::{get_l1_origin_of, get_output_at};
+cfg_if! {
+    if #[cfg(feature = "kroma")] {
+        use alloy_primitives::B256;
+    } else {
+        use op_succinct_client_utils::BootInfoWithBytesConfig;
+    }
+}
 
 pub const SINGLE_BLOCK_ELF: &[u8] = include_bytes!("../../program/elf/fault-proof-elf");
 
@@ -122,8 +128,23 @@ async fn main() -> Result<()> {
         }
         Method::Execute => {
             let start_time = Instant::now();
-            let (_, report) = prover.execute(SINGLE_BLOCK_ELF, sp1_stdin).run().unwrap();
+            let (mut public_values, report) =
+                prover.execute(SINGLE_BLOCK_ELF, sp1_stdin).run().unwrap();
             let execution_duration = start_time.elapsed();
+
+            cfg_if! {
+                if #[cfg(feature = "kroma")] {
+            let output_root = public_values.read::<B256>();
+            let expected_output_root = get_output_at(&data_fetcher, args.l2_block);
+            assert_eq!(output_root, expected_output_root);
+
+            let l1_head = public_values.read::<B256>();
+            assert_eq!(l1_head, args.l1_head_hash.unwrap());
+                } else {
+                    let boot_info = public_values.read::<BootInfoWithBytesConfig>();
+                    println!("{:#?}", boot_info);
+                }
+            }
 
             utils::report_execution(
                 &data_fetcher,
