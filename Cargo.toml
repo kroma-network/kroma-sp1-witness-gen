@@ -1,0 +1,58 @@
+[workspace]
+members = ["program", "script", "witnessgen"]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+license = "MIT"
+authors = ["dongchangYoo"]
+repository = "https://github.com/kroma-network/kroma-sp1-prover"
+homepage = "https://github.com/kroma-network/kroma-sp1-prover"
+
+[workspace.dependencies]
+anyhow = { version = "1.0.86", default-features = false }
+cargo_metadata = "0.18.1"
+cfg-if = "1.0.0"
+clap = "4.5.9"
+csv = "1.3.0"
+dotenv = "0.15.0"
+serde_json = { version = "1.0.117", default-features = false }
+tokio = { version = "1.37.0", features = ["full"] }
+
+# ethreum
+alloy-consensus = { version = "0.3.6", default-features = false }
+alloy-primitives = { version = "0.8", default-features = false }
+
+# optimism
+op-alloy-genesis = { version = "0.2.12", default-features = false }
+op-alloy-rpc-types-engine = { version = "0.2.12", default-features = false }
+
+# kona
+kona-primitives = { git = "https://github.com/anton-rs/kona", rev = "5d0e211ca1c271377fe184729761bcb217f1f60a" }
+kona-executor = { git = "https://github.com/anton-rs/kona", rev = "5d0e211ca1c271377fe184729761bcb217f1f60a" }
+kona-client = { git = "https://github.com/anton-rs/kona", rev = "5d0e211ca1c271377fe184729761bcb217f1f60a" }
+kona-host = { git = "https://github.com/anton-rs/kona", rev = "5d0e211ca1c271377fe184729761bcb217f1f60a" }
+
+# sp1
+sp1-sdk = { version = "3.0.0-rc1" }
+sp1-zkvm = { version = "3.0.0-rc1", features = ["verify"] }
+sp1-build = { version = "3.0.0-rc1" }
+
+# op-succinct
+op-succinct-client-utils = { git = "https://github.com/succinctlabs/op-succinct", rev = "a2b3ff0" }
+op-succinct-host-utils = { git = "https://github.com/succinctlabs/op-succinct", rev = "a2b3ff0" }
+
+[profile.release-client-lto]
+inherits = "release"
+panic = "abort"
+codegen-units = 1
+lto = "fat"
+
+[patch.crates-io]
+tiny-keccak = { git = "https://github.com/sp1-patches/tiny-keccak", branch = "patch-v2.0.2" }
+sha2 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha2", branch = "patch-sha2-v0.10.8" }
+ecdsa = { git = "https://github.com/sp1-patches/signatures", branch = "patch-ecdsa-v0.16.8" }
+bn = { git = "https://github.com/0xWOLAND/bn.git", package = "substrate-bn" }
+sha3 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha3", branch = "patch-sha3-v0.10.8" }
+# This patch uses sha3 instead of tiny-keccak. Reduces cycle count for Keccak by 50%.
+alloy-primitives = { git = "https://github.com/sp1-patches/alloy-core", branch = "patch-v0.8.3" }

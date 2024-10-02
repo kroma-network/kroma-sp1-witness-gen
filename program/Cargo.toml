@@ -1,0 +1,29 @@
+[package]
+name = "fault-proof"
+version = "0.1.0"
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+cfg-if.workspace = true
+serde_json.workspace = true
+
+# ethereum
+alloy-consensus.workspace = true
+
+# optimism
+op-alloy-genesis.workspace = true
+
+# kona
+kona-primitives.workspace = true
+kona-executor.workspace = true
+kona-client.workspace = true
+
+# sp1
+sp1-zkvm = { workspace = true }
+
+# op-succinct
+op-succinct-client-utils.workspace = true
