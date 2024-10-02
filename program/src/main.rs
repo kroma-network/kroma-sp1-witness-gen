@@ -19,6 +19,12 @@ use kona_client::{
     BootInfo,
 };
 use op_succinct_client_utils::precompiles::zkvm_handle_register;
+cfg_if! {
+    if #[cfg(feature = "kroma")] {
+        mod utils;
+        use utils::compute_output_root_at;
+    }
+}
 
 cfg_if! {
     if #[cfg(target_os = "zkvm")] {
@@ -117,6 +123,15 @@ fn main() {
 
         #[cfg(feature = "kroma")]
         {
+            println!("cycle-tracker-start: compute-parent-output-root");
+            let l2_safe_header = driver.l2_safe_head_header();
+            let parent_output_root =
+                compute_output_root_at(l2_safe_header, l2_provider.clone(), l2_provider.clone());
+            #[cfg(target_os = "zkvm")]
+            sp1_zkvm::io::commit(&parent_output_root);
+            println!("Validated Parent Output Root: {}", parent_output_root);
+            println!("cycle-tracker-end: compute-parent-output-root");
+
             println!("cycle-tracker-start: check-l1-connectivity");
             let l1_origin = driver.l2_safe_head().l1_origin;
             let mut current_header = l1_provider.header_by_hash(boot.l1_head).await.unwrap();
