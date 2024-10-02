@@ -2513,10 +2513,12 @@ name = "fault-proof"
 version = "0.1.0"
 dependencies = [
  "alloy-consensus",
+ "alloy-primitives 0.8.3",
  "cfg-if",
  "kona-client",
  "kona-derive",
  "kona-executor",
+ "kona-mpt",
  "kona-primitives",
  "op-alloy-genesis",
  "op-succinct-client-utils",

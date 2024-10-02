@@ -134,12 +134,16 @@ async fn main() -> Result<()> {
 
             cfg_if! {
                 if #[cfg(feature = "kroma")] {
-            let output_root = public_values.read::<B256>();
-            let expected_output_root = get_output_at(&data_fetcher, args.l2_block);
-            assert_eq!(output_root, expected_output_root);
+                    let parent_output_root = public_values.read::<B256>();
+                    let expected_parent_output_root = get_output_at(&data_fetcher, args.l2_block - 1);
+                    assert_eq!(parent_output_root, expected_parent_output_root);
 
-            let l1_head = public_values.read::<B256>();
-            assert_eq!(l1_head, args.l1_head_hash.unwrap());
+                    let output_root = public_values.read::<B256>();
+                    let expected_output_root = get_output_at(&data_fetcher, args.l2_block);
+                    assert_eq!(output_root, expected_output_root);
+
+                    let l1_head = public_values.read::<B256>();
+                    assert_eq!(l1_head, args.l1_head_hash.unwrap());
                 } else {
                     let boot_info = public_values.read::<BootInfoWithBytesConfig>();
                     println!("{:#?}", boot_info);

@@ -13,6 +13,7 @@ serde_json.workspace = true
 
 # ethereum
 alloy-consensus.workspace = true
+alloy-primitives.workspace = true
 
 # optimism
 op-alloy-genesis.workspace = true
@@ -22,6 +23,7 @@ kona-primitives.workspace = true
 kona-executor.workspace = true
 kona-client.workspace = true
 kona-derive.workspace = true
+kona-mpt.workspace = true
 
 # sp1
 sp1-zkvm = { workspace = true }
