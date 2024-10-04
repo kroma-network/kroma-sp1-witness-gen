@@ -22,7 +22,14 @@ clap = { workspace = true }
 anyhow = { workspace = true }
 
 # server
+alloy-primitives.workspace = true
 dotenv.workspace = true
 jsonrpc-http-server.workspace = true
 jsonrpc-core.workspace = true
+jsonrpc-core-client.workspace = true
+jsonrpc-derive.workspace = true
+once_cell.workspace = true
+serde.workspace = true
+sp1-sdk.workspace = true
+tracing.workspace = true
 tracing-subscriber.workspace = true

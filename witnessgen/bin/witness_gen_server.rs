@@ -1,5 +1,6 @@
 use clap::Parser;
 use jsonrpc_http_server::ServerBuilder;
+use kroma_witnessgen::{Rpc, RpcImpl};
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -14,11 +15,12 @@ fn main() {
 
     let args = Args::parse();
 
-    let io = jsonrpc_core::IoHandler::new();
+    let mut io = jsonrpc_core::IoHandler::new();
+    io.extend_with(RpcImpl.to_delegate());
 
     let server = ServerBuilder::new(io)
         .threads(3)
-        .max_request_body_size(32_000_000)
+        .max_request_body_size(200 * 1024 * 1024)
         .start_http(&args.endpoint.parse().unwrap())
         .unwrap();
 
