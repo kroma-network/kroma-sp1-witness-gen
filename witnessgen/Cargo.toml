@@ -15,6 +15,10 @@ path = "bin/native_host_runner.rs"
 name = "witness_gen_server"
 path = "bin/witness_gen_server.rs"
 
+[[bin]]
+name = "witness_gen_client"
+path = "bin/witness_gen_client.rs"
+
 [dependencies]
 kona-host = { workspace = true }
 tokio = { workspace = true }
@@ -36,3 +40,7 @@ serde.workspace = true
 sp1-sdk.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
+
+# client
+jsonrpsee-core = "0.16.2"
+jsonrpsee = { version = "0.16.2", features = ["full"] }
