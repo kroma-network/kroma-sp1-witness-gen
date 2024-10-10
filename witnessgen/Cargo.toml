@@ -21,6 +21,9 @@ tokio = { workspace = true }
 clap = { workspace = true }
 anyhow = { workspace = true }
 
+# succinct
+op-succinct-host-utils = { workspace = true }
+
 # server
 alloy-primitives.workspace = true
 dotenv.workspace = true

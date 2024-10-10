@@ -1,3 +1,6 @@
+use alloy_primitives::{hex::FromHex, B256};
+use anyhow::Result;
+
 /// Convert a u32 array to a u8 array. Useful for converting the range vkey to a B256.
 pub fn u32_to_u8(input: [u32; 8]) -> [u8; 32] {
     let mut output = [0u8; 32];
@@ -6,6 +9,13 @@ pub fn u32_to_u8(input: [u32; 8]) -> [u8; 32] {
         output[i * 4..(i + 1) * 4].copy_from_slice(&bytes);
     }
     output
+}
+
+pub fn b256_from_str(s: &str) -> Result<B256> {
+    match B256::from_hex(s.strip_prefix("0x").unwrap_or(s)) {
+        Ok(b) => Ok(b),
+        Err(e) => Err(anyhow::anyhow!("failed to parse B256 from string: {}", e)),
+    }
 }
 
 #[cfg(test)]

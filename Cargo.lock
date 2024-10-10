@@ -3783,6 +3783,7 @@ dependencies = [
  "jsonrpc-http-server",
  "kona-host",
  "once_cell",
+ "op-succinct-host-utils",
  "serde",
  "sp1-sdk",
  "tokio",
