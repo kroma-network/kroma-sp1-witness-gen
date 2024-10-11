@@ -16,7 +16,7 @@ fn main() {
     let args = Args::parse();
 
     let mut io = jsonrpc_core::IoHandler::new();
-    io.extend_with(RpcImpl.to_delegate());
+    io.extend_with(RpcImpl::default().to_delegate());
 
     let server = ServerBuilder::new(io)
         .threads(3)

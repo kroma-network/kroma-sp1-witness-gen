@@ -14,6 +14,7 @@ use crate::utils::b256_from_str;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum RequestResult {
     None,
+    Requested,
     Processing,
     Completed,
 }
