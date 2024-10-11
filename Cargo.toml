@@ -11,6 +11,7 @@ homepage = "https://github.com/kroma-network/kroma-sp1-prover"
 
 [workspace.dependencies]
 anyhow = { version = "1.0.86", default-features = false }
+bincode = "1.3.3"
 cargo_metadata = "0.18.1"
 cfg-if = "1.0.0"
 clap = { version = "4.5.9", features = ["derive", "env"] }
@@ -28,6 +29,7 @@ once_cell = "1.20.1"
 serde = { version = "1.0.198", features = ["derive"] }
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
+rocksdb = { version = "0.22", default-features = false, features = ["snappy"] }
 
 # ethreum
 alloy-consensus = { version = "0.3.6", default-features = false }

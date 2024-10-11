@@ -11,7 +11,7 @@ use sp1_sdk::{block_on, SP1Stdin};
 
 use crate::utils::b256_from_str;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum RequestResult {
     None,
     Requested,
