@@ -2,6 +2,8 @@ use clap::Parser;
 use jsonrpc_http_server::ServerBuilder;
 use kroma_witnessgen::{Rpc, RpcImpl};
 
+static WITNESS_STORE_PATH: &str = "data/witness_store";
+
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
@@ -16,7 +18,7 @@ fn main() {
     let args = Args::parse();
 
     let mut io = jsonrpc_core::IoHandler::new();
-    io.extend_with(RpcImpl::default().to_delegate());
+    io.extend_with(RpcImpl::new(WITNESS_STORE_PATH).to_delegate());
 
     let server = ServerBuilder::new(io)
         .threads(3)
