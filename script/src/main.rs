@@ -1,7 +1,7 @@
 #![allow(unused_mut)]
 mod utils;
 
-use std::{env, time::Instant};
+use std::{env, time::{Duration, Instant}};
 
 use anyhow::Result;
 use cfg_if::cfg_if;
@@ -22,6 +22,7 @@ cfg_if! {
     }
 }
 
+pub const WITNESSGEN_TIMEOUT: Duration = Duration::from_secs(1200);
 pub const SINGLE_BLOCK_ELF: &[u8] = include_bytes!("../../program/elf/fault-proof-elf");
 
 #[derive(ValueEnum, Debug, Clone, PartialEq)]
@@ -117,7 +118,7 @@ async fn main() -> Result<()> {
     // By default, re-run the native execution unless the user passes `--use-cache`.
     if !args.use_cache {
         // Start the server and native client.
-        let mut witnessgen_executor = WitnessGenExecutor::default();
+        let mut witnessgen_executor = WitnessGenExecutor::new(WITNESSGEN_TIMEOUT);
         witnessgen_executor.spawn_witnessgen(&host_cli).await?;
         witnessgen_executor.flush().await?;
     }
