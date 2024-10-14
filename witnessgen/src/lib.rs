@@ -2,10 +2,14 @@ mod interface;
 pub use interface::*;
 
 mod utils;
+pub use utils::*;
 
 mod db;
 
 mod task_info;
+
+mod errors;
+pub use errors::*;
 
 mod spec_impl;
 pub use spec_impl::SpecResult;

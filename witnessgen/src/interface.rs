@@ -1,6 +1,6 @@
 use alloy_primitives::B256;
 use anyhow::Result;
-use jsonrpc_core::{Error as JsonError, ErrorCode as JsonErrorCode, Result as JsonResult};
+use jsonrpc_core::Result as JsonResult;
 use jsonrpc_derive::rpc;
 use std::sync::Arc;
 use std::sync::RwLock;
@@ -10,6 +10,7 @@ use crate::get_witness_impl::WitnessResult;
 use crate::request_witness_impl::{check_request, generate_witness_impl, RequestResult};
 use crate::spec_impl::{spec_impl, SpecResult};
 use crate::task_info::TaskInfo;
+use crate::WitnessError;
 
 static DEFAULT_WITNESS_STORE_PATH: &str = "data/witness_store";
 
@@ -104,11 +105,7 @@ impl Rpc for RpcImpl {
             tracing::info!("the request in progress");
             Ok(RequestResult::Processing)
         } else {
-            return Err(JsonError {
-                code: JsonErrorCode::ServerError(1),
-                message: "The server is busy".to_string(),
-                data: None,
-            });
+            return Err(WitnessError::server_busy().into());
         }
     }
 

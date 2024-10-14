@@ -1,5 +1,25 @@
+use std::env;
+
 use alloy_primitives::{hex::FromHex, B256};
 use anyhow::Result;
+
+use crate::errors::WitnessError;
+
+pub fn check_endpoints() -> Result<(), WitnessError> {
+    if env::var("L1_RPC").is_err() {
+        return Err(WitnessError::empty_l1_rpc_endpoint());
+    }
+    if env::var("L1_BEACON_RPC").is_err() {
+        return Err(WitnessError::empty_l1_beacon_endpoint());
+    }
+    if env::var("L2_RPC").is_err() {
+        return Err(WitnessError::empty_l2_rpc_endpoint());
+    }
+    if env::var("L2_NODE_RPC").is_err() {
+        return Err(WitnessError::empty_l2_node_rpc_endpoint());
+    }
+    Ok(())
+}
 
 /// Convert a u32 array to a u8 array. Useful for converting the range vkey to a B256.
 pub fn u32_to_u8(input: [u32; 8]) -> [u8; 32] {

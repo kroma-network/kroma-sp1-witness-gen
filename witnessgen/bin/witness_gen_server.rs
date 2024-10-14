@@ -1,6 +1,7 @@
+use anyhow::Result;
 use clap::Parser;
 use jsonrpc_http_server::ServerBuilder;
-use kroma_witnessgen::{Rpc, RpcImpl};
+use kroma_witnessgen::{check_endpoints, Rpc, RpcImpl, WitnessError};
 
 static WITNESS_STORE_PATH: &str = "data/witness_store";
 
@@ -11,9 +12,12 @@ struct Args {
     endpoint: String,
 }
 
-fn main() {
+fn main() -> Result<(), WitnessError> {
     dotenv::dotenv().ok();
     tracing_subscriber::fmt::Subscriber::builder().init();
+
+    // Check if the endpoints are empty.
+    check_endpoints()?;
 
     let args = Args::parse();
 
@@ -27,4 +31,6 @@ fn main() {
         .unwrap();
 
     server.wait();
+
+    Ok(())
 }
