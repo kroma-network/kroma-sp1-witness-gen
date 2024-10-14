@@ -22,6 +22,9 @@ pub trait Rpc {
 
     #[rpc(name = "requestWitness")]
     fn request_witness(&self, l2_hash: String, l1_head_hash: String) -> JsonResult<RequestResult>;
+
+    #[rpc(name = "getWitness")]
+    fn get_witness(&self, l2_hash: String, l1_head_hash: String) -> JsonResult<WitnessResult>;
 }
 
 #[derive(Clone)]
@@ -106,6 +109,30 @@ impl Rpc for RpcImpl {
                 message: "The server is busy".to_string(),
                 data: None,
             });
+        }
+    }
+
+    fn get_witness(&self, l2_hash: String, l1_head_hash: String) -> JsonResult<WitnessResult> {
+        let (l2_hash, l1_head_hash) = check_request(&l2_hash, &l1_head_hash).unwrap();
+
+        // Check if it exists in the database.
+        let result = self.witness_db.get(l2_hash, l1_head_hash);
+        match result {
+            Ok(witness_result) => {
+                tracing::info!("return cached witness");
+                Ok(witness_result)
+            }
+            Err(_) => {
+                // Check if the request is in progress.
+                let current_task = Arc::clone(&self.current_task);
+                if current_task.try_read().unwrap().is_equal(l2_hash, l1_head_hash) {
+                    tracing::info!("the request is already in process");
+                    Ok(WitnessResult::new(RequestResult::Processing, None))
+                } else {
+                    tracing::info!("witness not found in db");
+                    Ok(WitnessResult::new(RequestResult::None, None))
+                }
+            }
         }
     }
 }

@@ -14,3 +14,4 @@ mod request_witness_impl;
 pub use request_witness_impl::RequestResult;
 
 mod get_witness_impl;
+pub use get_witness_impl::WitnessResult;
