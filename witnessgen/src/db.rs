@@ -3,8 +3,6 @@ use anyhow::{anyhow, Result};
 use rocksdb::{Options, DB};
 use std::path::PathBuf;
 
-use crate::get_witness_impl::WitnessResult;
-
 /// A simple, synchronous key-value store that stores data on disk.
 pub struct WitnessStore {
     store_path: PathBuf,
@@ -35,26 +33,26 @@ impl WitnessStore {
         key
     }
 
-    pub fn get(&self, l2_hash: B256, l1_head_hash: B256) -> Result<WitnessResult> {
+    pub fn get(&self, l2_hash: B256, l1_head_hash: B256) -> Result<Vec<Vec<u8>>> {
         let key = Self::build_key(l2_hash, l1_head_hash);
         let result = self.db.get(key);
         match result {
             Ok(Some(value)) => {
-                let witness_result: WitnessResult = bincode::deserialize(&value)
+                let witness: Vec<Vec<u8>> = bincode::deserialize(&value)
                     .map_err(|e| anyhow!("Failed to deserialize value: {}", e))?;
-                Ok(witness_result)
+                Ok(witness)
             }
             Ok(None) => Err(anyhow!("Key not found")),
             Err(e) => Err(anyhow!("Failed to get value: {}", e)),
         }
     }
 
-    pub fn set(&self, l2_hash: B256, l1_head_hash: B256, value: WitnessResult) -> Result<()> {
+    pub fn set(&self, l2_hash: B256, l1_head_hash: B256, witness: Vec<Vec<u8>>) -> Result<()> {
         let key = Self::build_key(l2_hash, l1_head_hash);
-        let serialized_value =
-            bincode::serialize(&value).map_err(|e| anyhow!("Failed to serialize value: {}", e))?;
+        let serialized_witness = bincode::serialize(&witness)
+            .map_err(|e| anyhow!("Failed to serialize value: {}", e))?;
         self.db
-            .put(key, serialized_value)
+            .put(key, serialized_witness)
             .map_err(|e| anyhow!("Failed to set key-value pair: {}", e))
     }
 }
@@ -67,6 +65,8 @@ impl Drop for WitnessStore {
 
 #[cfg(test)]
 mod tests {
+    use crate::WitnessResult;
+
     use super::*;
 
     use alloy_primitives::b256;
@@ -86,15 +86,16 @@ mod tests {
     #[test]
     fn test_witness_store() {
         let store = WITNESS_STORE.lock().unwrap();
-        let witness_result = WitnessResult::default();
+        let mut witness_result =
+            WitnessResult::new_from_bytes(crate::RequestResult::Completed, vec![vec![1, 2, 3]]);
 
         let l2_hash = b256!("0000000000000000000000000000000000000000000000000000000000000001");
         let l1_head_hash =
             b256!("0000000000000000000000000000000000000000000000000000000000000001");
-        store.set(l2_hash, l1_head_hash, witness_result.clone()).unwrap();
 
+        store.set(l2_hash, l1_head_hash, witness_result.get_witness()).unwrap();
         let result = store.get(l2_hash, l1_head_hash).unwrap();
-        assert_eq!(witness_result, result);
+        assert_eq!(witness_result.get_witness(), result);
 
         let l2_hash = b256!("0000000000000000000000000000000000000000000000000000000000000002");
         let l1_head_hash =

@@ -71,8 +71,7 @@ impl RpcImpl {
         drop(current_task);
 
         // Store the witness to db.
-        let witness_result = WitnessResult::new(RequestResult::Completed, Some(sp1_stdin.buffer));
-        self.witness_db.set(l2_hash, l1_head_hash, witness_result)?;
+        self.witness_db.set(l2_hash, l1_head_hash, sp1_stdin.buffer)?;
         tracing::info!("store witness to db");
 
         Ok(())
@@ -117,17 +116,17 @@ impl Rpc for RpcImpl {
         match result {
             Ok(witness_result) => {
                 tracing::info!("return cached witness");
-                Ok(witness_result)
+                Ok(WitnessResult::new_from_bytes(RequestResult::Completed, witness_result))
             }
             Err(_) => {
                 // Check if the request is in progress.
                 let current_task = Arc::clone(&self.current_task);
                 if current_task.try_read().unwrap().is_equal(l2_hash, l1_head_hash) {
                     tracing::info!("the request is already in process");
-                    Ok(WitnessResult::new(RequestResult::Processing, None))
+                    Ok(WitnessResult::new(RequestResult::Processing, ""))
                 } else {
                     tracing::info!("witness not found in db");
-                    Ok(WitnessResult::new(RequestResult::None, None))
+                    Ok(WitnessResult::new(RequestResult::None, ""))
                 }
             }
         }

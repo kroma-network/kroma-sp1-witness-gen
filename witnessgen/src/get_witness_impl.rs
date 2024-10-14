@@ -8,24 +8,32 @@ use crate::{request_witness_impl::RequestResult, spec_impl::VKEY_HASH};
 pub struct WitnessResult {
     pub status: RequestResult,
     pub vkey_hash: B256,
-    pub witness: Option<Vec<Vec<u8>>>,
+    pub witness: String,
 }
 
 impl Default for WitnessResult {
     fn default() -> Self {
-        Self::new(RequestResult::None, None)
+        Self::new(RequestResult::None, "".to_string())
     }
 }
 
 impl WitnessResult {
-    pub fn new(status: RequestResult, witness: Option<Vec<Vec<u8>>>) -> Self {
-        Self { status, vkey_hash: *VKEY_HASH, witness }
+    pub fn new<T: ToString>(status: RequestResult, witness: T) -> Self {
+        Self { status, vkey_hash: *VKEY_HASH, witness: witness.to_string() }
+    }
+
+    pub fn new_from_bytes(status: RequestResult, witness: Vec<Vec<u8>>) -> Self {
+        let serialized_witness = bincode::serialize(&witness).unwrap();
+        let hex_encoded_with_prefix = "0x".to_string() + hex::encode(&serialized_witness).as_ref();
+        Self::new(status, hex_encoded_with_prefix)
     }
 
     pub fn size(&self) -> usize {
-        match &self.witness {
-            Some(witness) => witness.iter().map(|w| w.len()).sum(),
-            None => 0,
-        }
+        hex::decode(&self.witness).unwrap().len()
+    }
+
+    pub fn get_witness(&mut self) -> Vec<Vec<u8>> {
+        let witness = hex::decode(&self.witness.strip_prefix("0x").unwrap()).unwrap();
+        bincode::deserialize(&witness).unwrap()
     }
 }

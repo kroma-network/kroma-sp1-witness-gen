@@ -4040,6 +4040,7 @@ dependencies = [
  "clap",
  "ctor",
  "dotenv",
+ "hex",
  "jsonrpc-core",
  "jsonrpc-core-client",
  "jsonrpc-derive",

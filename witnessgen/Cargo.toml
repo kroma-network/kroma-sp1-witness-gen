@@ -36,6 +36,7 @@ jsonrpc-http-server.workspace = true
 jsonrpc-core.workspace = true
 jsonrpc-core-client.workspace = true
 jsonrpc-derive.workspace = true
+hex = { workspace = true }
 once_cell.workspace = true
 serde.workspace = true
 sp1-sdk.workspace = true
