@@ -88,6 +88,19 @@ async fn main() -> Result<()> {
         ..Default::default()
     };
 
+    if args.method == Method::Preview {
+        let output_root = get_output_at(&data_fetcher, args.l2_block);
+        let parent_output_root = get_output_at(&data_fetcher, args.l2_block - 1);
+        let (l1_origin_hash, l1_origin_number) = get_l1_origin_of(&data_fetcher, args.l2_block);
+
+        println!("- output_root: {:?}", output_root);
+        println!("- parent_output_root: {:?}", parent_output_root);
+        println!("- l1_origin_hash: {:?}", l1_origin_hash);
+        println!("- l1_origin_number: {:?}", l1_origin_number);
+        println!("- l1_head_number: {:?}", l1_origin_number + 300);
+        return Ok(());
+    }
+
     let l2_safe_head = args.l2_block - 1;
 
     let cache_mode = if args.use_cache { CacheMode::KeepCache } else { CacheMode::DeleteCache };
@@ -116,16 +129,7 @@ async fn main() -> Result<()> {
     let prover = ProverClient::new();
 
     match args.method {
-        Method::Preview => {
-            let output_root = get_output_at(&data_fetcher, args.l2_block);
-            let parent_output_root = get_output_at(&data_fetcher, args.l2_block - 1);
-            let (l1_origin_hash, l1_origin_number) = get_l1_origin_of(&data_fetcher, args.l2_block);
-
-            println!("- output_root: {:?}", output_root);
-            println!("- parent_output_root: {:?}", parent_output_root);
-            println!("- l1_origin_hash: {:?}", l1_origin_hash);
-            println!("- l1_origin_number: {:?}", l1_origin_number);
-        }
+        Method::Preview => {}
         Method::Execute => {
             let start_time = Instant::now();
             let (mut public_values, report) =
