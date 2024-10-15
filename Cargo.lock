@@ -4031,6 +4031,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "kroma-prover"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives 0.8.3",
+ "anyhow",
+ "clap",
+ "dotenv",
+ "jsonrpc-core",
+ "jsonrpc-core-client",
+ "jsonrpc-derive",
+ "jsonrpc-http-server",
+ "kroma-utils",
+ "once_cell",
+ "serde",
+ "sp1-sdk",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "kroma-utils"
 version = "0.1.0"
 dependencies = [
