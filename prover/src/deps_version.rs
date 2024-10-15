@@ -1,0 +1,1 @@
+pub const SP1_SDK_VERSION: &str = "v3.0.0-rc1";

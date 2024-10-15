@@ -4,6 +4,8 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use sp1_sdk::{HashableKey, ProverClient};
 
+use crate::deps_version::SP1_SDK_VERSION;
+
 // TODO: integrate elf and vkey_hash
 pub const SINGLE_BLOCK_ELF: &[u8] = include_bytes!("../../program/elf/fault-proof-elf");
 pub static VKEY_HASH: Lazy<B256> = Lazy::new(|| {
@@ -23,7 +25,7 @@ impl Default for SpecResult {
     fn default() -> Self {
         SpecResult {
             version: "0.1.0".to_string(),
-            sp1_version: "".to_string(),
+            sp1_version: SP1_SDK_VERSION.to_string(),
             vkey_hash: *VKEY_HASH,
         }
     }
