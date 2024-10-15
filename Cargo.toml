@@ -1,5 +1,5 @@
 [workspace]
-members = ["program", "script", "witnessgen"]
+members = ["program", "script", "witnessgen", "utils"]
 resolver = "2"
 
 [workspace.package]
@@ -58,7 +58,10 @@ sp1-build = { version = "3.0.0-rc1" }
 op-succinct-client-utils = { git = "https://github.com/succinctlabs/op-succinct", rev = "a2b3ff0" }
 op-succinct-host-utils = { git = "https://github.com/succinctlabs/op-succinct", rev = "a2b3ff0" }
 
-[profile.release-client-lto]
+# kroma
+kroma-utils = { path = "utils" }
+
+[profile.release-client-lto] # kroma
 inherits = "release"
 panic = "abort"
 codegen-units = 1
