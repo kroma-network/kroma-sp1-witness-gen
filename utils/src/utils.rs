@@ -1,22 +1,30 @@
-use std::env;
-
 use alloy_primitives::{hex::FromHex, B256};
 use anyhow::Result;
+use std::env;
 
-use crate::errors::WitnessError;
+use crate::errors::KromaError;
 
-pub fn check_endpoints() -> Result<(), WitnessError> {
+pub fn check_request(l2_hash: &String, l1_head_hash: &String) -> Result<(B256, B256)> {
+    let l2_hash = b256_from_str(&l2_hash).unwrap();
+    let l1_head_hash = b256_from_str(&l1_head_hash).unwrap();
+
+    // TODO: check more detail.
+
+    Ok((l2_hash, l1_head_hash))
+}
+
+pub fn check_endpoints() -> Result<(), KromaError> {
     if env::var("L1_RPC").is_err() {
-        return Err(WitnessError::empty_l1_rpc_endpoint());
+        return Err(KromaError::empty_l1_rpc_endpoint());
     }
     if env::var("L1_BEACON_RPC").is_err() {
-        return Err(WitnessError::empty_l1_beacon_endpoint());
+        return Err(KromaError::empty_l1_beacon_endpoint());
     }
     if env::var("L2_RPC").is_err() {
-        return Err(WitnessError::empty_l2_rpc_endpoint());
+        return Err(KromaError::empty_l2_rpc_endpoint());
     }
     if env::var("L2_NODE_RPC").is_err() {
-        return Err(WitnessError::empty_l2_node_rpc_endpoint());
+        return Err(KromaError::empty_l2_node_rpc_endpoint());
     }
     Ok(())
 }

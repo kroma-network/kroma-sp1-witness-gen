@@ -13,6 +13,9 @@ bincode.workspace = true
 rocksdb.workspace = true
 serde.workspace = true
 
+# json rpc
+jsonrpc-http-server.workspace = true
+
 # ethereum
 alloy-primitives.workspace = true
 

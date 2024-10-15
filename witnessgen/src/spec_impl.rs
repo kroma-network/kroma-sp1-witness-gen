@@ -1,5 +1,5 @@
-use crate::utils::u32_to_u8;
 use alloy_primitives::B256;
+use kroma_utils::utils::u32_to_u8;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use sp1_sdk::{HashableKey, ProverClient};

@@ -4038,6 +4038,7 @@ dependencies = [
  "anyhow",
  "bincode",
  "ctor",
+ "jsonrpc-http-server",
  "once_cell",
  "rocksdb",
  "serde",

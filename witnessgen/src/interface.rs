@@ -2,14 +2,15 @@ use alloy_primitives::B256;
 use anyhow::Result;
 use jsonrpc_core::Result as JsonResult;
 use jsonrpc_derive::rpc;
+use kroma_utils::errors::KromaError;
+use kroma_utils::task_info::TaskInfo;
+use kroma_utils::utils::check_request;
 use std::sync::Arc;
 use std::sync::RwLock;
 
-use crate::errors::WitnessError;
 use crate::get_witness_impl::WitnessResult;
-use crate::request_witness_impl::{check_request, generate_witness_impl, RequestResult};
+use crate::request_witness_impl::{generate_witness_impl, RequestResult};
 use crate::spec_impl::{spec_impl, SpecResult};
-use crate::task_info::TaskInfo;
 use crate::witness_db::WitnessDB;
 
 static DEFAULT_WITNESS_STORE_PATH: &str = "data/witness_store";
@@ -101,7 +102,7 @@ impl Rpc for RpcImpl {
             tracing::info!("the request in progress");
             Ok(RequestResult::Processing)
         } else {
-            return Err(WitnessError::server_busy().into());
+            return Err(KromaError::server_busy().into());
         }
     }
 
