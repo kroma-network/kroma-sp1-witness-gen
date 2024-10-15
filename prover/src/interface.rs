@@ -3,7 +3,7 @@ use jsonrpc_derive::rpc;
 
 use crate::get_proof_impl::ProofResult;
 use crate::request_prove_impl::RequestResult;
-use crate::spec_impl::SpecResult;
+use crate::spec_impl::{spec_impl, SpecResult};
 
 #[rpc]
 pub trait Rpc {
@@ -39,7 +39,7 @@ impl Default for RpcImpl {
 
 impl Rpc for RpcImpl {
     fn spec(&self) -> JsonResult<SpecResult> {
-        todo!()
+        Ok(spec_impl())
     }
 
     fn request_prove(

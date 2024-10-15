@@ -30,3 +30,11 @@ impl Default for SpecResult {
         }
     }
 }
+
+pub fn spec_impl() -> SpecResult {
+    let spec = SpecResult::default();
+    tracing::info_span!("spec").in_scope(|| {
+        tracing::info!("return the specification:\n{:#?}", spec);
+    });
+    spec
+}

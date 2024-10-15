@@ -4042,6 +4042,8 @@ dependencies = [
  "jsonrpc-core-client",
  "jsonrpc-derive",
  "jsonrpc-http-server",
+ "jsonrpsee",
+ "jsonrpsee-core",
  "kroma-utils",
  "once_cell",
  "serde",

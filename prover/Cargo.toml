@@ -11,6 +11,10 @@ homepage.workspace = true
 name = "prover"
 path = "bin/prover_server.rs"
 
+[[bin]]
+name = "prover_client"
+path = "bin/prover_client.rs"
+
 [dependencies]
 anyhow.workspace = true
 clap.workspace = true
@@ -32,6 +36,10 @@ jsonrpc-core.workspace = true
 jsonrpc-core-client.workspace = true
 jsonrpc-derive.workspace = true
 jsonrpc-http-server.workspace = true
+
+## jsonrpc client
+jsonrpsee-core = "0.16.2"
+jsonrpsee = { version = "0.16.2", features = ["full"] }
 
 # kroma
 kroma-utils.workspace = true
