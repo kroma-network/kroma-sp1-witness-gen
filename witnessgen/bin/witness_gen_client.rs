@@ -54,7 +54,7 @@ async fn test_get(cli: HttpClient) -> bool {
 
     let prover = ProverClient::new();
     let mut sp1_stdin = SP1Stdin::new();
-    sp1_stdin.buffer = witness_result.get_witness();
+    sp1_stdin.buffer = witness_result.get_witness_buf();
 
     let (_, report) = prover.execute(SINGLE_BLOCK_ELF, sp1_stdin).run().unwrap();
     println!("report: {:?}", report);

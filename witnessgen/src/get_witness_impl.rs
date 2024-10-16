@@ -22,18 +22,19 @@ impl WitnessResult {
         Self { status, vkey_hash: *VKEY_HASH, witness: witness.to_string() }
     }
 
-    pub fn new_from_bytes(status: RequestResult, witness: Vec<Vec<u8>>) -> Self {
-        let serialized_witness = bincode::serialize(&witness).unwrap();
+    // Note(Ethan): `sp1-core-machine::SP1Stdin` has witness as `Vec<Vec<u8>>`.
+    pub fn new_from_witness_buf(status: RequestResult, buf: Vec<Vec<u8>>) -> Self {
+        let serialized_witness = bincode::serialize(&buf).unwrap();
         let hex_encoded_with_prefix = "0x".to_string() + hex::encode(&serialized_witness).as_ref();
         Self::new(status, hex_encoded_with_prefix)
     }
 
-    pub fn size(&self) -> usize {
-        hex::decode(&self.witness).unwrap().len()
+    pub fn string_to_witness_buf(witness: &String) -> Vec<Vec<u8>> {
+        let witness = hex::decode(&witness.strip_prefix("0x").unwrap()).unwrap();
+        bincode::deserialize(&witness).unwrap()
     }
 
-    pub fn get_witness(&self) -> Vec<Vec<u8>> {
-        let witness = hex::decode(&self.witness.strip_prefix("0x").unwrap()).unwrap();
-        bincode::deserialize(&witness).unwrap()
+    pub fn get_witness_buf(&self) -> Vec<Vec<u8>> {
+        Self::string_to_witness_buf(&self.witness)
     }
 }

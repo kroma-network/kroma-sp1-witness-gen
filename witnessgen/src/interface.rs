@@ -114,7 +114,7 @@ impl Rpc for RpcImpl {
         match result {
             Ok(witness_result) => {
                 tracing::info!("return cached witness");
-                Ok(WitnessResult::new_from_bytes(RequestResult::Completed, witness_result))
+                Ok(WitnessResult::new_from_witness_buf(RequestResult::Completed, witness_result))
             }
             Err(_) => {
                 // Check if the request is in progress.
