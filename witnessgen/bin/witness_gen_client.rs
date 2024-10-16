@@ -2,7 +2,9 @@ use clap::Parser;
 use jsonrpsee::http_client::{HttpClient, HttpClientBuilder};
 use jsonrpsee_core::client::ClientT;
 use jsonrpsee_core::rpc_params;
-use kroma_witnessgen::{RequestResult, SpecResult, WitnessResult};
+use kroma_witnessgen::{
+    get_witness_impl::WitnessResult, request_witness_impl::RequestResult, spec_impl::SpecResult,
+};
 use std::time::Duration;
 
 const CLIENT_TIMEOUT_SEC: u64 = 10800;

@@ -1,7 +1,11 @@
 use anyhow::Result;
 use clap::Parser;
 use jsonrpc_http_server::ServerBuilder;
-use kroma_witnessgen::{check_endpoints, Rpc, RpcImpl, WitnessError};
+use kroma_witnessgen::{
+    errors::WitnessError,
+    interface::{Rpc, RpcImpl},
+    utils::check_endpoints,
+};
 
 static WITNESS_STORE_PATH: &str = "data/witness_store";
 
