@@ -5,6 +5,7 @@ use anyhow::Result;
 use op_succinct_host_utils::{
     fetcher::{CacheMode, OPSuccinctDataFetcher, RPCMode},
     get_proof_stdin,
+    witnessgen::WitnessGenExecutor,
 };
 use serde::{Deserialize, Serialize};
 use sp1_sdk::{block_on, SP1Stdin};
@@ -39,28 +40,26 @@ pub fn generate_witness_impl(l2_hash: B256, l1_head_hash: B256) -> Result<SP1Std
     // TODO: return error if `l2_header` is `None`.
     // TODO: return error if `l1_head` is `None` after fetching the header.
 
-    let cache_mode = CacheMode::KeepCache;
-    // TODO: change `cache_mode` to `CacheMode::KeepCache` after finishing the implementation.
-    // let cache_mode = CacheMode::DeleteCache;
-
     let host_cli = block_on(async {
         data_fetcher
             .get_host_cli_args(
                 l2_block_number - 1,
                 l2_block_number,
                 op_succinct_host_utils::ProgramType::Single,
-                cache_mode,
+                CacheMode::KeepCache,
             )
             .await
     });
     let mut host_cli = host_cli.unwrap();
     host_cli.l1_head = l1_head_hash;
 
-    // TODO: activate this code after finishing the implementation.
-    // // Start the server and native client.
-    // let mut witnessgen_executor = WitnessGenExecutor::default();
-    // witnessgen_executor.spawn_witnessgen(&host_cli).await?;
-    // witnessgen_executor.flush().await?;
+    // Start the server and native client.
+    let mut witnessgen_executor = WitnessGenExecutor::default();
+    block_on(async {
+        let _ = witnessgen_executor.spawn_witnessgen(&host_cli).await;
+        let _ = witnessgen_executor.flush().await;
+    });
+    println!("witness generated, see the directory.");
 
     Ok(get_proof_stdin(&host_cli).unwrap())
 }

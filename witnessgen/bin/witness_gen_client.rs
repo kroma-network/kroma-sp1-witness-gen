@@ -3,8 +3,11 @@ use jsonrpsee::http_client::{HttpClient, HttpClientBuilder};
 use jsonrpsee_core::client::ClientT;
 use jsonrpsee_core::rpc_params;
 use kroma_witnessgen::{
-    get_witness_impl::WitnessResult, request_witness_impl::RequestResult, spec_impl::SpecResult,
+    get_witness_impl::WitnessResult,
+    request_witness_impl::RequestResult,
+    spec_impl::{SpecResult, SINGLE_BLOCK_ELF},
 };
+use sp1_sdk::{ProverClient, SP1Stdin};
 use std::time::Duration;
 
 const CLIENT_TIMEOUT_SEC: u64 = 10800;
@@ -32,7 +35,7 @@ async fn test_spec(cli: HttpClient) {
 async fn test_request(cli: HttpClient) -> bool {
     // TODO: Change these from hard-coded values to values from the command line
     let l2_head = "0x86df565e6a6e3e266411e3718d5ceba49026606a00624e48c08448f8bf7bc82e";
-    let l1_head = "0x5fa696ce65c95ed8e3931a285cbc7d101dc5ac47e0251f44d86c41c2aa9233f6";
+    let l1_head = "0x42c0d60066fbd229758f8deaee337afc6cd0a75ddf120896258a4fd846aafbfd";
 
     let params = rpc_params![l2_head, l1_head];
     let witness_result: RequestResult = cli.request("requestWitness", params).await.unwrap();
@@ -44,12 +47,18 @@ async fn test_request(cli: HttpClient) -> bool {
 async fn test_get(cli: HttpClient) -> bool {
     // TODO: Change these from hard-coded values to values from the command line
     let l2_head = "0x86df565e6a6e3e266411e3718d5ceba49026606a00624e48c08448f8bf7bc82e";
-    let l1_head = "0x5fa696ce65c95ed8e3931a285cbc7d101dc5ac47e0251f44d86c41c2aa9233f6";
+    let l1_head = "0x42c0d60066fbd229758f8deaee337afc6cd0a75ddf120896258a4fd846aafbfd";
 
     let params = rpc_params![l2_head, l1_head];
     let witness_result: WitnessResult = cli.request("getWitness", params).await.unwrap();
 
-    print!("witness_result: {:?}", witness_result);
+    let prover = ProverClient::new();
+    let mut sp1_stdin = SP1Stdin::new();
+    sp1_stdin.buffer = witness_result.get_witness();
+
+    let (_, report) = prover.execute(SINGLE_BLOCK_ELF, sp1_stdin).run().unwrap();
+    println!("report: {:?}", report);
+
     true
 }
 

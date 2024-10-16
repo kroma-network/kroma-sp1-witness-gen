@@ -4,7 +4,7 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use sp1_sdk::{HashableKey, ProverClient};
 
-const SINGLE_BLOCK_ELF: &[u8] = include_bytes!("../../program/elf/fault-proof-elf");
+pub const SINGLE_BLOCK_ELF: &[u8] = include_bytes!("../../program/elf/fault-proof-elf");
 pub static VKEY_HASH: Lazy<B256> = Lazy::new(|| {
     let prover = ProverClient::new();
     let (_, vkey) = prover.setup(SINGLE_BLOCK_ELF);
