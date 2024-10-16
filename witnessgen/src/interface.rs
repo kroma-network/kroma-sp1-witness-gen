@@ -6,11 +6,11 @@ use std::sync::Arc;
 use std::sync::RwLock;
 
 use crate::db::WitnessStore;
+use crate::errors::WitnessError;
 use crate::get_witness_impl::WitnessResult;
 use crate::request_witness_impl::{check_request, generate_witness_impl, RequestResult};
 use crate::spec_impl::{spec_impl, SpecResult};
 use crate::task_info::TaskInfo;
-use crate::WitnessError;
 
 static DEFAULT_WITNESS_STORE_PATH: &str = "data/witness_store";
 

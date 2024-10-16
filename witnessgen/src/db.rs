@@ -65,7 +65,8 @@ impl Drop for WitnessStore {
 
 #[cfg(test)]
 mod tests {
-    use crate::WitnessResult;
+
+    use crate::{get_witness_impl::WitnessResult, request_witness_impl::RequestResult};
 
     use super::*;
 
@@ -87,7 +88,7 @@ mod tests {
     fn test_witness_store() {
         let store = WITNESS_STORE.lock().unwrap();
         let mut witness_result =
-            WitnessResult::new_from_bytes(crate::RequestResult::Completed, vec![vec![1, 2, 3]]);
+            WitnessResult::new_from_bytes(RequestResult::Completed, vec![vec![1, 2, 3]]);
 
         let l2_hash = b256!("0000000000000000000000000000000000000000000000000000000000000001");
         let l1_head_hash =

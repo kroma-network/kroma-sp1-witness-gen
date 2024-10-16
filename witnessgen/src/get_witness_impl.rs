@@ -32,7 +32,7 @@ impl WitnessResult {
         hex::decode(&self.witness).unwrap().len()
     }
 
-    pub fn get_witness(&mut self) -> Vec<Vec<u8>> {
+    pub fn get_witness(&self) -> Vec<Vec<u8>> {
         let witness = hex::decode(&self.witness.strip_prefix("0x").unwrap()).unwrap();
         bincode::deserialize(&witness).unwrap()
     }
