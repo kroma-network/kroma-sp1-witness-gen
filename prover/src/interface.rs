@@ -135,7 +135,53 @@ impl Rpc for RpcImpl {
         Ok(RequestResult::Requested)
     }
 
-    fn get_proof(&self, _l2_hash: String, _l1_head_hash: String) -> JsonResult<ProofResult> {
-        todo!()
+    fn get_proof(&self, l2_hash: String, l1_head_hash: String) -> JsonResult<ProofResult> {
+        let (l2_hash, l1_head_hash) = check_request(&l2_hash, &l1_head_hash).unwrap();
+
+        // Check if the request is already known.
+        let request_id = match self.proof_db.get_request_id(&l2_hash, &l1_head_hash) {
+            Ok(id) => id,
+            Err(_) => {
+                return Ok(ProofResult::none());
+            }
+        };
+
+        // Check if the proof is already stored.
+        if let Ok(proof) = self.proof_db.get_proof(&l2_hash, &l1_head_hash) {
+            return Ok(ProofResult::new(
+                &request_id,
+                RequestResult::Completed,
+                proof.public_values.raw(),
+                proof.raw(),
+            ));
+        }
+
+        // Check if the proof is already being generated in SP1 network.
+        let (response, maybe_proof) = block_on(async {
+            self.client.get_proof_status::<SP1ProofWithPublicValues>(&request_id).await.unwrap()
+        });
+
+        match response.status() {
+            ProofStatus::ProofFulfilled => {
+                // Store the proof to the database.
+                let proof = maybe_proof.unwrap();
+                self.proof_db.set_proof(&request_id, &proof).unwrap();
+
+                Ok(ProofResult::new(
+                    &request_id,
+                    RequestResult::Completed,
+                    proof.public_values.raw(),
+                    proof.raw(),
+                ))
+            }
+            ProofStatus::ProofPreparing
+            | ProofStatus::ProofRequested
+            | ProofStatus::ProofClaimed => Ok(ProofResult::processing(request_id)),
+
+            // TODO: To accurately grasp the meaning of these two.
+            ProofStatus::ProofUnspecifiedStatus | ProofStatus::ProofUnclaimed => {
+                Ok(ProofResult::unexpected(request_id))
+            }
+        }
     }
 }

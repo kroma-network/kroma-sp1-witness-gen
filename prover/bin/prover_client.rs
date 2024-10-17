@@ -2,6 +2,7 @@ use clap::Parser;
 use jsonrpsee::http_client::{HttpClient, HttpClientBuilder};
 use jsonrpsee_core::client::ClientT;
 use jsonrpsee_core::rpc_params;
+use kroma_prover::get_proof_impl::ProofResult;
 use kroma_prover::spec_impl::SpecResult;
 use kroma_utils::utils::b256_from_str;
 use kroma_witnessgen::get_witness_impl::WitnessResult;
@@ -21,6 +22,9 @@ struct Args {
 
     #[clap(short, long)]
     request: bool,
+
+    #[clap(short, long)]
+    get: bool,
 }
 
 async fn test_spec(cli: HttpClient) {
@@ -52,6 +56,16 @@ async fn test_request(cli: HttpClient) {
     println!("request result: {:?}", result);
 }
 
+async fn test_get(cli: HttpClient) {
+    // TODO: Change these from hard-coded values to values from the command line
+    let l2_head = "0x86df565e6a6e3e266411e3718d5ceba49026606a00624e48c08448f8bf7bc82e";
+    let l1_head = "0x42c0d60066fbd229758f8deaee337afc6cd0a75ddf120896258a4fd846aafbfd";
+
+    let params = rpc_params![l2_head, l1_head];
+    let result: ProofResult = cli.request("getProof", params).await.unwrap();
+    println!("proof result: {:?}", result);
+}
+
 #[tokio::main]
 async fn main() {
     dotenv::dotenv().ok();
@@ -69,5 +83,8 @@ async fn main() {
     }
     if args.request {
         let _ = test_request(http_client.clone()).await;
+    }
+    if args.get {
+        let _ = test_get(http_client.clone()).await;
     }
 }
