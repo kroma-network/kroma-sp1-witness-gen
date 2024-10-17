@@ -1,10 +1,8 @@
 use alloy_primitives::B256;
-use kroma_utils::utils::u32_to_u8;
+use kroma_utils::{deps_version::SP1_SDK_VERSION, utils::u32_to_u8};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use sp1_sdk::{HashableKey, ProverClient};
-
-use crate::deps_version::SP1_SDK_VERSION;
 
 // TODO: integrate elf and vkey_hash
 pub const SINGLE_BLOCK_ELF: &[u8] = include_bytes!("../../program/elf/fault-proof-elf");

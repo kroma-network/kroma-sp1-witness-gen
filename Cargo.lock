@@ -4036,6 +4036,7 @@ version = "0.1.0"
 dependencies = [
  "alloy-primitives 0.8.3",
  "anyhow",
+ "bincode",
  "clap",
  "dotenv",
  "jsonrpc-core",
@@ -4045,6 +4046,7 @@ dependencies = [
  "jsonrpsee",
  "jsonrpsee-core",
  "kroma-utils",
+ "kroma-witnessgen",
  "once_cell",
  "serde",
  "sp1-sdk",

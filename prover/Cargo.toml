@@ -17,6 +17,7 @@ path = "bin/prover_client.rs"
 
 [dependencies]
 anyhow.workspace = true
+bincode.workspace = true
 clap.workspace = true
 dotenv.workspace = true
 once_cell.workspace = true
@@ -43,3 +44,4 @@ jsonrpsee = { version = "0.16.2", features = ["full"] }
 
 # kroma
 kroma-utils.workspace = true
+kroma-witnessgen.workspace = true

@@ -60,6 +60,7 @@ op-succinct-host-utils = { git = "https://github.com/succinctlabs/op-succinct", 
 
 # kroma
 kroma-utils = { path = "utils" }
+kroma-witnessgen = { path = "witnessgen" }
 
 [profile.release-client-lto] # kroma
 inherits = "release"

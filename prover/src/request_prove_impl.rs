@@ -6,4 +6,5 @@ pub enum RequestResult {
     Requested,
     Processing,
     Completed,
+    UnexpectedError(String),
 }
