@@ -4,7 +4,7 @@ use jsonrpc_core::Result as JsonResult;
 use jsonrpc_derive::rpc;
 use kroma_utils::errors::KromaError;
 use kroma_utils::task_info::TaskInfo;
-use kroma_utils::utils::check_request;
+use kroma_utils::utils::preprocessing;
 use std::sync::Arc;
 use std::sync::RwLock;
 
@@ -78,7 +78,7 @@ impl RpcImpl {
 
 impl Rpc for RpcImpl {
     fn request_witness(&self, l2_hash: String, l1_head_hash: String) -> JsonResult<RequestResult> {
-        let (l2_hash, l1_head_hash) = check_request(&l2_hash, &l1_head_hash).unwrap();
+        let (l2_hash, l1_head_hash, _) = preprocessing(&l2_hash, &l1_head_hash).unwrap();
 
         // Return cached witness if it exists.
         let witness_result = self.witness_db.get(&l2_hash, &l1_head_hash);
@@ -107,7 +107,7 @@ impl Rpc for RpcImpl {
     }
 
     fn get_witness(&self, l2_hash: String, l1_head_hash: String) -> JsonResult<WitnessResult> {
-        let (l2_hash, l1_head_hash) = check_request(&l2_hash, &l1_head_hash).unwrap();
+        let (l2_hash, l1_head_hash, _) = preprocessing(&l2_hash, &l1_head_hash).unwrap();
 
         // Check if it exists in the database.
         let result = self.witness_db.get(&l2_hash, &l1_head_hash);

@@ -1,3 +1,4 @@
+pub mod errors;
 pub mod get_proof_impl;
 pub mod interface;
 pub mod proof_db;

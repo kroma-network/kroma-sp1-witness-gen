@@ -1,8 +1,8 @@
 use anyhow::Result;
-use jsonrpc_core::Result as JsonResult;
+use jsonrpc_core::{Error as JsonError, Result as JsonResult};
 use jsonrpc_derive::rpc;
 use kroma_utils::deps_version::SP1_SDK_VERSION;
-use kroma_utils::utils::check_request;
+use kroma_utils::utils::preprocessing;
 use kroma_witnessgen::get_witness_impl::WitnessResult;
 use sp1_sdk::network::client::NetworkClient;
 use sp1_sdk::proto::network::{ProofMode, ProofStatus};
@@ -10,6 +10,7 @@ use sp1_sdk::{block_on, SP1ProofWithPublicValues, SP1Stdin};
 use std::sync::Arc;
 use std::time::Duration;
 
+use crate::errors::ProverError;
 use crate::get_proof_impl::ProofResult;
 use crate::proof_db::ProofDB;
 use crate::request_prove_impl::RequestResult;
@@ -64,15 +65,13 @@ impl RpcImpl {
         sp1_stdin.buffer = WitnessResult::string_to_witness_buf(&witness);
 
         // Send a request to generate a proof to the sp1 network.
-        let request_id = self
-            .client
+        self.client
             .create_proof(SINGLE_BLOCK_ELF, &sp1_stdin, ProofMode::Plonk, SP1_SDK_VERSION)
             .await
-            .unwrap();
-        Ok(request_id)
     }
 
     async fn wait_proof(&self, request_id: String) -> Result<()> {
+        // TODO: Add a timeout.
         let proof = loop {
             let (response, maybe_proof) = block_on(async {
                 self.client.get_proof_status::<SP1ProofWithPublicValues>(&request_id).await.unwrap()
@@ -87,7 +86,9 @@ impl RpcImpl {
             std::thread::sleep(Duration::from_secs(30));
         };
 
+        //TODO: it should get a db lock (TBD).
         self.proof_db.set_proof(&request_id, &proof)?;
+        //TODO: it should release a db lock (TBD).
         tracing::info!("proof saved to db");
 
         Ok(())
@@ -105,40 +106,68 @@ impl Rpc for RpcImpl {
         l1_head_hash: String,
         witness: String,
     ) -> JsonResult<RequestResult> {
-        let (l2_hash, l1_head_hash) = check_request(&l2_hash, &l1_head_hash).unwrap();
+        let (l2_hash, l1_head_hash, user_req_id) =
+            preprocessing(&l2_hash, &l1_head_hash).map_err(|e| {
+                tracing::error!(
+                    "Invalid parameters - \"l2_hash\": {:?}, \"l1_head_hash\": {:?}",
+                    l2_hash,
+                    l1_head_hash
+                );
+                ProverError::invalid_input_hash(e.to_string())
+            })?;
 
-        // Return cached witness if it exists.
-        let proof_result = self.proof_db.get_request_id(&l2_hash, &l1_head_hash);
-        if proof_result.is_ok() {
-            tracing::info!("return cached proof");
+        // TODO: return error if the request is already requested.
+        // ProverError::occupied(user_req_id)
+
+        // Check if the request has been requested.
+        // TODO: it should get a db lock (TBD).
+        if let Ok(_) = self.proof_db.get_request_id(&l2_hash, &l1_head_hash) {
+            tracing::info!("The request have been requested: {:?}", user_req_id);
             return Ok(RequestResult::Completed);
         }
 
-        // Send a request to sp1 proof to generate proof"
-        println!("requesting proof to sp1 network");
+        // TODO: execute guest program to validate witness.
+        // ProverError::failed_to_execute_witness()
+
+        // Send a request to SP1 network.
         let service = self.clone();
-        let request_id =
-            block_on(async move { service.request_prove_to_sp1(witness).await.unwrap() });
+        let request_id = block_on(async move { service.request_prove_to_sp1(witness).await })
+            .map_err(|e| {
+                tracing::error!("Failed to send request to SP1 network: {:?}", e);
+                ProverError::sp1_network_error(e.to_string())
+            })?;
+        tracing::info!("Sent request to SP1 network: {:?}", request_id);
 
         // Store the `request_id` to the database.
-        if let Err(_) = self.proof_db.set_request_id(&l2_hash, &l1_head_hash, &request_id) {
-            return Ok(RequestResult::UnexpectedError("Failed to store request id".to_string()));
-        }
-        tracing::info!("sent request to sp1 network: {:?}", request_id);
+        self.proof_db
+            .set_request_id(&l2_hash, &l1_head_hash, &request_id)
+            .map_err(|e| ProverError::db_error(e.to_string()))?;
+
+        // TODO: it should release a db lock (TBD).
 
         // Wait for the proof to be generated.
         let service = self.clone();
-        tokio::task::spawn(async move {
+        tokio::spawn(async move {
+            // TODO: handle timeout error.
             let _ = service.wait_proof(request_id).await;
         });
 
-        Ok(RequestResult::Requested)
+        Ok(RequestResult::Processing)
     }
 
     fn get_proof(&self, l2_hash: String, l1_head_hash: String) -> JsonResult<ProofResult> {
-        let (l2_hash, l1_head_hash) = check_request(&l2_hash, &l1_head_hash).unwrap();
+        let (l2_hash, l1_head_hash, user_req_id) =
+            preprocessing(&l2_hash, &l1_head_hash).map_err(|e| {
+                tracing::error!(
+                    "Invalid parameters - \"l2_hash\": {:?}, \"l1_head_hash\": {:?}",
+                    l2_hash,
+                    l1_head_hash
+                );
+                ProverError::invalid_input_hash(e.to_string())
+            })?;
 
-        // Check if the request is already known.
+        // Check if it has been requested.
+        // TODO: it should get a db lock (TBD).
         let request_id = match self.proof_db.get_request_id(&l2_hash, &l1_head_hash) {
             Ok(id) => id,
             Err(_) => {
@@ -155,18 +184,30 @@ impl Rpc for RpcImpl {
                 proof.raw(),
             ));
         }
+        // TODO: it should release a db lock (TBD).
 
         // Check if the proof is already being generated in SP1 network.
         let (response, maybe_proof) = block_on(async {
-            self.client.get_proof_status::<SP1ProofWithPublicValues>(&request_id).await.unwrap()
-        });
+            self.client.get_proof_status::<SP1ProofWithPublicValues>(&request_id).await
+        })
+        .map_err(|e| {
+            tracing::error!(
+                "Failed to get proof status from SP1 network - \"user_req_id\": {:?}, \"request_id\": {:?}",
+                user_req_id,
+                request_id
+            );
+            ProverError::sp1_network_error(e.to_string())
+        })?;
 
         match response.status() {
             ProofStatus::ProofFulfilled => {
                 // Store the proof to the database.
                 let proof = maybe_proof.unwrap();
-                self.proof_db.set_proof(&request_id, &proof).unwrap();
+                tracing::info!("The proof is fetched from SP1 network: {:?}", request_id);
 
+                // TODO: it should get a db lock (TBD).
+                self.proof_db.set_proof(&request_id, &proof).unwrap();
+                // TODO: it should release a db lock (TBD).
                 Ok(ProofResult::new(
                     &request_id,
                     RequestResult::Completed,
@@ -176,11 +217,17 @@ impl Rpc for RpcImpl {
             }
             ProofStatus::ProofPreparing
             | ProofStatus::ProofRequested
-            | ProofStatus::ProofClaimed => Ok(ProofResult::processing(request_id)),
-
-            // TODO: To accurately grasp the meaning of these two.
-            ProofStatus::ProofUnspecifiedStatus | ProofStatus::ProofUnclaimed => {
-                Ok(ProofResult::unexpected(request_id))
+            | ProofStatus::ProofClaimed => {
+                tracing::info!("The proof is in processing: {:?}", request_id);
+                Ok(ProofResult::processing(request_id))
+            }
+            ProofStatus::ProofUnspecifiedStatus => {
+                tracing::info!("The request is not found: {:?}", request_id);
+                Ok(ProofResult::none())
+            }
+            ProofStatus::ProofUnclaimed => {
+                let msg = format!("Unexpected status: {:?}", response.status());
+                Err(JsonError::from(ProverError::unexpected(Some(msg))))
             }
         }
     }

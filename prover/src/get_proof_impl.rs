@@ -38,16 +38,6 @@ impl ProofResult {
         }
     }
 
-    pub fn unexpected(request_id: String) -> Self {
-        Self {
-            request_id,
-            request_status: RequestResult::UnexpectedError("Unexpected error".to_string()),
-            vkey_hash: *VKEY_HASH,
-            public_values: "".to_string(),
-            proof: "".to_string(),
-        }
-    }
-
     pub fn processing(request_id: String) -> Self {
         Self {
             request_id,
