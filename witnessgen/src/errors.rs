@@ -80,6 +80,6 @@ impl WitnessGenError {
     }
 
     pub fn already_in_progress() -> Self {
-        Self::new(ErrorCode::AlreadyInProgress, Some("Server is busy".to_string()))
+        Self::new(ErrorCode::AlreadyInProgress, Some("Another request is in progress".to_string()))
     }
 }
