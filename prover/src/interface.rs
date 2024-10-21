@@ -88,10 +88,10 @@ impl RpcImpl {
                 break Some(maybe_proof.unwrap());
             }
 
-            tracing::info!("waiting for proof: {:?}", response.status());
+            tracing::debug!("waiting for proof: {:?}, {:?}", request_id, response.status());
 
             if start_time.elapsed() > timeout {
-                tracing::error!("timeout to wait for proof: {:?}", request_id);
+                tracing::debug!("timeout to wait for proof: {:?}", request_id);
                 break None;
             }
 
@@ -100,7 +100,7 @@ impl RpcImpl {
 
         if let Some(proof) = proof {
             self.proof_db.write().unwrap().set_proof(&request_id, &proof)?;
-            tracing::info!("proof saved to db");
+            tracing::info!("proof saved to db: {:#?}", request_id);
         }
 
         Ok(())
@@ -193,7 +193,7 @@ impl Rpc for RpcImpl {
 
         // Check if the proof is already stored.
         if let Ok(proof) = proof_db.get_proof(&l2_hash, &l1_head_hash) {
-            tracing::info!("The proof is already stored: {:?}", request_id);
+            tracing::info!("The proof is already stored: {:?}, {:?}", user_req_id, request_id);
             return Ok(ProofResult::new(
                 &request_id,
                 RequestResult::Completed,
@@ -209,7 +209,7 @@ impl Rpc for RpcImpl {
         })
         .map_err(|e| {
             tracing::error!(
-                "Failed to get proof status from SP1 network - \"user_req_id\": {:?}, \"request_id\": {:?}",
+                "Failed to get proof status from SP1 network: {:?}, {:?}",
                 user_req_id,
                 request_id
             );
@@ -220,11 +220,19 @@ impl Rpc for RpcImpl {
             ProofStatus::ProofFulfilled => {
                 // Store the proof to the database.
                 let proof = maybe_proof.unwrap();
-                tracing::info!("The proof is fetched from SP1 network: {:?}", request_id);
+                tracing::info!(
+                    "The proof is fetched from SP1 network: {:?}, {:?}",
+                    user_req_id,
+                    request_id
+                );
 
                 let proof_db = self.proof_db.write().unwrap();
                 proof_db.set_proof(&request_id, &proof).unwrap();
-                tracing::info!("The proof is stored to database: {:?}", request_id);
+                tracing::info!(
+                    "The proof is stored to database: {:?}, {:?}",
+                    user_req_id,
+                    request_id
+                );
                 drop(proof_db);
 
                 Ok(ProofResult::new(
@@ -237,15 +245,20 @@ impl Rpc for RpcImpl {
             ProofStatus::ProofPreparing
             | ProofStatus::ProofRequested
             | ProofStatus::ProofClaimed => {
-                tracing::info!("The proof is in processing: {:?}", request_id);
+                tracing::info!("The proof is in processing: {:?}, {:?}", user_req_id, request_id);
                 Ok(ProofResult::processing(request_id))
             }
             ProofStatus::ProofUnspecifiedStatus => {
-                tracing::info!("The request is not found: {:?}", request_id);
+                tracing::info!("The request is not found: {:?}, {:?}", user_req_id, request_id);
                 Ok(ProofResult::none())
             }
             ProofStatus::ProofUnclaimed => {
-                let msg = format!("Unexpected status: {:?}", response.status());
+                let msg = format!(
+                    "Unexpected status({:?}): {:?}, {:?}",
+                    response.status(),
+                    user_req_id,
+                    request_id
+                );
                 Err(JsonError::from(ProverError::unexpected(Some(msg))))
             }
         }

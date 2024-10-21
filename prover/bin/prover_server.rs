@@ -27,6 +27,7 @@ fn main() -> Result<(), KromaError> {
     let mut io = jsonrpc_core::IoHandler::new();
     io.extend_with(RpcImpl::new(PROOF_STORE_PATH, &sp1_private_key, None).to_delegate());
 
+    tracing::info!("Starting Prover at {}", args.endpoint);
     let server = ServerBuilder::new(io)
         .threads(3)
         .max_request_body_size(200 * 1024 * 1024)
