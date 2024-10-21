@@ -5,9 +5,8 @@ use serde::ser::{Serialize, Serializer};
 /// Error Code
 #[derive(Debug, Clone)]
 pub enum ProverErrorCode {
-    Unexpected,
+    ProofGenerationFailed,
     InvalidInputHash,
-    FailedToExecuteWitness,
     DBError,
     SP1NetworkError,
 }
@@ -15,20 +14,18 @@ pub enum ProverErrorCode {
 impl ProverErrorCode {
     pub fn code(&self) -> i64 {
         match *self {
-            ProverErrorCode::Unexpected => 1000,
+            ProverErrorCode::ProofGenerationFailed => 1000,
             ProverErrorCode::DBError => 2000,
             ProverErrorCode::InvalidInputHash => 3000,
-            ProverErrorCode::FailedToExecuteWitness => 3001,
             ProverErrorCode::SP1NetworkError => 4000,
         }
     }
 
     pub fn default_message(&self) -> String {
         match *self {
-            ProverErrorCode::Unexpected => String::from("Unexpected error"),
+            ProverErrorCode::ProofGenerationFailed => String::from("Proof generation failed"),
             ProverErrorCode::DBError => String::from("Database error"),
             ProverErrorCode::InvalidInputHash => String::from("Invalid parameters"),
-            ProverErrorCode::FailedToExecuteWitness => String::from("Invalid witness"),
             ProverErrorCode::SP1NetworkError => String::from("SP1 network error"),
         }
     }
@@ -37,10 +34,9 @@ impl ProverErrorCode {
 impl From<i64> for ProverErrorCode {
     fn from(code: i64) -> Self {
         match code {
-            1000 => ProverErrorCode::Unexpected,
+            1000 => ProverErrorCode::ProofGenerationFailed,
             2000 => ProverErrorCode::DBError,
             3000 => ProverErrorCode::InvalidInputHash,
-            3001 => ProverErrorCode::FailedToExecuteWitness,
             4000 => ProverErrorCode::SP1NetworkError,
             _ => panic!("not supported code: {:?}", code),
         }
@@ -94,8 +90,8 @@ impl ProverError {
         ProverError { code, message }
     }
 
-    pub fn unexpected(msg: Option<String>) -> Self {
-        let code = ProverErrorCode::Unexpected;
+    pub fn proof_generation_failed(msg: Option<String>) -> Self {
+        let code = ProverErrorCode::ProofGenerationFailed;
         let msg = match msg {
             Some(m) => m.clone(),
             None => code.default_message(),
@@ -110,11 +106,6 @@ impl ProverError {
 
     pub fn invalid_input_hash(msg: String) -> Self {
         let code = ProverErrorCode::InvalidInputHash;
-        Self::new(code.clone(), Some(msg))
-    }
-
-    pub fn failed_to_execute_witness(msg: String) -> Self {
-        let code = ProverErrorCode::FailedToExecuteWitness;
         Self::new(code.clone(), Some(msg))
     }
 

@@ -254,12 +254,12 @@ impl Rpc for RpcImpl {
             }
             ProofStatus::ProofUnclaimed => {
                 let msg = format!(
-                    "Unexpected status({:?}): {:?}, {:?}",
+                    "request status({:?}): {:?}, {:?}",
                     response.status(),
                     user_req_id,
                     request_id
                 );
-                Err(JsonError::from(ProverError::unexpected(Some(msg))))
+                Err(ProverError::proof_generation_failed(Some(msg)).into())
             }
         }
     }
