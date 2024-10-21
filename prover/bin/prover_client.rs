@@ -2,16 +2,17 @@ use clap::Parser;
 use jsonrpsee::http_client::{HttpClient, HttpClientBuilder};
 use jsonrpsee_core::client::ClientT;
 use jsonrpsee_core::rpc_params;
-use kroma_witnessgen::{
-    get_witness_impl::WitnessResult,
-    request_witness_impl::RequestResult,
-    spec_impl::{SpecResult, SINGLE_BLOCK_ELF},
-};
-use sp1_sdk::{ProverClient, SP1Stdin};
+use kroma_prover::get_proof_impl::ProofResult;
+use kroma_prover::spec_impl::SpecResult;
+use kroma_utils::utils::b256_from_str;
+use kroma_witnessgen::get_witness_impl::WitnessResult;
+use kroma_witnessgen::request_witness_impl::RequestResult;
+use kroma_witnessgen::witness_db::WitnessDB;
+use std::sync::Arc;
 use std::time::Duration;
 
 const CLIENT_TIMEOUT_SEC: u64 = 10800;
-const DEFAULT_RPC_SERVER_ENDPOINT: &str = "http://127.0.0.1:3030";
+const DEFAULT_RPC_SERVER_ENDPOINT: &str = "http://127.0.0.1:3031";
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -32,34 +33,37 @@ async fn test_spec(cli: HttpClient) {
     println!("spec: {:?}", spec);
 }
 
-async fn test_request(cli: HttpClient) -> bool {
-    // TODO: Change these from hard-coded values to values from the command line
-    let l2_head = "0x86df565e6a6e3e266411e3718d5ceba49026606a00624e48c08448f8bf7bc82e";
-    let l1_head = "0x42c0d60066fbd229758f8deaee337afc6cd0a75ddf120896258a4fd846aafbfd";
+fn get_witness_from_db(l2_head: &str, l1_head_hash: &str) -> WitnessResult {
+    let l2_head = b256_from_str(l2_head).unwrap();
+    let l1_head_hash = b256_from_str(l1_head_hash).unwrap();
 
-    let params = rpc_params![l2_head, l1_head];
-    let witness_result: RequestResult = cli.request("requestWitness", params).await.unwrap();
+    let db_path = "data/witness_store";
+    let witness_db = Arc::new(WitnessDB::new(db_path.into()));
+    let witness: Vec<Vec<u8>> = witness_db.get(&l2_head, &l1_head_hash).unwrap();
 
-    print!("status: {:?}", witness_result);
-    true
+    WitnessResult::new_from_witness_buf(RequestResult::Completed, witness)
 }
 
-async fn test_get(cli: HttpClient) -> bool {
+async fn test_request(cli: HttpClient) {
+    // TODO: Change these from hard-coded values to values from the command line
+    let l2_head = "0x86df565e6a6e3e266411e3718d5ceba49026606a00624e48c08448f8bf7bc82e";
+    let l1_head = "0x42c0d60066fbd229758f8deaee337afc6cd0a75ddf120896258a4fd846aafbfd";
+
+    let witness_result = get_witness_from_db(l2_head, l1_head);
+
+    let params = rpc_params![l2_head, l1_head, &witness_result.witness];
+    let result: RequestResult = cli.request("requestProve", params).await.unwrap();
+    println!("request result: {:?}", result);
+}
+
+async fn test_get(cli: HttpClient) {
     // TODO: Change these from hard-coded values to values from the command line
     let l2_head = "0x86df565e6a6e3e266411e3718d5ceba49026606a00624e48c08448f8bf7bc82e";
     let l1_head = "0x42c0d60066fbd229758f8deaee337afc6cd0a75ddf120896258a4fd846aafbfd";
 
     let params = rpc_params![l2_head, l1_head];
-    let witness_result: WitnessResult = cli.request("getWitness", params).await.unwrap();
-
-    let prover = ProverClient::new();
-    let mut sp1_stdin = SP1Stdin::new();
-    sp1_stdin.buffer = witness_result.get_witness_buf();
-
-    let (_, report) = prover.execute(SINGLE_BLOCK_ELF, sp1_stdin).run().unwrap();
-    println!("report: {:?}", report);
-
-    true
+    let result: ProofResult = cli.request("getProof", params).await.unwrap();
+    println!("proof result: {:?}", result);
 }
 
 #[tokio::main]
@@ -81,6 +85,6 @@ async fn main() {
         let _ = test_request(http_client.clone()).await;
     }
     if args.get {
-        let _ = test_get(http_client).await;
+        let _ = test_get(http_client.clone()).await;
     }
 }

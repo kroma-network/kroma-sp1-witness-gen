@@ -2,15 +2,16 @@ use alloy_primitives::B256;
 use anyhow::Result;
 use jsonrpc_core::Result as JsonResult;
 use jsonrpc_derive::rpc;
+use kroma_utils::errors::KromaError;
+use kroma_utils::task_info::TaskInfo;
+use kroma_utils::utils::check_request;
 use std::sync::Arc;
 use std::sync::RwLock;
 
-use crate::db::WitnessStore;
-use crate::errors::WitnessError;
 use crate::get_witness_impl::WitnessResult;
-use crate::request_witness_impl::{check_request, generate_witness_impl, RequestResult};
+use crate::request_witness_impl::{generate_witness_impl, RequestResult};
 use crate::spec_impl::{spec_impl, SpecResult};
-use crate::task_info::TaskInfo;
+use crate::witness_db::WitnessDB;
 
 static DEFAULT_WITNESS_STORE_PATH: &str = "data/witness_store";
 
@@ -31,24 +32,21 @@ pub trait Rpc {
 #[derive(Clone)]
 pub struct RpcImpl {
     current_task: Arc<RwLock<TaskInfo>>,
-    witness_db: Arc<WitnessStore>,
+    witness_db: Arc<WitnessDB>,
 }
 
 impl RpcImpl {
     pub fn new(store_path: &str) -> Self {
         RpcImpl {
             current_task: Arc::new(RwLock::new(TaskInfo::default())),
-            witness_db: Arc::new(WitnessStore::new(store_path.into())),
+            witness_db: Arc::new(WitnessDB::new(store_path)),
         }
     }
 }
 
 impl Default for RpcImpl {
     fn default() -> Self {
-        RpcImpl {
-            current_task: Arc::new(RwLock::new(TaskInfo::default())),
-            witness_db: Arc::new(WitnessStore::new(DEFAULT_WITNESS_STORE_PATH.into())),
-        }
+        Self::new(DEFAULT_WITNESS_STORE_PATH)
     }
 }
 
@@ -71,7 +69,7 @@ impl RpcImpl {
         drop(current_task);
 
         // Store the witness to db.
-        self.witness_db.set(l2_hash, l1_head_hash, sp1_stdin.buffer)?;
+        self.witness_db.set(&l2_hash, &l1_head_hash, sp1_stdin.buffer)?;
         tracing::info!("store witness to db");
 
         Ok(())
@@ -83,7 +81,7 @@ impl Rpc for RpcImpl {
         let (l2_hash, l1_head_hash) = check_request(&l2_hash, &l1_head_hash).unwrap();
 
         // Return cached witness if it exists.
-        let witness_result = self.witness_db.get(l2_hash, l1_head_hash);
+        let witness_result = self.witness_db.get(&l2_hash, &l1_head_hash);
         if witness_result.is_ok() {
             tracing::info!("return cached witness");
             return Ok(RequestResult::Completed);
@@ -104,7 +102,7 @@ impl Rpc for RpcImpl {
             tracing::info!("the request in progress");
             Ok(RequestResult::Processing)
         } else {
-            return Err(WitnessError::server_busy().into());
+            return Err(KromaError::server_busy().into());
         }
     }
 
@@ -112,11 +110,11 @@ impl Rpc for RpcImpl {
         let (l2_hash, l1_head_hash) = check_request(&l2_hash, &l1_head_hash).unwrap();
 
         // Check if it exists in the database.
-        let result = self.witness_db.get(l2_hash, l1_head_hash);
+        let result = self.witness_db.get(&l2_hash, &l1_head_hash);
         match result {
             Ok(witness_result) => {
                 tracing::info!("return cached witness");
-                Ok(WitnessResult::new_from_bytes(RequestResult::Completed, witness_result))
+                Ok(WitnessResult::new_from_witness_buf(RequestResult::Completed, witness_result))
             }
             Err(_) => {
                 // Check if the request is in progress.

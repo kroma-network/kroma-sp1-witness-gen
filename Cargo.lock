@@ -4031,6 +4031,45 @@ dependencies = [
 ]
 
 [[package]]
+name = "kroma-prover"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives 0.8.3",
+ "anyhow",
+ "bincode",
+ "clap",
+ "dotenv",
+ "jsonrpc-core",
+ "jsonrpc-core-client",
+ "jsonrpc-derive",
+ "jsonrpc-http-server",
+ "jsonrpsee",
+ "jsonrpsee-core",
+ "kroma-utils",
+ "kroma-witnessgen",
+ "once_cell",
+ "serde",
+ "sp1-sdk",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "kroma-utils"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives 0.8.3",
+ "anyhow",
+ "bincode",
+ "ctor",
+ "jsonrpc-http-server",
+ "once_cell",
+ "rocksdb",
+ "serde",
+]
+
+[[package]]
 name = "kroma-witnessgen"
 version = "0.1.0"
 dependencies = [
@@ -4048,9 +4087,9 @@ dependencies = [
  "jsonrpsee",
  "jsonrpsee-core",
  "kona-host",
+ "kroma-utils",
  "once_cell",
  "op-succinct-host-utils",
- "rocksdb",
  "serde",
  "sp1-sdk",
  "tokio",

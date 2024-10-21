@@ -10,23 +10,12 @@ use op_succinct_host_utils::{
 use serde::{Deserialize, Serialize};
 use sp1_sdk::{block_on, SP1Stdin};
 
-use crate::utils::b256_from_str;
-
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum RequestResult {
     None,
     Requested,
     Processing,
     Completed,
-}
-
-pub fn check_request(l2_hash: &String, l1_head_hash: &String) -> Result<(B256, B256)> {
-    let l2_hash = b256_from_str(&l2_hash).unwrap();
-    let l1_head_hash = b256_from_str(&l1_head_hash).unwrap();
-
-    // TODO: check more detail.
-
-    Ok((l2_hash, l1_head_hash))
 }
 
 pub fn generate_witness_impl(l2_hash: B256, l1_head_hash: B256) -> Result<SP1Stdin> {

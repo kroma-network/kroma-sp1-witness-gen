@@ -59,30 +59,30 @@ impl Serialize for ErrorCode {
 
 /// Error object as defined in Spec
 #[derive(Debug)]
-pub struct WitnessError {
+pub struct KromaError {
     /// Code
     pub code: ErrorCode,
     /// Message
     pub message: Option<String>,
 }
 
-impl std::error::Error for WitnessError {}
+impl std::error::Error for KromaError {}
 
-impl std::fmt::Display for WitnessError {
+impl std::fmt::Display for KromaError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{:?}", self)
     }
 }
 
-impl From<WitnessError> for JsonError {
-    fn from(err: WitnessError) -> Self {
+impl From<KromaError> for JsonError {
+    fn from(err: KromaError) -> Self {
         Self { code: JsonErrorCode::InternalError, message: err.to_string(), data: None }
     }
 }
 
-impl WitnessError {
+impl KromaError {
     pub fn new(code: ErrorCode, message: Option<String>) -> Self {
-        WitnessError { code, message }
+        KromaError { code, message }
     }
 
     pub fn empty_l1_rpc_endpoint() -> Self {
