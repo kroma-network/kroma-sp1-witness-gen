@@ -74,7 +74,7 @@ impl RpcImpl {
         match sp1_stdin {
             Ok(value) => {
                 self.witness_db.set(&l2_hash, &l1_head_hash, value.buffer)?;
-        tracing::info!("store witness to db");
+                tracing::info!("store witness to db");
             }
             Err(e) => {
                 self.witness_db.set(&l2_hash, &l1_head_hash, vec![vec![]])?;
@@ -102,8 +102,8 @@ impl Rpc for RpcImpl {
         // If the witness is empty, it means the witness generation failed, so a retry is required.
         if let Ok(witness) = self.witness_db.get(&l2_hash, &l1_head_hash) {
             if !witness.is_empty() {
-            tracing::info!("The request is already completed: {:?}", user_req_id);
-            return Ok(RequestResult::Completed);
+                tracing::info!("The request is already completed: {:?}", user_req_id);
+                return Ok(RequestResult::Completed);
             }
         }
 
@@ -117,7 +117,7 @@ impl Rpc for RpcImpl {
             tokio::task::spawn(
                 async move { service.generate_witness(l2_hash, l1_head_hash).await },
             );
-            Ok(RequestResult::Requested)
+            Ok(RequestResult::Processing)
         } else if current_task.is_equal(l2_hash, l1_head_hash) {
             tracing::info!("the request in already progress");
             Ok(RequestResult::Processing)
@@ -146,7 +146,7 @@ impl Rpc for RpcImpl {
                     tracing::info!("The request is not found: {:?}", user_req_id);
                     return Ok(WitnessResult::new_with_status(RequestResult::Failed));
                 } else {
-                tracing::info!("The proof is already stored: {:?}", user_req_id);
+                    tracing::info!("The proof is already stored: {:?}", user_req_id);
                     Ok(WitnessResult::new_from_witness_buf(
                         RequestResult::Completed,
                         witness_result,
