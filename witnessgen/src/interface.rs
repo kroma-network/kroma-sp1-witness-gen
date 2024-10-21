@@ -4,6 +4,7 @@ use jsonrpc_core::Result as JsonResult;
 use jsonrpc_derive::rpc;
 use kroma_utils::task_info::TaskInfo;
 use kroma_utils::utils::preprocessing;
+use sp1_sdk::block_on;
 use std::sync::Arc;
 use std::sync::RwLock;
 
@@ -60,7 +61,8 @@ impl RpcImpl {
         drop(current_task);
 
         // Generate witness.
-        let sp1_stdin = generate_witness_impl(l2_hash, l1_head_hash).unwrap();
+        let sp1_stdin = block_on(async { generate_witness_impl(l2_hash, l1_head_hash).await });
+
         tracing::info!("successfully witness result generated");
 
         // Get lock to release the current task.
@@ -69,8 +71,16 @@ impl RpcImpl {
         drop(current_task);
 
         // Store the witness to db.
-        self.witness_db.set(&l2_hash, &l1_head_hash, sp1_stdin.buffer)?;
+        match sp1_stdin {
+            Ok(value) => {
+                self.witness_db.set(&l2_hash, &l1_head_hash, value.buffer)?;
         tracing::info!("store witness to db");
+            }
+            Err(e) => {
+                self.witness_db.set(&l2_hash, &l1_head_hash, vec![vec![]])?;
+                tracing::info!("failed to generate witness: {:?}", e);
+            }
+        }
 
         Ok(())
     }
@@ -88,11 +98,13 @@ impl Rpc for RpcImpl {
                 WitnessGenError::invalid_input_hash(e.to_string())
             })?;
 
-        // Return cached witness if it exists.
-        let witness_result = self.witness_db.get(&l2_hash, &l1_head_hash);
-        if witness_result.is_ok() {
+        // Return cached witness if it exists. Otherwise, start to generate witness.
+        // If the witness is empty, it means the witness generation failed, so a retry is required.
+        if let Ok(witness) = self.witness_db.get(&l2_hash, &l1_head_hash) {
+            if !witness.is_empty() {
             tracing::info!("The request is already completed: {:?}", user_req_id);
             return Ok(RequestResult::Completed);
+            }
         }
 
         let current_task = self.current_task.read().unwrap();
