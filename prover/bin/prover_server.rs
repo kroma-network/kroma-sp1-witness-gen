@@ -2,7 +2,6 @@ use anyhow::Result;
 use clap::Parser;
 use jsonrpc_http_server::ServerBuilder;
 use kroma_prover::interface::{Rpc, RpcImpl};
-use kroma_utils::{errors::KromaError, utils::check_endpoints};
 
 static PROOF_STORE_PATH: &str = "data/proof_store";
 
@@ -13,12 +12,12 @@ struct Args {
     endpoint: String,
 }
 
-fn main() -> Result<(), KromaError> {
+fn main() -> Result<()> {
     dotenv::dotenv().ok();
     tracing_subscriber::fmt::Subscriber::builder().init();
 
     // Check if the endpoints are empty.
-    check_endpoints()?;
+    // TODO: implement check_endpoints
 
     let args = Args::parse();
 

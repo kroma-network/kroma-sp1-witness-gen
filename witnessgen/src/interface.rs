@@ -2,12 +2,12 @@ use alloy_primitives::B256;
 use anyhow::Result;
 use jsonrpc_core::Result as JsonResult;
 use jsonrpc_derive::rpc;
-use kroma_utils::errors::KromaError;
 use kroma_utils::task_info::TaskInfo;
 use kroma_utils::utils::preprocessing;
 use std::sync::Arc;
 use std::sync::RwLock;
 
+use crate::errors::WitnessGenError;
 use crate::get_witness_impl::WitnessResult;
 use crate::request_witness_impl::{generate_witness_impl, RequestResult};
 use crate::spec_impl::{spec_impl, SpecResult};
@@ -78,12 +78,20 @@ impl RpcImpl {
 
 impl Rpc for RpcImpl {
     fn request_witness(&self, l2_hash: String, l1_head_hash: String) -> JsonResult<RequestResult> {
-        let (l2_hash, l1_head_hash, _) = preprocessing(&l2_hash, &l1_head_hash).unwrap();
+        let (l2_hash, l1_head_hash, user_req_id) =
+            preprocessing(&l2_hash, &l1_head_hash).map_err(|e| {
+                tracing::error!(
+                    "Invalid parameters - \"l2_hash\": {:?}, \"l1_head_hash\": {:?}",
+                    l2_hash,
+                    l1_head_hash
+                );
+                WitnessGenError::invalid_input_hash(e.to_string())
+            })?;
 
         // Return cached witness if it exists.
         let witness_result = self.witness_db.get(&l2_hash, &l1_head_hash);
         if witness_result.is_ok() {
-            tracing::info!("return cached witness");
+            tracing::info!("The request is already completed: {:?}", user_req_id);
             return Ok(RequestResult::Completed);
         }
 
@@ -92,38 +100,47 @@ impl Rpc for RpcImpl {
             // Return error if the request is already in progress.
             drop(current_task);
 
-            tracing::info!("do generate witness");
+            tracing::info!("start to generate witness");
             let service = self.clone();
             tokio::task::spawn(
                 async move { service.generate_witness(l2_hash, l1_head_hash).await },
             );
             Ok(RequestResult::Requested)
         } else if current_task.is_equal(l2_hash, l1_head_hash) {
-            tracing::info!("the request in progress");
+            tracing::info!("the request in already progress");
             Ok(RequestResult::Processing)
         } else {
-            return Err(KromaError::server_busy().into());
+            tracing::info!("server is in progress with another request");
+            return Err(WitnessGenError::already_in_progress().into());
         }
     }
 
     fn get_witness(&self, l2_hash: String, l1_head_hash: String) -> JsonResult<WitnessResult> {
-        let (l2_hash, l1_head_hash, _) = preprocessing(&l2_hash, &l1_head_hash).unwrap();
+        let (l2_hash, l1_head_hash, user_req_id) =
+            preprocessing(&l2_hash, &l1_head_hash).map_err(|e| {
+                tracing::error!(
+                    "Invalid parameters - \"l2_hash\": {:?}, \"l1_head_hash\": {:?}",
+                    l2_hash,
+                    l1_head_hash
+                );
+                WitnessGenError::invalid_input_hash(e.to_string())
+            })?;
 
         // Check if it exists in the database.
         let result = self.witness_db.get(&l2_hash, &l1_head_hash);
         match result {
             Ok(witness_result) => {
-                tracing::info!("return cached witness");
+                tracing::info!("The proof is already stored: {:?}", user_req_id);
                 Ok(WitnessResult::new_from_witness_buf(RequestResult::Completed, witness_result))
             }
             Err(_) => {
                 // Check if the request is in progress.
                 let current_task = Arc::clone(&self.current_task);
                 if current_task.try_read().unwrap().is_equal(l2_hash, l1_head_hash) {
-                    tracing::info!("the request is already in process");
+                    tracing::info!("the request is in progress: {:?}", user_req_id);
                     Ok(WitnessResult::new(RequestResult::Processing, ""))
                 } else {
-                    tracing::info!("witness not found in db");
+                    tracing::info!("the request is not found: {:?}", user_req_id);
                     Ok(WitnessResult::new(RequestResult::None, ""))
                 }
             }
