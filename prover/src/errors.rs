@@ -6,7 +6,6 @@ use serde::ser::{Serialize, Serializer};
 #[derive(Debug, Clone)]
 pub enum ProverErrorCode {
     Unexpected,
-    Occupied,
     InvalidInputHash,
     FailedToExecuteWitness,
     DBError,
@@ -17,8 +16,7 @@ impl ProverErrorCode {
     pub fn code(&self) -> i64 {
         match *self {
             ProverErrorCode::Unexpected => 1000,
-            ProverErrorCode::Occupied => 2000,
-            ProverErrorCode::DBError => 2001,
+            ProverErrorCode::DBError => 2000,
             ProverErrorCode::InvalidInputHash => 3000,
             ProverErrorCode::FailedToExecuteWitness => 3001,
             ProverErrorCode::SP1NetworkError => 4000,
@@ -28,9 +26,6 @@ impl ProverErrorCode {
     pub fn default_message(&self) -> String {
         match *self {
             ProverErrorCode::Unexpected => String::from("Unexpected error"),
-            ProverErrorCode::Occupied => {
-                String::from("The prover is generating proof for another request.")
-            }
             ProverErrorCode::DBError => String::from("Database error"),
             ProverErrorCode::InvalidInputHash => String::from("Invalid parameters"),
             ProverErrorCode::FailedToExecuteWitness => String::from("Invalid witness"),
@@ -43,8 +38,7 @@ impl From<i64> for ProverErrorCode {
     fn from(code: i64) -> Self {
         match code {
             1000 => ProverErrorCode::Unexpected,
-            2000 => ProverErrorCode::Occupied,
-            2001 => ProverErrorCode::DBError,
+            2000 => ProverErrorCode::DBError,
             3000 => ProverErrorCode::InvalidInputHash,
             3001 => ProverErrorCode::FailedToExecuteWitness,
             4000 => ProverErrorCode::SP1NetworkError,
@@ -101,17 +95,12 @@ impl ProverError {
     }
 
     pub fn unexpected(msg: Option<String>) -> Self {
-        let code = ProverErrorCode::Occupied;
+        let code = ProverErrorCode::Unexpected;
         let msg = match msg {
             Some(m) => m.clone(),
             None => code.default_message(),
         };
         Self::new(code.clone(), Some(msg))
-    }
-
-    pub fn occupied() -> Self {
-        let code = ProverErrorCode::Occupied;
-        Self::new(code.clone(), Some(code.default_message()))
     }
 
     pub fn db_error(msg: String) -> Self {
