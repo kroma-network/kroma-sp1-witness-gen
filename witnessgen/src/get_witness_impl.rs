@@ -22,6 +22,10 @@ impl WitnessResult {
         Self { status, vkey_hash: *VKEY_HASH, witness: witness.to_string() }
     }
 
+    pub fn new_with_status(status: RequestResult) -> Self {
+        Self::new(status, "".to_string())
+    }
+
     // Note(Ethan): `sp1-core-machine::SP1Stdin` has witness as `Vec<Vec<u8>>`.
     pub fn new_from_witness_buf(status: RequestResult, buf: Vec<Vec<u8>>) -> Self {
         let serialized_witness = bincode::serialize(&buf).unwrap();

@@ -130,18 +130,26 @@ impl Rpc for RpcImpl {
         let result = self.witness_db.get(&l2_hash, &l1_head_hash);
         match result {
             Ok(witness_result) => {
+                if witness_result.is_empty() {
+                    tracing::info!("The request is not found: {:?}", user_req_id);
+                    return Ok(WitnessResult::new_with_status(RequestResult::Failed));
+                } else {
                 tracing::info!("The proof is already stored: {:?}", user_req_id);
-                Ok(WitnessResult::new_from_witness_buf(RequestResult::Completed, witness_result))
+                    Ok(WitnessResult::new_from_witness_buf(
+                        RequestResult::Completed,
+                        witness_result,
+                    ))
+                }
             }
             Err(_) => {
                 // Check if the request is in progress.
                 let current_task = Arc::clone(&self.current_task);
                 if current_task.try_read().unwrap().is_equal(l2_hash, l1_head_hash) {
                     tracing::info!("the request is in progress: {:?}", user_req_id);
-                    Ok(WitnessResult::new(RequestResult::Processing, ""))
+                    Ok(WitnessResult::new_with_status(RequestResult::Processing))
                 } else {
                     tracing::info!("the request is not found: {:?}", user_req_id);
-                    Ok(WitnessResult::new(RequestResult::None, ""))
+                    Ok(WitnessResult::new_with_status(RequestResult::None))
                 }
             }
         }
