@@ -8,7 +8,7 @@ use sp1_sdk::network::client::NetworkClient;
 use sp1_sdk::proto::network::{ProofMode, ProofStatus};
 use sp1_sdk::{block_on, SP1ProofWithPublicValues, SP1Stdin};
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use crate::errors::ProverError;
 use crate::get_proof_impl::ProofResult;
@@ -17,6 +17,8 @@ use crate::request_prove_impl::RequestResult;
 use crate::spec_impl::{spec_impl, SpecResult, SINGLE_BLOCK_ELF};
 
 static DEFAULT_PROOF_STORE_PATH: &str = "data/proof_store";
+static DEFAULT_PROOF_WAIT_TIMEOUT_SEC: u64 = 14_400;
+static DEFAULT_PROOF_WAIT_POLLING_RATE: u64 = 60;
 
 #[rpc]
 pub trait Rpc {
@@ -39,13 +41,15 @@ pub trait Rpc {
 pub struct RpcImpl {
     proof_db: Arc<ProofDB>,
     client: Arc<NetworkClient>,
+    proof_wait_timeout: u64,
 }
 
 impl RpcImpl {
-    pub fn new(store_path: &str, sp1_private_key: &str) -> Self {
+    pub fn new(store_path: &str, sp1_private_key: &str, proof_wait_timeout: Option<u64>) -> Self {
         RpcImpl {
             proof_db: Arc::new(ProofDB::new(store_path.into())),
             client: Arc::new(NetworkClient::new(&sp1_private_key)),
+            proof_wait_timeout: proof_wait_timeout.unwrap_or(DEFAULT_PROOF_WAIT_TIMEOUT_SEC),
         }
     }
 }
@@ -54,7 +58,7 @@ impl Default for RpcImpl {
     fn default() -> Self {
         let sp1_private_key = std::env::var("SP1_PRIVATE_KEY")
             .expect("SP1_PRIVATE_KEY must be set for remote proving");
-        Self::new(DEFAULT_PROOF_STORE_PATH, &sp1_private_key)
+        Self::new(DEFAULT_PROOF_STORE_PATH, &sp1_private_key, None)
     }
 }
 
@@ -71,7 +75,9 @@ impl RpcImpl {
     }
 
     async fn wait_proof(&self, request_id: String) -> Result<()> {
-        // TODO: Add a timeout.
+        let timeout = Duration::from_secs(self.proof_wait_timeout);
+
+        let start_time = Instant::now();
         let proof = loop {
             let (response, maybe_proof) = block_on(async {
                 self.client.get_proof_status::<SP1ProofWithPublicValues>(&request_id).await.unwrap()
@@ -79,17 +85,25 @@ impl RpcImpl {
 
             if maybe_proof.is_some() {
                 assert_eq!(response.status(), ProofStatus::ProofFulfilled);
-                break maybe_proof.unwrap();
+                break Some(maybe_proof.unwrap());
             }
 
             tracing::info!("waiting for proof: {:?}", response.status());
-            std::thread::sleep(Duration::from_secs(30));
+
+            if start_time.elapsed() > timeout {
+                tracing::error!("timeout to wait for proof: {:?}", request_id);
+                break None;
+            }
+
+            std::thread::sleep(Duration::from_secs(DEFAULT_PROOF_WAIT_POLLING_RATE));
         };
 
         //TODO: it should get a db lock (TBD).
-        self.proof_db.set_proof(&request_id, &proof)?;
-        //TODO: it should release a db lock (TBD).
-        tracing::info!("proof saved to db");
+        if let Some(proof) = proof {
+            self.proof_db.set_proof(&request_id, &proof)?;
+            //TODO: it should release a db lock (TBD).
+            tracing::info!("proof saved to db");
+        }
 
         Ok(())
     }
