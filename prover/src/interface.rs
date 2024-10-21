@@ -227,7 +227,10 @@ impl Rpc for RpcImpl {
                 );
 
                 let proof_db = self.proof_db.write().unwrap();
-                proof_db.set_proof(&request_id, &proof).unwrap();
+                proof_db.set_proof(&request_id, &proof).map_err(|e| {
+                    tracing::info!("The database is full: {:?}", e.to_string());
+                    ProverError::db_error(e.to_string())
+                })?;
                 tracing::info!(
                     "The proof is stored to database: {:?}, {:?}",
                     user_req_id,
@@ -239,7 +242,7 @@ impl Rpc for RpcImpl {
                     &request_id,
                     RequestResult::Completed,
                     proof.public_values.raw(),
-                    proof.raw(),
+                    format!("0x{}", proof.raw()),
                 ))
             }
             ProofStatus::ProofPreparing
