@@ -100,7 +100,7 @@ impl Rpc for RpcImpl {
 
         // Return cached witness if it exists. Otherwise, start to generate witness.
         // If the witness is empty, it means the witness generation failed, so a retry is required.
-        if let Ok(witness) = self.witness_db.get(&l2_hash, &l1_head_hash) {
+        if let Some(witness) = self.witness_db.get(&l2_hash, &l1_head_hash) {
             if !witness.is_empty() {
                 tracing::info!("The request is already completed: {:?}", user_req_id);
                 return Ok(RequestResult::Completed);
@@ -139,9 +139,8 @@ impl Rpc for RpcImpl {
             })?;
 
         // Check if it exists in the database.
-        let result = self.witness_db.get(&l2_hash, &l1_head_hash);
-        match result {
-            Ok(witness_result) => {
+        match self.witness_db.get(&l2_hash, &l1_head_hash) {
+            Some(witness_result) => {
                 if witness_result.is_empty() {
                     tracing::info!("The request is not found: {:?}", user_req_id);
                     return Ok(WitnessResult::new_with_status(RequestResult::Failed));
@@ -153,7 +152,7 @@ impl Rpc for RpcImpl {
                     ))
                 }
             }
-            Err(_) => {
+            None => {
                 // Check if the request is in progress.
                 let current_task = Arc::clone(&self.current_task);
                 if current_task.try_read().unwrap().is_equal(l2_hash, l1_head_hash) {

@@ -18,7 +18,7 @@ impl WitnessDB {
         key
     }
 
-    pub fn get(&self, l2_hash: &B256, l1_head_hash: &B256) -> Result<Vec<Vec<u8>>> {
+    pub fn get(&self, l2_hash: &B256, l1_head_hash: &B256) -> Option<Vec<Vec<u8>>> {
         let key = Self::build_key(l2_hash, l1_head_hash);
         self.db.get(&key)
     }

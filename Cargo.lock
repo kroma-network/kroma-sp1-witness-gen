@@ -4067,6 +4067,7 @@ dependencies = [
  "once_cell",
  "rocksdb",
  "serde",
+ "tracing",
 ]
 
 [[package]]

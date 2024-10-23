@@ -108,19 +108,26 @@ impl Rpc for RpcImpl {
 
         // If this request has been made before, the `request_prove` method will terminate here.
         let guard = self.task_lock.read().unwrap();
-        if let Ok(request_id) = self.proof_db.get_request_id(&l2_hash, &l1_head_hash) {
-            if let Ok(_) = self.proof_db.get_proof_by_id(&request_id) {
-                // The request is already completed.
-                tracing::info!(
-                    "The request is already completed: {:?}, {:?}",
-                    user_req_id,
-                    request_id
-                );
-                return Ok(RequestResult::Completed);
-            } else {
-                // The request is in processing.
-                tracing::info!("The request is in processing: {:?}, {:?}", user_req_id, request_id);
-                return Ok(RequestResult::Processing);
+        if let Some(request_id) = self.proof_db.get_request_id(&l2_hash, &l1_head_hash) {
+            match self.proof_db.get_proof_by_id(&request_id) {
+                Some(_) => {
+                    // The request is already completed.
+                    tracing::info!(
+                        "The request is already completed: {:?}, {:?}",
+                        user_req_id,
+                        request_id
+                    );
+                    return Ok(RequestResult::Completed);
+                }
+                None => {
+                    // The request is in processing.
+                    tracing::info!(
+                        "The request is in processing: {:?}, {:?}",
+                        user_req_id,
+                        request_id
+                    );
+                    return Ok(RequestResult::Processing);
+                }
             }
         }
         drop(guard);
@@ -159,15 +166,15 @@ impl Rpc for RpcImpl {
         // Check if it has been requested.
         let guard = self.task_lock.read().unwrap();
         let request_id = match self.proof_db.get_request_id(&l2_hash, &l1_head_hash) {
-            Ok(id) => id,
-            Err(_) => {
+            Some(id) => id,
+            None => {
                 tracing::info!("The request is not found: {:?}", user_req_id);
                 return Ok(ProofResult::none());
             }
         };
 
         // Check if the proof is already stored.
-        if let Ok(proof) = self.proof_db.get_proof(&l2_hash, &l1_head_hash) {
+        if let Some(proof) = self.proof_db.get_proof(&l2_hash, &l1_head_hash) {
             tracing::info!("The proof is already stored: {:?}, {:?}", user_req_id, request_id);
             return Ok(ProofResult::new(
                 &request_id,
