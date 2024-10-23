@@ -79,8 +79,8 @@ impl std::fmt::Display for ProverError {
     }
 }
 
-impl From<ProverError> for JsonError {
-    fn from(err: ProverError) -> Self {
+impl From<&ProverError> for JsonError {
+    fn from(err: &ProverError) -> Self {
         Self { code: JsonErrorCode::InternalError, message: err.to_string(), data: None }
     }
 }
@@ -88,6 +88,10 @@ impl From<ProverError> for JsonError {
 impl ProverError {
     pub fn new(code: ProverErrorCode, message: Option<String>) -> Self {
         ProverError { code, message }
+    }
+
+    pub fn to_json_error(&self) -> JsonError {
+        JsonError::from(self)
     }
 
     pub fn proof_generation_failed(msg: Option<String>) -> Self {

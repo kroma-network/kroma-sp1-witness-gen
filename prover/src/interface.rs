@@ -50,6 +50,20 @@ impl RpcImpl {
         }
     }
 
+    fn request_prove_to_sp1(&self, witness: String) -> Result<String> {
+        // Recover a SP1Stdin from the witness string.
+        let mut sp1_stdin = SP1Stdin::new();
+        sp1_stdin.buffer = WitnessResult::string_to_witness_buf(&witness);
+
+        // Send a request to generate a proof to the sp1 network.
+        let request_id = block_on(async move {
+            self.client
+                .create_proof(SINGLE_BLOCK_ELF, &sp1_stdin, ProofMode::Plonk, SP1_SDK_VERSION)
+                .await
+        })?;
+        Ok(request_id)
+    }
+
     fn get_proof_status_from_sp1(&self, request_id: &str) -> Result<ProofStatus> {
         let (response, maybe_proof) = block_on(async {
             self.client.get_proof_status::<SP1ProofWithPublicValues>(request_id).await
@@ -72,19 +86,6 @@ impl Default for RpcImpl {
     }
 }
 
-impl RpcImpl {
-    async fn request_prove_to_sp1(&self, witness: String) -> Result<String> {
-        // Recover a SP1Stdin from the witness string.
-        let mut sp1_stdin = SP1Stdin::new();
-        sp1_stdin.buffer = WitnessResult::string_to_witness_buf(&witness);
-
-        // Send a request to generate a proof to the sp1 network.
-        self.client
-            .create_proof(SINGLE_BLOCK_ELF, &sp1_stdin, ProofMode::Plonk, SP1_SDK_VERSION)
-            .await
-    }
-}
-
 impl Rpc for RpcImpl {
     fn spec(&self) -> JsonResult<SpecResult> {
         Ok(spec_impl())
@@ -103,7 +104,7 @@ impl Rpc for RpcImpl {
                     l2_hash,
                     l1_head_hash
                 );
-                ProverError::invalid_input_hash(e.to_string())
+                ProverError::invalid_input_hash(e.to_string()).to_json_error()
             })?;
 
         // If this request has been made before, the `request_prove` method will terminate here.
@@ -134,18 +135,16 @@ impl Rpc for RpcImpl {
 
         // Send a request to SP1 network.
         let guard = self.task_lock.write().unwrap();
-        let service = self.clone();
-        let request_id = block_on(async move { service.request_prove_to_sp1(witness).await })
-            .map_err(|e| {
-                tracing::error!("Failed to send request to SP1 network: {:?}", e);
-                ProverError::sp1_network_error(e.to_string())
-            })?;
+        let request_id = self.request_prove_to_sp1(witness).map_err(|e| {
+            tracing::error!("Failed to send request to SP1 network: {:?}", e);
+            ProverError::sp1_network_error(e.to_string()).to_json_error()
+        })?;
         tracing::info!("Sent request to SP1 network: {:?}", request_id);
 
         // Store the `request_id` to the database.
         self.proof_db.set_request_id(&l2_hash, &l1_head_hash, &request_id).map_err(|e| {
             tracing::info!("The database is full: {:?}", e.to_string());
-            ProverError::db_error(e.to_string())
+            ProverError::db_error(e.to_string()).to_json_error()
         })?;
         drop(guard);
 
@@ -160,7 +159,7 @@ impl Rpc for RpcImpl {
                     l2_hash,
                     l1_head_hash
                 );
-                ProverError::invalid_input_hash(e.to_string())
+                ProverError::invalid_input_hash(e.to_string()).to_json_error()
             })?;
 
         // Check if it has been requested.
@@ -192,7 +191,7 @@ impl Rpc for RpcImpl {
                 user_req_id,
                 request_id
             );
-            ProverError::sp1_network_error(e.to_string())
+            ProverError::sp1_network_error(e.to_string()).to_json_error()
         })?;
 
         match status {
@@ -219,7 +218,7 @@ impl Rpc for RpcImpl {
             ProofStatus::ProofUnclaimed => {
                 let msg =
                     format!("request status({:?}): {:?}, {:?}", status, user_req_id, request_id);
-                Err(ProverError::proof_generation_failed(Some(msg)).into())
+                Err(ProverError::proof_generation_failed(Some(msg)).to_json_error())
             }
         }
     }
