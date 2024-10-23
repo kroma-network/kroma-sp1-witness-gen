@@ -64,17 +64,29 @@ impl RpcImpl {
         Ok(request_id)
     }
 
-    fn get_proof_status_from_sp1(&self, request_id: &str) -> Result<ProofStatus> {
-        let (response, maybe_proof) = block_on(async {
+    fn get_proof_status_from_sp1(&self, request_id: &str) -> Result<RequestResult> {
+        match block_on(async {
             self.client.get_proof_status::<SP1ProofWithPublicValues>(request_id).await
-        })?;
-        tracing::info!("The proof is fetched from SP1 network: {:?}", request_id);
-        if maybe_proof.is_some() {
-            let _guard = self.task_lock.write().unwrap();
-            self.proof_db.set_proof(&request_id, &maybe_proof.unwrap())?;
+        }) {
+            Ok((response, maybe_proof)) => match response.status() {
+                ProofStatus::ProofFulfilled => {
+                    self.proof_db.set_proof(&request_id, &maybe_proof.unwrap())?;
+                    Ok(RequestResult::Completed)
+                }
+                ProofStatus::ProofPreparing
+                | ProofStatus::ProofRequested
+                | ProofStatus::ProofClaimed => Ok(RequestResult::Processing),
+                ProofStatus::ProofUnclaimed => {
+                    Ok(RequestResult::Failed(response.unclaim_description.unwrap()))
+                }
+                ProofStatus::ProofUnspecifiedStatus => {
+                    tracing::error!("The proof status is unspecified: {:?}", request_id);
+                    Ok(RequestResult::None)
+                }
+            },
+            // There is only one error case: "Failed to get proof status"
+            Err(_) => Ok(RequestResult::None),
         }
-        tracing::info!("The proof is stored to database: {:?}", request_id);
-        Ok(response.status())
     }
 }
 
@@ -185,7 +197,7 @@ impl Rpc for RpcImpl {
         drop(guard);
 
         // Check if the proof is already being generated in SP1 network.
-        let status = self.get_proof_status_from_sp1(&request_id).map_err(|e| {
+        let request_result = self.get_proof_status_from_sp1(&request_id).map_err(|e| {
             tracing::error!(
                 "Failed to get proof status from SP1 network: {:?}, {:?}",
                 user_req_id,
@@ -194,8 +206,8 @@ impl Rpc for RpcImpl {
             ProverError::sp1_network_error(e.to_string()).to_json_error()
         })?;
 
-        match status {
-            ProofStatus::ProofFulfilled => {
+        match request_result {
+            RequestResult::Completed => {
                 let _guard = self.task_lock.read().unwrap();
                 let proof = self.proof_db.get_proof_by_id(&request_id).unwrap();
                 Ok(ProofResult::new(
@@ -205,20 +217,17 @@ impl Rpc for RpcImpl {
                     format!("0x{}", proof.raw()),
                 ))
             }
-            ProofStatus::ProofPreparing
-            | ProofStatus::ProofRequested
-            | ProofStatus::ProofClaimed => {
+            RequestResult::Processing => {
                 tracing::info!("The proof is in processing: {:?}, {:?}", user_req_id, request_id);
                 Ok(ProofResult::processing(request_id))
             }
-            ProofStatus::ProofUnspecifiedStatus => {
+            RequestResult::None => {
                 tracing::info!("The request is not found: {:?}, {:?}", user_req_id, request_id);
                 Ok(ProofResult::none())
             }
-            ProofStatus::ProofUnclaimed => {
-                let msg =
-                    format!("request status({:?}): {:?}, {:?}", status, user_req_id, request_id);
-                Err(ProverError::proof_generation_failed(Some(msg)).to_json_error())
+            RequestResult::Failed(msg) => {
+                tracing::info!("The request has been failed: {:?}", msg);
+                Ok(ProofResult::failed(request_id, msg))
             }
         }
     }
