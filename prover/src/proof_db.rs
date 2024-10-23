@@ -55,6 +55,10 @@ impl ProofDB {
         l1_head_hash: &B256,
     ) -> Result<SP1ProofWithPublicValues> {
         let request_id = self.get_request_id(l2_hash, l1_head_hash)?;
+        self.get_proof_by_id(&request_id)
+    }
+
+    pub fn get_proof_by_id(&self, request_id: &str) -> Result<SP1ProofWithPublicValues> {
         let req_id_key = Self::convert_req_id_as_key(&request_id);
         self.db.get(&req_id_key)
     }

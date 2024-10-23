@@ -1,5 +1,5 @@
 use anyhow::Result;
-use jsonrpc_core::{Error as JsonError, Result as JsonResult};
+use jsonrpc_core::Result as JsonResult;
 use jsonrpc_derive::rpc;
 use kroma_utils::deps_version::SP1_SDK_VERSION;
 use kroma_utils::utils::preprocessing;
@@ -52,6 +52,20 @@ impl RpcImpl {
             proof_wait_timeout: proof_wait_timeout.unwrap_or(DEFAULT_PROOF_WAIT_TIMEOUT_SEC),
         }
     }
+
+    fn get_proof_status_from_sp1(&self, request_id: &str) -> Result<ProofStatus> {
+        let (response, maybe_proof) = block_on(async {
+            self.client.get_proof_status::<SP1ProofWithPublicValues>(request_id).await
+        })?;
+        tracing::info!("The proof is fetched from SP1 network: {:?}", request_id);
+        if maybe_proof.is_some() {
+            let proof_db = self.proof_db.write().unwrap();
+            proof_db.set_proof(&request_id, &maybe_proof.unwrap())?;
+            drop(proof_db);
+        }
+        tracing::info!("The proof is stored to database: {:?}", request_id);
+        Ok(response.status())
+    }
 }
 
 impl Default for RpcImpl {
@@ -79,16 +93,18 @@ impl RpcImpl {
 
         let start_time = Instant::now();
         let proof = loop {
-            let (response, maybe_proof) = block_on(async {
-                self.client.get_proof_status::<SP1ProofWithPublicValues>(&request_id).await.unwrap()
-            });
+            let status = self.get_proof_status_from_sp1(&request_id).map_err(|e| {
+                tracing::error!("Failed to get proof status from SP1 network: {:?}", e);
+                ProverError::sp1_network_error(e.to_string())
+            })?;
 
-            if maybe_proof.is_some() {
-                assert_eq!(response.status(), ProofStatus::ProofFulfilled);
-                break Some(maybe_proof.unwrap());
+            if status == ProofStatus::ProofFulfilled {
+                let proof_db = self.proof_db.read().unwrap();
+                let proof = proof_db.get_proof_by_id(&request_id).unwrap();
+                drop(proof_db);
+                break Some(proof);
             }
-
-            tracing::debug!("waiting for proof: {:?}, {:?}", request_id, response.status());
+            tracing::debug!("waiting for proof: {:?}, {:?}", request_id, status);
 
             if start_time.elapsed() > timeout {
                 tracing::debug!("timeout to wait for proof: {:?}", request_id);
@@ -204,10 +220,7 @@ impl Rpc for RpcImpl {
         drop(proof_db);
 
         // Check if the proof is already being generated in SP1 network.
-        let (response, maybe_proof) = block_on(async {
-            self.client.get_proof_status::<SP1ProofWithPublicValues>(&request_id).await
-        })
-        .map_err(|e| {
+        let status = self.get_proof_status_from_sp1(&request_id).map_err(|e| {
             tracing::error!(
                 "Failed to get proof status from SP1 network: {:?}, {:?}",
                 user_req_id,
@@ -216,28 +229,10 @@ impl Rpc for RpcImpl {
             ProverError::sp1_network_error(e.to_string())
         })?;
 
-        match response.status() {
+        match status {
             ProofStatus::ProofFulfilled => {
-                // Store the proof to the database.
-                let proof = maybe_proof.unwrap();
-                tracing::info!(
-                    "The proof is fetched from SP1 network: {:?}, {:?}",
-                    user_req_id,
-                    request_id
-                );
-
-                let proof_db = self.proof_db.write().unwrap();
-                proof_db.set_proof(&request_id, &proof).map_err(|e| {
-                    tracing::info!("The database is full: {:?}", e.to_string());
-                    ProverError::db_error(e.to_string())
-                })?;
-                tracing::info!(
-                    "The proof is stored to database: {:?}, {:?}",
-                    user_req_id,
-                    request_id
-                );
-                drop(proof_db);
-
+                let proof_db = self.proof_db.read().unwrap();
+                let proof = proof_db.get_proof_by_id(&request_id).unwrap();
                 Ok(ProofResult::new(
                     &request_id,
                     RequestResult::Completed,
@@ -256,12 +251,8 @@ impl Rpc for RpcImpl {
                 Ok(ProofResult::none())
             }
             ProofStatus::ProofUnclaimed => {
-                let msg = format!(
-                    "request status({:?}): {:?}, {:?}",
-                    response.status(),
-                    user_req_id,
-                    request_id
-                );
+                let msg =
+                    format!("request status({:?}): {:?}, {:?}", status, user_req_id, request_id);
                 Err(ProverError::proof_generation_failed(Some(msg)).into())
             }
         }
