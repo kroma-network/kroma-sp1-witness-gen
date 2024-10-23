@@ -39,7 +39,8 @@ pub trait Rpc {
 
 #[derive(Clone)]
 pub struct RpcImpl {
-    proof_db: Arc<RwLock<ProofDB>>,
+    task_lock: Arc<RwLock<()>>,
+    proof_db: Arc<ProofDB>,
     client: Arc<NetworkClient>,
     proof_wait_timeout: u64,
 }
@@ -47,7 +48,8 @@ pub struct RpcImpl {
 impl RpcImpl {
     pub fn new(store_path: &str, sp1_private_key: &str, proof_wait_timeout: Option<u64>) -> Self {
         RpcImpl {
-            proof_db: Arc::new(RwLock::new(ProofDB::new(store_path.into()))),
+            task_lock: Arc::new(RwLock::new(())),
+            proof_db: Arc::new(ProofDB::new(store_path.into())),
             client: Arc::new(NetworkClient::new(&sp1_private_key)),
             proof_wait_timeout: proof_wait_timeout.unwrap_or(DEFAULT_PROOF_WAIT_TIMEOUT_SEC),
         }
@@ -59,9 +61,8 @@ impl RpcImpl {
         })?;
         tracing::info!("The proof is fetched from SP1 network: {:?}", request_id);
         if maybe_proof.is_some() {
-            let proof_db = self.proof_db.write().unwrap();
-            proof_db.set_proof(&request_id, &maybe_proof.unwrap())?;
-            drop(proof_db);
+            let _guard = self.task_lock.write().unwrap();
+            self.proof_db.set_proof(&request_id, &maybe_proof.unwrap())?;
         }
         tracing::info!("The proof is stored to database: {:?}", request_id);
         Ok(response.status())
@@ -99,10 +100,8 @@ impl RpcImpl {
             })?;
 
             if status == ProofStatus::ProofFulfilled {
-                let proof_db = self.proof_db.read().unwrap();
-                let proof = proof_db.get_proof_by_id(&request_id).unwrap();
-                drop(proof_db);
-                break Some(proof);
+                let _guard = self.task_lock.read().unwrap();
+                break Some(self.proof_db.get_proof_by_id(&request_id).unwrap());
             }
             tracing::debug!("waiting for proof: {:?}, {:?}", request_id, status);
 
@@ -110,12 +109,12 @@ impl RpcImpl {
                 tracing::debug!("timeout to wait for proof: {:?}", request_id);
                 break None;
             }
-
             std::thread::sleep(Duration::from_secs(DEFAULT_PROOF_WAIT_POLLING_RATE));
         };
 
         if let Some(proof) = proof {
-            self.proof_db.write().unwrap().set_proof(&request_id, &proof)?;
+            let _guard = self.task_lock.write().unwrap();
+            self.proof_db.set_proof(&request_id, &proof).unwrap();
             tracing::info!("proof saved to db: {:#?}", request_id);
         }
 
@@ -145,22 +144,26 @@ impl Rpc for RpcImpl {
             })?;
 
         // If this request has been made before, the `request_prove` method will terminate here.
-        let proof_db = self.proof_db.read().unwrap();
-        if let Ok(_) = proof_db.get_request_id(&l2_hash, &l1_head_hash) {
-            if let Ok(_) = proof_db.get_proof(&l2_hash, &l1_head_hash) {
+        let guard = self.task_lock.read().unwrap();
+        if let Ok(request_id) = self.proof_db.get_request_id(&l2_hash, &l1_head_hash) {
+            if let Ok(_) = self.proof_db.get_proof_by_id(&request_id) {
                 // The request is already completed.
-                tracing::info!("The request is already completed: {:?}", user_req_id);
+                tracing::info!(
+                    "The request is already completed: {:?}, {:?}",
+                    user_req_id,
+                    request_id
+                );
                 return Ok(RequestResult::Completed);
             } else {
                 // The request is in processing.
-                tracing::info!("The request is in processing: {:?}", user_req_id);
+                tracing::info!("The request is in processing: {:?}, {:?}", user_req_id, request_id);
                 return Ok(RequestResult::Processing);
             }
         }
-        drop(proof_db);
+        drop(guard);
 
         // Send a request to SP1 network.
-        let proof_db = self.proof_db.write().unwrap();
+        let guard = self.task_lock.write().unwrap();
         let service = self.clone();
         let request_id = block_on(async move { service.request_prove_to_sp1(witness).await })
             .map_err(|e| {
@@ -170,11 +173,11 @@ impl Rpc for RpcImpl {
         tracing::info!("Sent request to SP1 network: {:?}", request_id);
 
         // Store the `request_id` to the database.
-        proof_db.set_request_id(&l2_hash, &l1_head_hash, &request_id).map_err(|e| {
+        self.proof_db.set_request_id(&l2_hash, &l1_head_hash, &request_id).map_err(|e| {
             tracing::info!("The database is full: {:?}", e.to_string());
             ProverError::db_error(e.to_string())
         })?;
-        drop(proof_db);
+        drop(guard);
 
         // Wait for the proof to be generated.
         let service = self.clone();
@@ -198,8 +201,8 @@ impl Rpc for RpcImpl {
             })?;
 
         // Check if it has been requested.
-        let proof_db = self.proof_db.read().unwrap();
-        let request_id = match proof_db.get_request_id(&l2_hash, &l1_head_hash) {
+        let guard = self.task_lock.read().unwrap();
+        let request_id = match self.proof_db.get_request_id(&l2_hash, &l1_head_hash) {
             Ok(id) => id,
             Err(_) => {
                 tracing::info!("The request is not found: {:?}", user_req_id);
@@ -208,7 +211,7 @@ impl Rpc for RpcImpl {
         };
 
         // Check if the proof is already stored.
-        if let Ok(proof) = proof_db.get_proof(&l2_hash, &l1_head_hash) {
+        if let Ok(proof) = self.proof_db.get_proof(&l2_hash, &l1_head_hash) {
             tracing::info!("The proof is already stored: {:?}, {:?}", user_req_id, request_id);
             return Ok(ProofResult::new(
                 &request_id,
@@ -217,7 +220,7 @@ impl Rpc for RpcImpl {
                 proof.raw(),
             ));
         }
-        drop(proof_db);
+        drop(guard);
 
         // Check if the proof is already being generated in SP1 network.
         let status = self.get_proof_status_from_sp1(&request_id).map_err(|e| {
@@ -231,8 +234,8 @@ impl Rpc for RpcImpl {
 
         match status {
             ProofStatus::ProofFulfilled => {
-                let proof_db = self.proof_db.read().unwrap();
-                let proof = proof_db.get_proof_by_id(&request_id).unwrap();
+                let _guard = self.task_lock.read().unwrap();
+                let proof = self.proof_db.get_proof_by_id(&request_id).unwrap();
                 Ok(ProofResult::new(
                     &request_id,
                     RequestResult::Completed,
