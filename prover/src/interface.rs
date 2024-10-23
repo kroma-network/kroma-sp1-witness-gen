@@ -8,7 +8,6 @@ use sp1_sdk::network::client::NetworkClient;
 use sp1_sdk::proto::network::{ProofMode, ProofStatus};
 use sp1_sdk::{block_on, SP1ProofWithPublicValues, SP1Stdin};
 use std::sync::{Arc, RwLock};
-use std::time::{Duration, Instant};
 
 use crate::errors::ProverError;
 use crate::get_proof_impl::ProofResult;
@@ -17,8 +16,6 @@ use crate::request_prove_impl::RequestResult;
 use crate::spec_impl::{spec_impl, SpecResult, SINGLE_BLOCK_ELF};
 
 static DEFAULT_PROOF_STORE_PATH: &str = "data/proof_store";
-static DEFAULT_PROOF_WAIT_TIMEOUT_SEC: u64 = 14_400;
-static DEFAULT_PROOF_WAIT_POLLING_RATE: u64 = 60;
 
 #[rpc]
 pub trait Rpc {
@@ -42,16 +39,14 @@ pub struct RpcImpl {
     task_lock: Arc<RwLock<()>>,
     proof_db: Arc<ProofDB>,
     client: Arc<NetworkClient>,
-    proof_wait_timeout: u64,
 }
 
 impl RpcImpl {
-    pub fn new(store_path: &str, sp1_private_key: &str, proof_wait_timeout: Option<u64>) -> Self {
+    pub fn new(store_path: &str, sp1_private_key: &str) -> Self {
         RpcImpl {
             task_lock: Arc::new(RwLock::new(())),
             proof_db: Arc::new(ProofDB::new(store_path.into())),
             client: Arc::new(NetworkClient::new(&sp1_private_key)),
-            proof_wait_timeout: proof_wait_timeout.unwrap_or(DEFAULT_PROOF_WAIT_TIMEOUT_SEC),
         }
     }
 
@@ -73,7 +68,7 @@ impl Default for RpcImpl {
     fn default() -> Self {
         let sp1_private_key = std::env::var("SP1_PRIVATE_KEY")
             .expect("SP1_PRIVATE_KEY must be set for remote proving");
-        Self::new(DEFAULT_PROOF_STORE_PATH, &sp1_private_key, None)
+        Self::new(DEFAULT_PROOF_STORE_PATH, &sp1_private_key)
     }
 }
 
@@ -87,38 +82,6 @@ impl RpcImpl {
         self.client
             .create_proof(SINGLE_BLOCK_ELF, &sp1_stdin, ProofMode::Plonk, SP1_SDK_VERSION)
             .await
-    }
-
-    async fn wait_proof(&self, request_id: String) -> Result<()> {
-        let timeout = Duration::from_secs(self.proof_wait_timeout);
-
-        let start_time = Instant::now();
-        let proof = loop {
-            let status = self.get_proof_status_from_sp1(&request_id).map_err(|e| {
-                tracing::error!("Failed to get proof status from SP1 network: {:?}", e);
-                ProverError::sp1_network_error(e.to_string())
-            })?;
-
-            if status == ProofStatus::ProofFulfilled {
-                let _guard = self.task_lock.read().unwrap();
-                break Some(self.proof_db.get_proof_by_id(&request_id).unwrap());
-            }
-            tracing::debug!("waiting for proof: {:?}, {:?}", request_id, status);
-
-            if start_time.elapsed() > timeout {
-                tracing::debug!("timeout to wait for proof: {:?}", request_id);
-                break None;
-            }
-            std::thread::sleep(Duration::from_secs(DEFAULT_PROOF_WAIT_POLLING_RATE));
-        };
-
-        if let Some(proof) = proof {
-            let _guard = self.task_lock.write().unwrap();
-            self.proof_db.set_proof(&request_id, &proof).unwrap();
-            tracing::info!("proof saved to db: {:#?}", request_id);
-        }
-
-        Ok(())
     }
 }
 
@@ -178,13 +141,6 @@ impl Rpc for RpcImpl {
             ProverError::db_error(e.to_string())
         })?;
         drop(guard);
-
-        // Wait for the proof to be generated.
-        let service = self.clone();
-        tokio::spawn(async move {
-            // TODO: handle timeout error.
-            let _ = service.wait_proof(request_id).await;
-        });
 
         Ok(RequestResult::Processing)
     }
