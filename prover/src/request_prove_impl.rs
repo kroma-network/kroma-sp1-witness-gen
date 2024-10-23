@@ -5,4 +5,5 @@ pub enum RequestResult {
     None,
     Processing,
     Completed,
+    Failed(String),
 }

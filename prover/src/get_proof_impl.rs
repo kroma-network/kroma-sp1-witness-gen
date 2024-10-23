@@ -47,4 +47,14 @@ impl ProofResult {
             proof: "".to_string(),
         }
     }
+
+    pub fn failed(request_id: String, message: String) -> Self {
+        Self {
+            request_id,
+            request_status: RequestResult::Failed(message),
+            vkey_hash: *VKEY_HASH,
+            public_values: "".to_string(),
+            proof: "".to_string(),
+        }
+    }
 }
