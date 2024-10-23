@@ -1,32 +1,16 @@
 use alloy_primitives::{hex::FromHex, B256};
 use anyhow::Result;
-use std::env;
 
-use crate::errors::KromaError;
+pub fn preprocessing(l2_hash: &String, l1_head_hash: &String) -> Result<(B256, B256, String)> {
+    let user_req_id = format!(
+        "{}-{}",
+        l2_hash.chars().take(8).collect::<String>(),
+        l1_head_hash.chars().take(8).collect::<String>()
+    );
+    let l2_hash = b256_from_str(&l2_hash)?;
+    let l1_head_hash = b256_from_str(&l1_head_hash)?;
 
-pub fn check_request(l2_hash: &String, l1_head_hash: &String) -> Result<(B256, B256)> {
-    let l2_hash = b256_from_str(&l2_hash).unwrap();
-    let l1_head_hash = b256_from_str(&l1_head_hash).unwrap();
-
-    // TODO: check more detail.
-
-    Ok((l2_hash, l1_head_hash))
-}
-
-pub fn check_endpoints() -> Result<(), KromaError> {
-    if env::var("L1_RPC").is_err() {
-        return Err(KromaError::empty_l1_rpc_endpoint());
-    }
-    if env::var("L1_BEACON_RPC").is_err() {
-        return Err(KromaError::empty_l1_beacon_endpoint());
-    }
-    if env::var("L2_RPC").is_err() {
-        return Err(KromaError::empty_l2_rpc_endpoint());
-    }
-    if env::var("L2_NODE_RPC").is_err() {
-        return Err(KromaError::empty_l2_node_rpc_endpoint());
-    }
-    Ok(())
+    Ok((l2_hash, l1_head_hash, user_req_id))
 }
 
 /// Convert a u32 array to a u8 array. Useful for converting the range vkey to a B256.

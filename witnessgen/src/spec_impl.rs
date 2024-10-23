@@ -1,5 +1,5 @@
 use alloy_primitives::B256;
-use kroma_utils::utils::u32_to_u8;
+use kroma_utils::{deps_version::SP1_SDK_VERSION, utils::u32_to_u8};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use sp1_sdk::{HashableKey, ProverClient};
@@ -14,12 +14,13 @@ pub static VKEY_HASH: Lazy<B256> = Lazy::new(|| {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SpecResult {
     pub version: String,
+    pub sp1_version: String,
     pub vkey_hash: B256,
 }
 
 impl SpecResult {
     pub fn new(version: String) -> Self {
-        Self { version, vkey_hash: *VKEY_HASH }
+        Self { version, sp1_version: SP1_SDK_VERSION.to_string(), vkey_hash: *VKEY_HASH }
     }
 }
 
