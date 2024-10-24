@@ -2,16 +2,11 @@ use alloy_primitives::B256;
 use anyhow::Result;
 use jsonrpc_core::Result as JsonResult;
 use jsonrpc_derive::rpc;
-use kroma_utils::task_info::TaskInfo;
-use kroma_utils::utils::preprocessing;
-use sp1_sdk::block_on;
-use std::sync::Arc;
-use std::sync::RwLock;
+use kroma_utils::{task_info::TaskInfo, utils::preprocessing};
+use std::sync::{Arc, RwLock};
 
 use crate::errors::WitnessGenError;
-use crate::get_witness_impl::WitnessResult;
-use crate::request_witness_impl::{generate_witness_impl, RequestResult};
-use crate::spec_impl::{spec_impl, SpecResult};
+use crate::types::{RequestResult, SpecResult, WitnessResult};
 use crate::witness_db::WitnessDB;
 
 static DEFAULT_WITNESS_STORE_PATH: &str = "data/witness_store";
@@ -19,9 +14,7 @@ static DEFAULT_WITNESS_STORE_PATH: &str = "data/witness_store";
 #[rpc]
 pub trait Rpc {
     #[rpc(name = "spec")]
-    fn spec(&self) -> JsonResult<SpecResult> {
-        Ok(spec_impl())
-    }
+    fn spec(&self) -> JsonResult<SpecResult>;
 
     #[rpc(name = "requestWitness")]
     fn request_witness(&self, l2_hash: String, l1_head_hash: String) -> JsonResult<RequestResult>;
@@ -32,17 +25,8 @@ pub trait Rpc {
 
 #[derive(Clone)]
 pub struct RpcImpl {
-    current_task: Arc<RwLock<TaskInfo>>,
-    witness_db: Arc<WitnessDB>,
-}
-
-impl RpcImpl {
-    pub fn new(store_path: &str) -> Self {
-        RpcImpl {
-            current_task: Arc::new(RwLock::new(TaskInfo::default())),
-            witness_db: Arc::new(WitnessDB::new(store_path)),
-        }
-    }
+    pub current_task: Arc<RwLock<TaskInfo>>,
+    pub witness_db: Arc<WitnessDB>,
 }
 
 impl Default for RpcImpl {
@@ -52,41 +36,23 @@ impl Default for RpcImpl {
 }
 
 impl RpcImpl {
-    pub async fn generate_witness(&self, l2_hash: B256, l1_head_hash: B256) -> Result<()> {
-        tracing::info!("start to generate witness");
-
-        // Get lock to update the current task.
-        let mut current_task = self.current_task.write().unwrap();
-        current_task.set(l2_hash, l1_head_hash);
-        drop(current_task);
-
-        // Generate witness.
-        let sp1_stdin = block_on(async { generate_witness_impl(l2_hash, l1_head_hash).await });
-
-        tracing::info!("successfully witness result generated");
-
-        // Get lock to release the current task.
-        let mut current_task = self.current_task.write().unwrap();
-        current_task.release();
-        drop(current_task);
-
-        // Store the witness to db.
-        match sp1_stdin {
-            Ok(value) => {
-                self.witness_db.set(&l2_hash, &l1_head_hash, value.buffer)?;
-                tracing::info!("store witness to db");
-            }
-            Err(e) => {
-                self.witness_db.set(&l2_hash, &l1_head_hash, vec![vec![]])?;
-                tracing::info!("failed to generate witness: {:?}", e);
-            }
+    pub fn new(store_path: &str) -> Self {
+        RpcImpl {
+            current_task: Arc::new(RwLock::new(TaskInfo::default())),
+            witness_db: Arc::new(WitnessDB::new(store_path)),
         }
+    }
 
-        Ok(())
+    async fn generate_witness(&self, l2_hash: B256, l1_head_hash: B256) -> Result<()> {
+        crate::utils::generate_witness(self, l2_hash, l1_head_hash).await
     }
 }
 
 impl Rpc for RpcImpl {
+    fn spec(&self) -> JsonResult<SpecResult> {
+        Ok(SpecResult::default())
+    }
+
     fn request_witness(&self, l2_hash: String, l1_head_hash: String) -> JsonResult<RequestResult> {
         let (l2_hash, l1_head_hash, user_req_id) =
             preprocessing(&l2_hash, &l1_head_hash).map_err(|e| {

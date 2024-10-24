@@ -5,18 +5,9 @@ use op_succinct_host_utils::{
     get_proof_stdin,
     witnessgen::WitnessGenExecutor,
 };
-use serde::{Deserialize, Serialize};
-use sp1_sdk::{ProverClient, SP1Stdin};
+use sp1_sdk::{block_on, ProverClient, SP1Stdin};
 
-use crate::spec_impl::SINGLE_BLOCK_ELF;
-
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-pub enum RequestResult {
-    None,
-    Processing,
-    Completed,
-    Failed,
-}
+use crate::{interface::RpcImpl, types::SINGLE_BLOCK_ELF};
 
 pub async fn generate_witness_impl(l2_hash: B256, l1_head_hash: B256) -> Result<SP1Stdin> {
     let data_fetcher = OPSuccinctDataFetcher::new().await;
@@ -57,4 +48,34 @@ pub async fn generate_witness_impl(l2_hash: B256, l1_head_hash: B256) -> Result<
     );
 
     Ok(sp1_stdin)
+}
+
+pub async fn generate_witness(rpc_impl: &RpcImpl, l2_hash: B256, l1_head_hash: B256) -> Result<()> {
+    tracing::info!("start to generate witness");
+
+    // Get lock to update the current task.
+    let mut task_lock = rpc_impl.current_task.write().unwrap();
+    task_lock.set(l2_hash, l1_head_hash);
+    drop(task_lock);
+
+    // Generate witness.
+    let sp1_stdin = block_on(async { generate_witness_impl(l2_hash, l1_head_hash).await });
+    // Get lock to release the current task.
+    let mut task_lock = rpc_impl.current_task.write().unwrap();
+    task_lock.release();
+    drop(task_lock);
+
+    // Store the witness to db.
+    match sp1_stdin {
+        Ok(value) => {
+            tracing::info!("successfully witness result generated");
+            rpc_impl.witness_db.set(&l2_hash, &l1_head_hash, value.buffer)?;
+        }
+        Err(e) => {
+            tracing::info!("failed to generate witness: {:?}", e);
+            rpc_impl.witness_db.set(&l2_hash, &l1_head_hash, vec![vec![]])?;
+        }
+    }
+
+    Ok(())
 }

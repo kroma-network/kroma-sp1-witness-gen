@@ -2,11 +2,7 @@ use clap::Parser;
 use jsonrpsee::http_client::{HttpClient, HttpClientBuilder};
 use jsonrpsee_core::client::ClientT;
 use jsonrpsee_core::rpc_params;
-use kroma_witnessgen::{
-    get_witness_impl::WitnessResult,
-    request_witness_impl::RequestResult,
-    spec_impl::{SpecResult, SINGLE_BLOCK_ELF},
-};
+use kroma_witnessgen::types::{RequestResult, SpecResult, WitnessResult, SINGLE_BLOCK_ELF};
 use sp1_sdk::{ProverClient, SP1Stdin};
 use std::time::Duration;
 

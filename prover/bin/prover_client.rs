@@ -1,14 +1,13 @@
 use clap::Parser;
 use jsonrpsee::http_client::{HttpClient, HttpClientBuilder};
-use jsonrpsee_core::client::ClientT;
-use jsonrpsee_core::rpc_params;
+use jsonrpsee_core::{client::ClientT, rpc_params};
 use kroma_prover::types::{ProofResult, SpecResult};
 use kroma_utils::utils::b256_from_str;
-use kroma_witnessgen::get_witness_impl::WitnessResult;
-use kroma_witnessgen::request_witness_impl::RequestResult;
-use kroma_witnessgen::witness_db::WitnessDB;
-use std::sync::Arc;
-use std::time::Duration;
+use kroma_witnessgen::{
+    types::{RequestResult, WitnessResult},
+    witness_db::WitnessDB,
+};
+use std::{sync::Arc, time::Duration};
 
 const CLIENT_TIMEOUT_SEC: u64 = 10800;
 const DEFAULT_RPC_SERVER_ENDPOINT: &str = "http://127.0.0.1:3031";
