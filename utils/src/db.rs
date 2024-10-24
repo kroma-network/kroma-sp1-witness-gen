@@ -89,6 +89,6 @@ mod tests {
 
         let key2 = vec![0, 0, 0, 2];
         let result = store.get::<Vec<Vec<u8>>>(&key2);
-        assert!(result.is_err());
+        assert!(result.is_none());
     }
 }
