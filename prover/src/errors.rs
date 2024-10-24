@@ -7,26 +7,23 @@ use serde::ser::{Serialize, Serializer};
 pub enum ProverErrorCode {
     ProofGenerationFailed,
     InvalidInputHash,
-    DBError,
     SP1NetworkError,
 }
 
 impl ProverErrorCode {
     pub fn code(&self) -> i64 {
         match *self {
-            ProverErrorCode::ProofGenerationFailed => 1000,
-            ProverErrorCode::DBError => 2000,
-            ProverErrorCode::InvalidInputHash => 3000,
-            ProverErrorCode::SP1NetworkError => 4000,
+            ProverErrorCode::InvalidInputHash => 1000,
+            ProverErrorCode::SP1NetworkError => 2000,
+            ProverErrorCode::ProofGenerationFailed => 3000,
         }
     }
 
     pub fn default_message(&self) -> String {
         match *self {
-            ProverErrorCode::ProofGenerationFailed => String::from("Proof generation failed"),
-            ProverErrorCode::DBError => String::from("Database error"),
             ProverErrorCode::InvalidInputHash => String::from("Invalid parameters"),
             ProverErrorCode::SP1NetworkError => String::from("SP1 network error"),
+            ProverErrorCode::ProofGenerationFailed => String::from("Proof generation failed"),
         }
     }
 }
@@ -34,10 +31,9 @@ impl ProverErrorCode {
 impl From<i64> for ProverErrorCode {
     fn from(code: i64) -> Self {
         match code {
-            1000 => ProverErrorCode::ProofGenerationFailed,
-            2000 => ProverErrorCode::DBError,
-            3000 => ProverErrorCode::InvalidInputHash,
-            4000 => ProverErrorCode::SP1NetworkError,
+            1000 => ProverErrorCode::InvalidInputHash,
+            2000 => ProverErrorCode::SP1NetworkError,
+            3000 => ProverErrorCode::ProofGenerationFailed,
             _ => panic!("not supported code: {:?}", code),
         }
     }
@@ -100,11 +96,6 @@ impl ProverError {
             Some(m) => m.clone(),
             None => code.default_message(),
         };
-        Self::new(code.clone(), Some(msg))
-    }
-
-    pub fn db_error(msg: String) -> Self {
-        let code = ProverErrorCode::DBError;
         Self::new(code.clone(), Some(msg))
     }
 
