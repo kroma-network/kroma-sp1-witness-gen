@@ -1,5 +1,8 @@
+use std::sync::Arc;
+
 use alloy_primitives::B256;
 use anyhow::Result;
+use kroma_utils::task_info::TaskInfo;
 use op_succinct_host_utils::{
     fetcher::{CacheMode, OPSuccinctDataFetcher, RPCMode},
     get_proof_stdin,
@@ -7,7 +10,11 @@ use op_succinct_host_utils::{
 };
 use sp1_sdk::{block_on, ProverClient, SP1Stdin};
 
-use crate::{interface::RpcImpl, types::SINGLE_BLOCK_ELF};
+use crate::{
+    interface::RpcImpl,
+    types::{RequestResult, SINGLE_BLOCK_ELF},
+    witness_db::WitnessDB,
+};
 
 pub async fn generate_witness_impl(l2_hash: B256, l1_head_hash: B256) -> Result<SP1Stdin> {
     let data_fetcher = OPSuccinctDataFetcher::new().await;
@@ -78,4 +85,28 @@ pub async fn generate_witness(rpc_impl: &RpcImpl, l2_hash: B256, l1_head_hash: B
     }
 
     Ok(())
+}
+
+pub fn get_status_by_local_id(
+    current_task: &TaskInfo,
+    witness_db: &Arc<WitnessDB>,
+    l2_hash: &B256,
+    l1_head_hash: &B256,
+) -> Result<RequestResult> {
+    // If the witness is empty, it means the witness generation failed.
+    if let Some(witness) = witness_db.get(l2_hash, l1_head_hash) {
+        if witness.is_empty() {
+            return Ok(RequestResult::Failed);
+        } else {
+            return Ok(RequestResult::Completed);
+        }
+    }
+    if current_task.is_equal(l2_hash.clone(), l1_head_hash.clone()) {
+        return Ok(RequestResult::Processing);
+    }
+    if current_task.is_empty() {
+        return Ok(RequestResult::None);
+    }
+
+    Err(anyhow::anyhow!("Another request is in progress"))
 }

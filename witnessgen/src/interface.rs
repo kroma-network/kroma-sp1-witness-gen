@@ -7,6 +7,7 @@ use std::sync::{Arc, RwLock};
 
 use crate::errors::WitnessGenError;
 use crate::types::{RequestResult, SpecResult, WitnessResult};
+use crate::utils::get_status_by_local_id;
 use crate::witness_db::WitnessDB;
 
 static DEFAULT_WITNESS_STORE_PATH: &str = "data/witness_store";
@@ -61,35 +62,32 @@ impl Rpc for RpcImpl {
                     l2_hash,
                     l1_head_hash
                 );
-                WitnessGenError::invalid_input_hash(e.to_string())
+                WitnessGenError::invalid_input_hash(e.to_string()).to_json_error()
             })?;
 
-        // Return cached witness if it exists. Otherwise, start to generate witness.
-        // If the witness is empty, it means the witness generation failed, so a retry is required.
-        if let Some(witness) = self.witness_db.get(&l2_hash, &l1_head_hash) {
-            if !witness.is_empty() {
+        let current_task = self.current_task.read().unwrap();
+        match get_status_by_local_id(&current_task, &self.witness_db, &l2_hash, &l1_head_hash) {
+            Ok(RequestResult::Completed) => {
                 tracing::info!("The request is already completed: {:?}", user_req_id);
                 return Ok(RequestResult::Completed);
             }
-        }
-
-        let current_task = self.current_task.read().unwrap();
-        if current_task.is_empty() {
-            // Return error if the request is already in progress.
-            drop(current_task);
-
-            tracing::info!("start to generate witness");
-            let service = self.clone();
-            tokio::task::spawn(
-                async move { service.generate_witness(l2_hash, l1_head_hash).await },
-            );
-            Ok(RequestResult::Processing)
-        } else if current_task.is_equal(l2_hash, l1_head_hash) {
-            tracing::info!("the request in already progress");
-            Ok(RequestResult::Processing)
-        } else {
-            tracing::info!("server is in progress with another request");
-            return Err(WitnessGenError::already_in_progress().into());
+            Ok(RequestResult::Processing) => {
+                tracing::info!("the request is in progress: {:?}", user_req_id);
+                return Ok(RequestResult::Processing);
+            }
+            Ok(RequestResult::Failed) | Ok(RequestResult::None) => {
+                tracing::info!("start to generate witness");
+                let service = self.clone();
+                drop(current_task);
+                tokio::task::spawn(
+                    async move { service.generate_witness(l2_hash, l1_head_hash).await },
+                );
+                return Ok(RequestResult::Processing);
+            }
+            Err(e) => {
+                tracing::error!("{:?}", e);
+                return Err(WitnessGenError::already_in_progress(e.to_string()).to_json_error());
+            }
         }
     }
 
@@ -101,33 +99,28 @@ impl Rpc for RpcImpl {
                     l2_hash,
                     l1_head_hash
                 );
-                WitnessGenError::invalid_input_hash(e.to_string())
+                WitnessGenError::invalid_input_hash(e.to_string()).to_json_error()
             })?;
 
-        // Check if it exists in the database.
-        match self.witness_db.get(&l2_hash, &l1_head_hash) {
-            Some(witness_result) => {
-                if witness_result.is_empty() {
-                    tracing::info!("The request is not found: {:?}", user_req_id);
-                    return Ok(WitnessResult::new_with_status(RequestResult::Failed));
-                } else {
-                    tracing::info!("The proof is already stored: {:?}", user_req_id);
-                    Ok(WitnessResult::new_from_witness_buf(
-                        RequestResult::Completed,
-                        witness_result,
-                    ))
-                }
+        // Return cached witness if it exists. Otherwise, start to generate witness.
+        let current_task = self.current_task.read().unwrap();
+        match get_status_by_local_id(&current_task, &self.witness_db, &l2_hash, &l1_head_hash) {
+            Ok(RequestResult::Completed) => {
+                let witness = self.witness_db.get(&l2_hash, &l1_head_hash).unwrap();
+                tracing::info!("The request is already completed: {:?}", user_req_id);
+                return Ok(WitnessResult::new_from_witness_buf(RequestResult::Completed, witness));
             }
-            None => {
-                // Check if the request is in progress.
-                let current_task = Arc::clone(&self.current_task);
-                if current_task.try_read().unwrap().is_equal(l2_hash, l1_head_hash) {
-                    tracing::info!("the request is in progress: {:?}", user_req_id);
-                    Ok(WitnessResult::new_with_status(RequestResult::Processing))
-                } else {
-                    tracing::info!("the request is not found: {:?}", user_req_id);
-                    Ok(WitnessResult::new_with_status(RequestResult::None))
-                }
+            Ok(status) => {
+                tracing::info!("the request's status: {:?}, {:?} ", user_req_id, status);
+                return Ok(WitnessResult::new_with_status(status));
+            }
+            Err(_) => {
+                tracing::info!(
+                    "the request's status: {:?}, {:?} ",
+                    user_req_id,
+                    RequestResult::None
+                );
+                return Ok(WitnessResult::new_with_status(RequestResult::None));
             }
         }
     }

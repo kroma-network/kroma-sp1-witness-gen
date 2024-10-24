@@ -64,8 +64,8 @@ impl std::fmt::Display for WitnessGenError {
     }
 }
 
-impl From<WitnessGenError> for JsonError {
-    fn from(err: WitnessGenError) -> Self {
+impl From<&WitnessGenError> for JsonError {
+    fn from(err: &WitnessGenError) -> Self {
         Self { code: JsonErrorCode::InternalError, message: err.to_string(), data: None }
     }
 }
@@ -75,11 +75,15 @@ impl WitnessGenError {
         WitnessGenError { code, message }
     }
 
+    pub fn to_json_error(&self) -> JsonError {
+        JsonError::from(self)
+    }
+
     pub fn invalid_input_hash(message: String) -> Self {
         Self::new(ErrorCode::InvalidInputHash, Some(message))
     }
 
-    pub fn already_in_progress() -> Self {
-        Self::new(ErrorCode::AlreadyInProgress, Some("Another request is in progress".to_string()))
+    pub fn already_in_progress(message: String) -> Self {
+        Self::new(ErrorCode::AlreadyInProgress, Some(message))
     }
 }
