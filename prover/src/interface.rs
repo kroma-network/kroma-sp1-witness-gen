@@ -1,19 +1,12 @@
-use anyhow::Result;
 use jsonrpc_core::Result as JsonResult;
 use jsonrpc_derive::rpc;
-use kroma_utils::deps_version::SP1_SDK_VERSION;
 use kroma_utils::utils::preprocessing;
-use kroma_witnessgen::get_witness_impl::WitnessResult;
 use sp1_sdk::network::client::NetworkClient;
-use sp1_sdk::proto::network::{ProofMode, ProofStatus};
-use sp1_sdk::{block_on, SP1ProofWithPublicValues, SP1Stdin};
 use std::sync::{Arc, RwLock};
 
 use crate::errors::ProverError;
-use crate::get_proof_impl::ProofResult;
 use crate::proof_db::ProofDB;
-use crate::request_prove_impl::RequestResult;
-use crate::spec_impl::{spec_impl, SpecResult, SINGLE_BLOCK_ELF};
+use crate::types::{ProofResult, RequestResult, SpecResult};
 
 static DEFAULT_PROOF_STORE_PATH: &str = "data/proof_store";
 
@@ -49,45 +42,6 @@ impl RpcImpl {
             client: Arc::new(NetworkClient::new(&sp1_private_key)),
         }
     }
-
-    fn request_prove_to_sp1(&self, witness: String) -> Result<String> {
-        // Recover a SP1Stdin from the witness string.
-        let mut sp1_stdin = SP1Stdin::new();
-        sp1_stdin.buffer = WitnessResult::string_to_witness_buf(&witness);
-
-        // Send a request to generate a proof to the sp1 network.
-        let request_id = block_on(async move {
-            self.client
-                .create_proof(SINGLE_BLOCK_ELF, &sp1_stdin, ProofMode::Plonk, SP1_SDK_VERSION)
-                .await
-        })?;
-        Ok(request_id)
-    }
-
-    fn get_proof_status_from_sp1(&self, request_id: &str) -> Result<RequestResult> {
-        match block_on(async {
-            self.client.get_proof_status::<SP1ProofWithPublicValues>(request_id).await
-        }) {
-            Ok((response, maybe_proof)) => match response.status() {
-                ProofStatus::ProofFulfilled => {
-                    self.proof_db.set_proof(&request_id, &maybe_proof.unwrap())?;
-                    Ok(RequestResult::Completed)
-                }
-                ProofStatus::ProofPreparing
-                | ProofStatus::ProofRequested
-                | ProofStatus::ProofClaimed => Ok(RequestResult::Processing),
-                ProofStatus::ProofUnclaimed => {
-                    Ok(RequestResult::Failed(response.unclaim_description.unwrap()))
-                }
-                ProofStatus::ProofUnspecifiedStatus => {
-                    tracing::error!("The proof status is unspecified: {:?}", request_id);
-                    Ok(RequestResult::None)
-                }
-            },
-            // There is only one error case: "Failed to get proof status"
-            Err(_) => Ok(RequestResult::None),
-        }
-    }
 }
 
 impl Default for RpcImpl {
@@ -100,7 +54,7 @@ impl Default for RpcImpl {
 
 impl Rpc for RpcImpl {
     fn spec(&self) -> JsonResult<SpecResult> {
-        Ok(spec_impl())
+        Ok(SpecResult::default())
     }
 
     fn request_prove(
@@ -147,10 +101,11 @@ impl Rpc for RpcImpl {
 
         // Send a request to SP1 network.
         let guard = self.task_lock.write().unwrap();
-        let request_id = self.request_prove_to_sp1(witness).map_err(|e| {
-            tracing::error!("Failed to send request to SP1 network: {:?}", e);
-            ProverError::sp1_network_error(e.to_string()).to_json_error()
-        })?;
+        let request_id =
+            crate::utils::request_prove_to_sp1(&self.client, witness).map_err(|e| {
+                tracing::error!("Failed to send request to SP1 network: {:?}", e);
+                ProverError::sp1_network_error(e.to_string()).to_json_error()
+            })?;
         tracing::info!("Sent request to SP1 network: {:?}", request_id);
 
         // Store the `request_id` to the database.
@@ -197,14 +152,16 @@ impl Rpc for RpcImpl {
         drop(guard);
 
         // Check if the proof is already being generated in SP1 network.
-        let request_result = self.get_proof_status_from_sp1(&request_id).map_err(|e| {
-            tracing::error!(
-                "Failed to get proof status from SP1 network: {:?}, {:?}",
-                user_req_id,
-                request_id
-            );
-            ProverError::sp1_network_error(e.to_string()).to_json_error()
-        })?;
+        let request_result =
+            crate::utils::get_proof_status_from_sp1(&self.client, &self.proof_db, &request_id)
+                .map_err(|e| {
+                    tracing::error!(
+                        "Failed to get proof status from SP1 network: {:?}, {:?}",
+                        user_req_id,
+                        request_id
+                    );
+                    ProverError::sp1_network_error(e.to_string()).to_json_error()
+                })?;
 
         match request_result {
             RequestResult::Completed => {
