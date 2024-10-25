@@ -16,9 +16,11 @@ pub fn request_prove_to_sp1(client: &Arc<NetworkClient>, witness: String) -> Res
     sp1_stdin.buffer = WitnessResult::string_to_witness_buf(&witness);
 
     // Send a request to generate a proof to the sp1 network.
+    tracing::debug!("ready to send request to SP1 network prover");
     let request_id = block_on(async move {
         client.create_proof(SINGLE_BLOCK_ELF, &sp1_stdin, ProofMode::Plonk, SP1_SDK_VERSION).await
     })?;
+    tracing::debug!("Sent the request to SP1 network prover: {:?}", request_id);
     Ok(request_id)
 }
 
