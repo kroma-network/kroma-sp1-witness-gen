@@ -2,11 +2,7 @@ use clap::Parser;
 use jsonrpsee::http_client::{HttpClient, HttpClientBuilder};
 use jsonrpsee_core::client::ClientT;
 use jsonrpsee_core::rpc_params;
-use kroma_witnessgen::{
-    get_witness_impl::WitnessResult,
-    request_witness_impl::RequestResult,
-    spec_impl::{SpecResult, SINGLE_BLOCK_ELF},
-};
+use kroma_witnessgen::types::{RequestResult, SpecResult, WitnessResult, SINGLE_BLOCK_ELF};
 use sp1_sdk::{ProverClient, SP1Stdin};
 use std::time::Duration;
 
@@ -52,12 +48,19 @@ async fn test_get(cli: HttpClient) -> bool {
     let params = rpc_params![l2_head, l1_head];
     let witness_result: WitnessResult = cli.request("getWitness", params).await.unwrap();
 
-    let prover = ProverClient::new();
-    let mut sp1_stdin = SP1Stdin::new();
-    sp1_stdin.buffer = witness_result.get_witness_buf();
+    match witness_result.status {
+        RequestResult::Completed => {
+            let prover = ProverClient::new();
+            let mut sp1_stdin = SP1Stdin::new();
+            sp1_stdin.buffer = witness_result.get_witness_buf();
 
-    let (_, report) = prover.execute(SINGLE_BLOCK_ELF, sp1_stdin).run().unwrap();
-    println!("report: {:?}", report);
+            let (_, report) = prover.execute(SINGLE_BLOCK_ELF, sp1_stdin).run().unwrap();
+            println!("report: {:?}", report);
+        }
+        _ => {
+            println!("status: {:?}", witness_result.status);
+        }
+    }
 
     true
 }

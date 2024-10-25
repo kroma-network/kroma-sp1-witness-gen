@@ -24,7 +24,7 @@ fn main() -> Result<()> {
     let sp1_private_key =
         std::env::var("SP1_PRIVATE_KEY").expect("SP1_PRIVATE_KEY must be set for remote proving");
     let mut io = jsonrpc_core::IoHandler::new();
-    io.extend_with(RpcImpl::new(PROOF_STORE_PATH, &sp1_private_key, None).to_delegate());
+    io.extend_with(RpcImpl::new(PROOF_STORE_PATH, &sp1_private_key).to_delegate());
 
     tracing::info!("Starting Prover at {}", args.endpoint);
     let server = ServerBuilder::new(io)

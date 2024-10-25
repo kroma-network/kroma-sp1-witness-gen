@@ -44,7 +44,7 @@ impl ProofDB {
         self.db.set(&req_id_key, &proof)
     }
 
-    pub fn get_request_id(&self, l2_hash: &B256, l1_head_hash: &B256) -> Result<String> {
+    pub fn get_request_id(&self, l2_hash: &B256, l1_head_hash: &B256) -> Option<String> {
         let key = Self::build_key(l2_hash, l1_head_hash);
         self.db.get(&key)
     }
@@ -53,8 +53,15 @@ impl ProofDB {
         &self,
         l2_hash: &B256,
         l1_head_hash: &B256,
-    ) -> Result<SP1ProofWithPublicValues> {
-        let request_id = self.get_request_id(l2_hash, l1_head_hash)?;
+    ) -> Option<SP1ProofWithPublicValues> {
+        let request_id = self.get_request_id(l2_hash, l1_head_hash);
+        if request_id.is_none() {
+            return None;
+        }
+        self.get_proof_by_id(&request_id.unwrap())
+    }
+
+    pub fn get_proof_by_id(&self, request_id: &str) -> Option<SP1ProofWithPublicValues> {
         let req_id_key = Self::convert_req_id_as_key(&request_id);
         self.db.get(&req_id_key)
     }

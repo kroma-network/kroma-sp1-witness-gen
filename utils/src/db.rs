@@ -26,16 +26,20 @@ impl FileDB {
         options
     }
 
-    pub fn get<T: DeserializeOwned>(&self, key: &Vec<u8>) -> Result<T> {
+    pub fn get<T: DeserializeOwned>(&self, key: &Vec<u8>) -> Option<T> {
         let result = self.db.get(key);
         match result {
             Ok(Some(serialized_value)) => {
                 let value: T = bincode::deserialize(&serialized_value)
-                    .map_err(|e| anyhow!("Failed to deserialize value: {}", e))?;
-                Ok(value)
+                    .map_err(|e| anyhow!("Failed to deserialize value: {}", e))
+                    .unwrap();
+                Some(value)
             }
-            Ok(None) => Err(anyhow!("Key not found")),
-            Err(e) => Err(anyhow!("Failed to get value: {}", e)),
+            Ok(None) => None,
+            Err(e) => {
+                tracing::error!("Unexpected error occurs in db: {:?}", e);
+                None
+            }
         }
     }
 
@@ -85,6 +89,6 @@ mod tests {
 
         let key2 = vec![0, 0, 0, 2];
         let result = store.get::<Vec<Vec<u8>>>(&key2);
-        assert!(result.is_err());
+        assert!(result.is_none());
     }
 }
