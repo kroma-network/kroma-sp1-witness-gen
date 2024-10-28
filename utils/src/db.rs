@@ -26,29 +26,58 @@ impl FileDB {
         options
     }
 
-    pub fn get<T: DeserializeOwned>(&self, key: &Vec<u8>) -> Option<T> {
-        let result = self.db.get(key);
-        match result {
-            Ok(Some(serialized_value)) => {
-                let value: T = bincode::deserialize(&serialized_value)
-                    .map_err(|e| anyhow!("Failed to deserialize value: {}", e))
-                    .unwrap();
-                Some(value)
-            }
-            Ok(None) => None,
-            Err(e) => {
-                tracing::error!("Unexpected error occurs in db: {:?}", e);
-                None
-            }
-        }
+    fn append_timestamp(value: Vec<u8>) -> Vec<u8> {
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("Time went backwards")
+            .as_secs()
+            .to_le_bytes();
+        let mut updated_vector = Vec::with_capacity(value.len() + timestamp.len());
+        updated_vector.extend_from_slice(&timestamp);
+        updated_vector.extend_from_slice(&value);
+        updated_vector
     }
 
     pub fn set<T: Serialize>(&self, key: &Vec<u8>, value: &T) -> Result<()> {
         let serialized_value =
             bincode::serialize(value).map_err(|e| anyhow!("Failed to serialize value: {}", e))?;
-        self.db
-            .put(key, serialized_value)
-            .map_err(|e| anyhow!("Failed to set key-value pair: {}", e))
+
+        // Append `timestamp` to the serialized value.
+        let time_value = Self::append_timestamp(serialized_value);
+
+        // Store the value with `timestamp` in the database.
+        self.db.put(key, time_value).map_err(|e| anyhow!("Failed to set key-value pair: {}", e))
+    }
+
+    fn split_value_and_timestamp(mut value_from_db: Vec<u8>) -> (u64, Vec<u8>) {
+        let timestamp_bytes: Vec<u8> = value_from_db.drain(..8).collect();
+        let timestamp = u64::from_le_bytes(timestamp_bytes.try_into().unwrap());
+        (timestamp, value_from_db)
+    }
+
+    pub fn get_with_timestamp<T: DeserializeOwned>(&self, key: &Vec<u8>) -> Option<(u64, T)> {
+        let result = self.db.get(key);
+
+        // Fetch the value from the database.
+        let value_from_db = match result {
+            Ok(Some(value)) => value,
+            Ok(None) => return None,
+            Err(e) => {
+                tracing::error!("Unexpected error occurs in db: {:?}", e);
+                return None;
+            }
+        };
+
+        // split the `timestamp` and `value` from the fetched value.
+        let (timestamp, serialized_value) = Self::split_value_and_timestamp(value_from_db);
+        let value: T = bincode::deserialize(&serialized_value)
+            .map_err(|e| anyhow!("Failed to deserialize value: {}", e))
+            .unwrap();
+        Some((timestamp, value))
+    }
+
+    pub fn get<T: DeserializeOwned>(&self, key: &Vec<u8>) -> Option<T> {
+        self.get_with_timestamp(key).map(|(_, value)| value)
     }
 }
 
@@ -76,7 +105,7 @@ mod tests {
     }
 
     #[test]
-    fn test_witness_store() {
+    fn test_store() {
         let store = STORE.lock().unwrap();
         let value = vec![vec![1, 2, 3]];
 
