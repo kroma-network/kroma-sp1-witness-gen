@@ -1,5 +1,5 @@
 [workspace]
-members = ["program", "script", "witnessgen", "utils", "prover"]
+members = ["program", "script", "witnessgen", "utils", "prover", "integration-tests"]
 resolver = "2"
 
 [workspace.package]
@@ -67,12 +67,16 @@ op-succinct-host-utils = { git = "https://github.com/succinctlabs/op-succinct", 
 # kroma
 kroma-utils = { path = "utils" }
 kroma-witnessgen = { path = "witnessgen" }
+kroma-prover = { path = "prover" }
 
 [profile.release-client-lto] # kroma
 inherits = "release"
 panic = "abort"
 codegen-units = 1
 lto = "fat"
+
+[profile.dev]
+incremental = true
 
 [patch.crates-io]
 tiny-keccak = { git = "https://github.com/sp1-patches/tiny-keccak", branch = "patch-v2.0.2" }

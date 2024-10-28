@@ -1,0 +1,25 @@
+[package]
+name = "integration-tests"
+version = "0.1.0"
+license.workspace = true
+edition.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "integration-tests"
+path = "bin/scenario.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+jsonrpsee-core = "0.16.2"
+jsonrpsee = { version = "0.16.2", features = ["full"] }
+tokio.workspace = true
+tracing.workspace = true
+
+alloy-primitives.workspace = true
+sp1-sdk.workspace = true
+kroma-witnessgen.workspace = true
+kroma-prover.workspace = true
