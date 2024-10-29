@@ -3,13 +3,16 @@ use anyhow::{anyhow, Result};
 use kroma_utils::db::FileDB;
 use sp1_sdk::SP1ProofWithPublicValues;
 
+static CAPACITY: usize = 1000;
+static VALUE_EXPIRING_SECS: usize = 7 * 24 * 60 * 60; // 604800; 7 days in seconds.
+
 pub struct ProofDB {
     db: FileDB,
 }
 
 impl ProofDB {
     pub fn new(db_file_path: &str) -> Self {
-        Self { db: FileDB::new(db_file_path.into()) }
+        Self { db: FileDB::new(db_file_path.into(), CAPACITY, VALUE_EXPIRING_SECS) }
     }
 
     fn build_key(l2_hash: &B256, l1_head_hash: &B256) -> Vec<u8> {
