@@ -74,14 +74,13 @@ impl Rpc for RpcImpl {
             })?;
 
         // Check a status of the request.
-        let guard = self.task_lock.write().unwrap();
+        let _guard = self.task_lock.write().unwrap();
         let req_status = crate::utils::get_status_by_local_id(
             &self.client,
             &self.proof_db,
             &l2_hash,
             &l1_head_hash,
         );
-        drop(guard);
 
         // Return the status in case of `Processing` or `Completed`.
         if req_status == RequestResult::Processing || req_status == RequestResult::Completed {
@@ -98,10 +97,8 @@ impl Rpc for RpcImpl {
         tracing::info!("Sent request to SP1 network: {:?}, {:?}", user_req_id, request_id);
 
         // Store the `request_id` to the database.
-        let guard = self.task_lock.write().unwrap();
         self.proof_db.set_request_id(&l2_hash, &l1_head_hash, &request_id).unwrap();
         tracing::info!("Stored request id to the database: {:?}, {:?}", user_req_id, request_id);
-        drop(guard);
 
         Ok(RequestResult::Processing)
     }
