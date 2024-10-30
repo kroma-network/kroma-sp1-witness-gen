@@ -1,13 +1,13 @@
 #![allow(unused_mut)]
 mod utils;
 
-use std::{env, time::Instant};
+use std::env;
 
 use anyhow::Result;
 use cfg_if::cfg_if;
 use clap::{Parser, ValueEnum};
 use op_succinct_host_utils::{
-    fetcher::{CacheMode, OPSuccinctDataFetcher, RPCConfig, RPCMode},
+    fetcher::{CacheMode, OPSuccinctDataFetcher, RPCConfig},
     get_proof_stdin,
     witnessgen::WitnessGenExecutor,
     ProgramType,
@@ -85,9 +85,10 @@ async fn main() -> Result<()> {
 
     let data_fetcher = OPSuccinctDataFetcher {
         rpc_config: RPCConfig {
+            l1_rpc: env::var("L1_RPC").expect("L1_RPC is not set."),
+            l1_beacon_rpc: env::var("L1_BEACON_RPC").expect("L1_BEACON_RPC is not set."),
             l2_rpc: env::var("L2_RPC").expect("L2_RPC is not set."),
             l2_node_rpc: env::var("L2_NODE_RPC").expect("L2_NODE_RPC is not set."),
-            ..Default::default()
         },
         ..Default::default()
     };
@@ -135,10 +136,8 @@ async fn main() -> Result<()> {
     match args.method {
         Method::Preview => {}
         Method::Execute => {
-            let start_time = Instant::now();
             let (mut public_values, report) =
                 prover.execute(SINGLE_BLOCK_ELF, sp1_stdin).run().unwrap();
-            let execution_duration = start_time.elapsed();
 
             cfg_if! {
                 if #[cfg(feature = "kroma")] {
@@ -158,13 +157,7 @@ async fn main() -> Result<()> {
                 }
             }
 
-            utils::report_execution(
-                &data_fetcher,
-                &report,
-                execution_duration,
-                l2_chain_id,
-                args.l2_block,
-            );
+            utils::report_execution(&data_fetcher, &report, l2_chain_id, args.l2_block);
         }
         Method::Prove => {
             // If the prove flag is set, generate a proof.
@@ -188,6 +181,7 @@ async fn main() -> Result<()> {
 
 #[cfg(test)]
 mod tests {
+    use alloy_primitives::hex;
     use sp1_sdk::{HashableKey, ProverClient, SP1ProofWithPublicValues};
 
     use crate::SINGLE_BLOCK_ELF;

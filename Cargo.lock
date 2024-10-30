@@ -4723,6 +4723,7 @@ dependencies = [
 [[package]]
 name = "op-succinct-client-utils"
 version = "0.1.0"
+source = "git+https://github.com/succinctlabs/op-succinct?rev=053c73e#053c73e0f71e1a60bc4505cdf746105640077b75"
 dependencies = [
  "alloy-consensus",
  "alloy-eips",
@@ -4754,6 +4755,7 @@ dependencies = [
 [[package]]
 name = "op-succinct-host-utils"
 version = "0.1.0"
+source = "git+https://github.com/succinctlabs/op-succinct?rev=053c73e#053c73e0f71e1a60bc4505cdf746105640077b75"
 dependencies = [
  "alloy",
  "alloy-consensus",
@@ -8743,8 +8745,3 @@ dependencies = [
  "sha3",
  "subtle",
 ]
-
-[[patch.unused]]
-name = "alloy-primitives"
-version = "0.8.3"
-source = "git+https://github.com/sp1-patches/alloy-core?branch=patch-v0.8.3#68030698d446e2278a95fc7bf16403c1f1282f80"

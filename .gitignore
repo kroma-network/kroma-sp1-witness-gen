@@ -26,6 +26,7 @@ execution-reports/
 
 # Rollup Config
 rollup-configs/
+configs/
 
 # DB
 db/proofs.db

@@ -14,7 +14,6 @@ const REPORT_DIR: &str = "execution-reports";
 pub fn report_execution(
     data_fetcher: &OPSuccinctDataFetcher,
     report: &ExecutionReport,
-    execution_duration: std::time::Duration,
     l2_chain_id: u64,
     l2_number: u64,
 ) {

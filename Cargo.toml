@@ -61,8 +61,8 @@ sp1-sdk = { version = "3.0.0" }
 sp1-build = { version = "3.0.0" }
 
 # op-succinct
-op-succinct-client-utils = { path = "../op-succinct-1/utils/client" }
-op-succinct-host-utils = { path = "../op-succinct-1/utils/host" }
+op-succinct-client-utils = { git = "https://github.com/succinctlabs/op-succinct", rev = "053c73e" }
+op-succinct-host-utils = { git = "https://github.com/succinctlabs/op-succinct", rev = "053c73e" }
 
 # kroma
 kroma-utils = { path = "utils" }
@@ -80,5 +80,3 @@ sha2 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sh
 ecdsa = { git = "https://github.com/sp1-patches/signatures", branch = "patch-ecdsa-v0.16.8" }
 bn = { git = "https://github.com/0xWOLAND/bn.git", package = "substrate-bn" }
 sha3 = { git = "https://github.com/sp1-patches/RustCrypto-hashes", package = "sha3", branch = "patch-sha3-v0.10.8" }
-# This patch uses sha3 instead of tiny-keccak. Reduces cycle count for Keccak by 50%.
-alloy-primitives = { git = "https://github.com/sp1-patches/alloy-core", branch = "patch-v0.8.3" }

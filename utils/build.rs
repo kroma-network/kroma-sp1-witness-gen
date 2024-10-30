@@ -1,11 +1,10 @@
-
-use std::{fs::File, io::Write};
+use std::{ fs::File, io::Write };
 
 fn parse_package_version(package_data: &str, package_name: &str) -> Option<String> {
     let name_key = format!(r#"name = "{}""#, package_name);
     if let Some(name_pos) = package_data.find(&name_key) {
         if let Some(version_pos) = package_data[name_pos..].find("version = ") {
-            let version_start = name_pos + version_pos + "version = ".len() + 1; // "version = " 뒤의 시작점 + 따옴표 제거
+            let version_start = name_pos + version_pos + "version = ".len() + 1;
             if let Some(version_end) = package_data[version_start..].find('"') {
                 return Some(package_data[version_start..version_start + version_end].to_string());
             }
