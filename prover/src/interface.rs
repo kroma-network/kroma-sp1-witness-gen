@@ -146,7 +146,7 @@ impl Rpc for RpcImpl {
                     &user_req_id,
                     RequestResult::Completed,
                     proof.public_values.raw(),
-                    format!("0x{:?}", proof.raw()),
+                    "0x".to_string() + &proof.raw(),
                 )
             }
             RequestResult::Processing => ProofResult::processing(user_req_id),
