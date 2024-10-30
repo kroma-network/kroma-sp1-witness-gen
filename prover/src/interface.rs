@@ -126,8 +126,7 @@ impl Rpc for RpcImpl {
             return Ok(ProofResult::new(
                 &self.proof_db.get_request_id(&l2_hash, &l1_head_hash).unwrap(),
                 RequestResult::Completed,
-                proof.public_values.raw(),
-                proof.raw(),
+                proof,
             ));
         }
         drop(guard);
@@ -142,12 +141,7 @@ impl Rpc for RpcImpl {
         ) {
             RequestResult::Completed => {
                 let proof = self.proof_db.get_proof(&l2_hash, &l1_head_hash).unwrap();
-                ProofResult::new(
-                    &user_req_id,
-                    RequestResult::Completed,
-                    proof.public_values.raw(),
-                    "0x".to_string() + &proof.raw(),
-                )
+                ProofResult::new(&user_req_id, RequestResult::Completed, proof)
             }
             RequestResult::Processing => ProofResult::processing(user_req_id),
             RequestResult::None => ProofResult::none(),

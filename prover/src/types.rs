@@ -1,7 +1,7 @@
 use kroma_utils::deps_version::SP1_SDK_VERSION;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use sp1_sdk::{HashableKey, ProverClient};
+use sp1_sdk::{HashableKey, ProverClient, SP1ProofWithPublicValues};
 
 // TODO: integrate elf and vkey_hash
 pub const SINGLE_BLOCK_ELF: &[u8] = include_bytes!("../../program/elf/fault-proof-elf");
@@ -51,15 +51,14 @@ impl ProofResult {
     pub fn new<T: ToString>(
         request_id: &T,
         request_status: RequestResult,
-        public_values: T,
-        proof: T,
+        proof: SP1ProofWithPublicValues,
     ) -> Self {
         Self {
             request_id: request_id.to_string(),
             request_status,
             program_key: PROGRAM_KEY.to_string(),
-            public_values: public_values.to_string(),
-            proof: proof.to_string(),
+            public_values: hex::encode(&proof.public_values),
+            proof: hex::encode(&proof.bytes()),
         }
     }
 
