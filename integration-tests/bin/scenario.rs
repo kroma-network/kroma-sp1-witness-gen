@@ -1,10 +1,10 @@
-use std::{thread::sleep, time::Duration};
-
 use alloy_primitives::{b256, B256};
 use anyhow::Result;
 use clap::Parser;
 use integration_tests::{ProverRequest, TestClient, WitnessRequest};
 use kroma_witnessgen::errors::ErrorCode as WitnessErrorCode;
+use serde::{Deserialize, Serialize};
+use std::{fs::File, io::Write, thread::sleep, time::Duration};
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -14,6 +14,13 @@ struct Args {
 
     #[clap(short, long)]
     l1_head_hash: B256,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ProofFixture {
+    program_key: String,
+    public_values: String,
+    proof: String,
 }
 
 #[tokio::main]
@@ -81,9 +88,15 @@ async fn main() -> Result<()> {
         sleep(Duration::from_secs(20));
     };
 
-    println!("Proof: {:?}", proof_result.proof);
-
-    // TODO: send proof to the verifier contract
+    let proof_fixture = ProofFixture {
+        program_key: proof_result.program_key,
+        public_values: proof_result.public_values,
+        proof: proof_result.proof,
+    };
+    let proof_json = serde_json::to_string_pretty(&proof_fixture)?;
+    let mut file = File::create("output.json")?;
+    file.write_all(proof_json.as_bytes())?;
+    tracing::info!("Proof was saved");
 
     Ok(())
 }
