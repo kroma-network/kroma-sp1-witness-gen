@@ -1,13 +1,13 @@
 #![allow(unused_mut)]
 mod utils;
 
-use std::{env, time::{Duration, Instant}};
+use std::{env, time::Instant};
 
 use anyhow::Result;
 use cfg_if::cfg_if;
 use clap::{Parser, ValueEnum};
 use op_succinct_host_utils::{
-    fetcher::{CacheMode, OPSuccinctDataFetcher, RPCMode},
+    fetcher::{CacheMode, OPSuccinctDataFetcher, RPCConfig, RPCMode},
     get_proof_stdin,
     witnessgen::WitnessGenExecutor,
     ProgramType,
@@ -22,7 +22,6 @@ cfg_if! {
     }
 }
 
-pub const WITNESSGEN_TIMEOUT: Duration = Duration::from_secs(1200);
 pub const SINGLE_BLOCK_ELF: &[u8] = include_bytes!("../../program/elf/fault-proof-elf");
 
 #[derive(ValueEnum, Debug, Clone, PartialEq)]
@@ -85,7 +84,11 @@ async fn main() -> Result<()> {
     sdk_utils::setup_logger();
 
     let data_fetcher = OPSuccinctDataFetcher {
-        l2_rpc: env::var("L2_RPC").expect("L2_RPC is not set."),
+        rpc_config: RPCConfig {
+            l2_rpc: env::var("L2_RPC").expect("L2_RPC is not set."),
+            l2_node_rpc: env::var("L2_NODE_RPC").expect("L2_NODE_RPC is not set."),
+            ..Default::default()
+        },
         ..Default::default()
     };
 
@@ -118,7 +121,7 @@ async fn main() -> Result<()> {
     // By default, re-run the native execution unless the user passes `--use-cache`.
     if !args.use_cache {
         // Start the server and native client.
-        let mut witnessgen_executor = WitnessGenExecutor::new(WITNESSGEN_TIMEOUT);
+        let mut witnessgen_executor = WitnessGenExecutor::default();
         witnessgen_executor.spawn_witnessgen(&host_cli).await?;
         witnessgen_executor.flush().await?;
     }
@@ -126,7 +129,7 @@ async fn main() -> Result<()> {
     // Get the stdin for the block.
     let sp1_stdin = get_proof_stdin(&host_cli)?;
 
-    let l2_chain_id = data_fetcher.get_chain_id(RPCMode::L2).await.unwrap();
+    let l2_chain_id = data_fetcher.get_l2_chain_id().await?;
     let prover = ProverClient::new();
 
     match args.method {
@@ -171,8 +174,7 @@ async fn main() -> Result<()> {
             let proof = prover.prove(&pk, sp1_stdin).plonk().run().unwrap();
 
             // Create a proof directory for the chain ID if it doesn't exist.
-            let proof_dir =
-                format!("data/{}/proofs", data_fetcher.get_chain_id(RPCMode::L2).await.unwrap());
+            let proof_dir = format!("data/{}/proofs", data_fetcher.get_l2_chain_id().await?);
             if !std::path::Path::new(&proof_dir).exists() {
                 std::fs::create_dir_all(&proof_dir)?;
             }
@@ -182,4 +184,29 @@ async fn main() -> Result<()> {
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use sp1_sdk::{HashableKey, ProverClient, SP1ProofWithPublicValues};
+
+    use crate::SINGLE_BLOCK_ELF;
+
+    #[test]
+    fn print_proof() {
+        // Setup the prover client.
+        let client = ProverClient::new();
+
+        // Setup the program.
+        let (pk, vk) = client.setup(SINGLE_BLOCK_ELF);
+        println!("{:?}", vk.bytes32().to_string());
+
+        let proof = SP1ProofWithPublicValues::load(
+            "/home/ubuntu/kroma-sp1-prover/data/11155420/proofs/18579127.bin",
+        )
+        .unwrap();
+
+        println!("public values bytes: 0x{:?}", hex::encode(proof.public_values.as_slice()));
+        println!("proof bytes: 0x{}", hex::encode(proof.bytes()));
+    }
 }

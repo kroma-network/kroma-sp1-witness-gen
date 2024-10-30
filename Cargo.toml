@@ -33,30 +33,36 @@ tracing-subscriber = "0.3.18"
 rocksdb = { version = "0.22", default-features = false, features = ["snappy"] }
 
 # ethreum
-alloy-consensus = { version = "0.3.6", default-features = false }
-alloy-primitives = { version = "0.8", default-features = false }
-alloy-provider = { version = "0.3.6", default-features = false }
+alloy-consensus = { version = "0.4.2", default-features = false }
+# Uses sha3 instead of tiny-keccak. Reduces cycle count for Keccak by 50%.
+alloy-primitives = { version = "0.8.4", default-features = false, features = [
+    "sha3-keccak",
+] }
+alloy-provider = { version = "0.4.2", default-features = false }
 
 # optimism
-op-alloy-genesis = { version = "0.2.12", default-features = false }
-op-alloy-rpc-types-engine = { version = "0.2.12", default-features = false }
+op-alloy-genesis = { version = "0.4.0", default-features = false, features = [
+    "serde",
+] }
+op-alloy-protocol = { version = "0.4.0", default-features = false }
 
 # kona
-kona-primitives = { git = "https://github.com/anton-rs/kona", rev = "5d0e211ca1c271377fe184729761bcb217f1f60a" }
-kona-executor = { git = "https://github.com/anton-rs/kona", rev = "5d0e211ca1c271377fe184729761bcb217f1f60a" }
-kona-client = { git = "https://github.com/anton-rs/kona", rev = "5d0e211ca1c271377fe184729761bcb217f1f60a" }
-kona-host = { git = "https://github.com/anton-rs/kona", rev = "5d0e211ca1c271377fe184729761bcb217f1f60a" }
-kona-derive = { git = "https://github.com/anton-rs/kona", rev = "5d0e211ca1c271377fe184729761bcb217f1f60a" }
-kona-mpt = { git = "https://github.com/anton-rs/kona", rev = "5d0e211ca1c271377fe184729761bcb217f1f60a" }
+kona-primitives = { git = "https://github.com/moongate-forks/kona", branch = "patch-10-17-kona" }
+kona-executor = { git = "https://github.com/moongate-forks/kona", branch = "patch-10-17-kona" }
+kona-client = { git = "https://github.com/moongate-forks/kona", branch = "patch-10-17-kona" }
+kona-host = { git = "https://github.com/moongate-forks/kona", branch = "patch-10-17-kona" }
+kona-derive = { git = "https://github.com/moongate-forks/kona", branch = "patch-10-17-kona" }
+kona-mpt = { git = "https://github.com/moongate-forks/kona", branch = "patch-10-17-kona" }
+kona-providers = { git = "https://github.com/moongate-forks/kona", branch = "patch-10-17-kona" }
 
 # sp1
-sp1-sdk = { version = "3.0.0-rc1" }
-sp1-zkvm = { version = "3.0.0-rc1", features = ["verify"] }
-sp1-build = { version = "3.0.0-rc1" }
+sp1-zkvm = { version = "3.0.0", features = ["verify"] }
+sp1-sdk = { version = "3.0.0" }
+sp1-build = { version = "3.0.0" }
 
 # op-succinct
-op-succinct-client-utils = { git = "https://github.com/succinctlabs/op-succinct", rev = "a2b3ff0" }
-op-succinct-host-utils = { git = "https://github.com/succinctlabs/op-succinct", rev = "a2b3ff0" }
+op-succinct-client-utils = { path = "../op-succinct-1/utils/client" }
+op-succinct-host-utils = { path = "../op-succinct-1/utils/host" }
 
 # kroma
 kroma-utils = { path = "utils" }

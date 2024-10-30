@@ -20,11 +20,11 @@ pub async fn generate_witness_impl(l2_hash: B256, l1_head_hash: B256) -> Result<
     let data_fetcher = OPSuccinctDataFetcher::new().await;
 
     // Check the l2 block exists in the chain.
-    let l2_header = data_fetcher.get_header_by_hash(RPCMode::L2, l2_hash).await?;
+    let l2_header = data_fetcher.get_l2_header(l2_hash.into()).await?;
     let l2_number = l2_header.number;
 
     // Check the l1 block exists in the chain.
-    data_fetcher.get_header_by_hash(RPCMode::L1, l1_head_hash).await?;
+    data_fetcher.get_l1_header(l1_head_hash.into()).await?;
 
     // Prepare the host CLI args.
     let mut host_cli = data_fetcher
