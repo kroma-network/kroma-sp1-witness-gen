@@ -3,7 +3,7 @@ use std::{env, path::PathBuf, str::FromStr};
 use alloy_primitives::{hex::FromHex, B256};
 use alloy_provider::Provider;
 use op_succinct_host_utils::{
-    fetcher::{OPSuccinctDataFetcher, RPCMode},
+    fetcher::{OPSuccinctDataFetcher, RPCConfig, RPCMode},
     stats::ExecutionStats,
 };
 use serde_json::Value;
@@ -14,13 +14,12 @@ const REPORT_DIR: &str = "execution-reports";
 pub fn report_execution(
     data_fetcher: &OPSuccinctDataFetcher,
     report: &ExecutionReport,
-    execution_duration: std::time::Duration,
     l2_chain_id: u64,
     l2_number: u64,
 ) {
     let mut stats = ExecutionStats::default();
     block_on(async { stats.add_block_data(&data_fetcher, l2_number, l2_number).await });
-    stats.add_report_data(&report, execution_duration);
+    stats.add_report_data(&report);
     stats.add_aggregate_data();
     println!("{:#?}", stats);
 
@@ -40,7 +39,10 @@ pub fn report_execution(
 #[allow(dead_code)]
 pub fn get_l1_block_hash(block_number: u64) -> B256 {
     let data_fetcher = OPSuccinctDataFetcher {
-        l1_rpc: env::var("L1_RPC").expect("L1_RPC is not set."),
+        rpc_config: RPCConfig {
+            l1_rpc: env::var("L1_RPC").expect("L1_RPC is not set."),
+            ..Default::default()
+        },
         ..Default::default()
     };
     let l1_provider = data_fetcher.l1_provider;

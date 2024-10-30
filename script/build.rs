@@ -5,7 +5,16 @@ use sp1_build::{build_program_with_args, BuildArgs};
 /// Build a native program.
 fn build_native_program(program: &str) {
     let status = Command::new("cargo")
-        .args(["build", "--workspace", "--bin", program, "--profile", "release-client-lto"])
+        .args([
+            "build",
+            "--workspace",
+            "--bin",
+            program,
+            "--profile",
+            "release-client-lto",
+            "--features",
+            "kroma",
+        ])
         .status()
         .expect("Failed to execute cargo build command");
 

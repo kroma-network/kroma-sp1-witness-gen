@@ -3,7 +3,7 @@ use anyhow::Result;
 use kroma_utils::deps_version::SP1_SDK_VERSION;
 use kroma_witnessgen::types::WitnessResult;
 use sp1_sdk::network::client::NetworkClient;
-use sp1_sdk::proto::network::{ProofMode, ProofStatus};
+use sp1_sdk::network::proto::network::{ProofMode, ProofStatus};
 use sp1_sdk::{block_on, SP1ProofWithPublicValues, SP1Stdin};
 use std::sync::Arc;
 
@@ -42,8 +42,7 @@ pub fn get_status_by_remote_id(
     proof_db: &Arc<ProofDB>,
     request_id: &str,
 ) -> RequestResult {
-    match block_on(async { client.get_proof_status::<SP1ProofWithPublicValues>(request_id).await })
-    {
+    match block_on(async { client.get_proof_status(request_id).await }) {
         Ok((response, maybe_proof)) => match response.status() {
             ProofStatus::ProofFulfilled => {
                 proof_db.set_proof(&request_id, &maybe_proof.unwrap()).unwrap();
