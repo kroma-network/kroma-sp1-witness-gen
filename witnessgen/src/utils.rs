@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use alloy_primitives::B256;
 use anyhow::Result;
-use kroma_common::task_info::TaskInfo;
+use kroma_common::{task_info::TaskInfo, SINGLE_BLOCK_ELF};
 use op_succinct_host_utils::{
     fetcher::{CacheMode, OPSuccinctDataFetcher},
     get_proof_stdin,
@@ -10,11 +10,7 @@ use op_succinct_host_utils::{
 };
 use sp1_sdk::{block_on, ProverClient, SP1Stdin};
 
-use crate::{
-    interface::RpcImpl,
-    types::{RequestResult, SINGLE_BLOCK_ELF},
-    witness_db::WitnessDB,
-};
+use crate::{interface::RpcImpl, types::RequestResult, witness_db::WitnessDB};
 
 pub async fn generate_witness_impl(l2_hash: B256, l1_head_hash: B256) -> Result<SP1Stdin> {
     let data_fetcher = OPSuccinctDataFetcher::new().await;

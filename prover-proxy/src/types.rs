@@ -1,15 +1,7 @@
 use kroma_common::deps_version::SP1_SDK_VERSION;
-use once_cell::sync::Lazy;
+use kroma_common::PROGRAM_KEY;
 use serde::{Deserialize, Serialize};
-use sp1_sdk::{HashableKey, ProverClient, SP1ProofWithPublicValues};
-
-// TODO: integrate elf and vkey_hash
-pub const SINGLE_BLOCK_ELF: &[u8] = include_bytes!("../../program/elf/fault-proof-elf");
-pub static PROGRAM_KEY: Lazy<String> = Lazy::new(|| {
-    let prover = ProverClient::new();
-    let (_, vkey) = prover.setup(SINGLE_BLOCK_ELF);
-    vkey.bytes32()
-});
+use sp1_sdk::SP1ProofWithPublicValues;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SpecResult {

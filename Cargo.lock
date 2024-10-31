@@ -3436,6 +3436,7 @@ dependencies = [
  "hex",
  "jsonrpsee",
  "jsonrpsee-core",
+ "kroma-common",
  "kroma-prover-proxy",
  "kroma-witnessgen",
  "serde",
@@ -4076,6 +4077,7 @@ dependencies = [
  "once_cell",
  "rocksdb",
  "serde",
+ "sp1-sdk",
  "tracing",
 ]
 
@@ -4097,7 +4099,6 @@ dependencies = [
  "jsonrpsee-core",
  "kroma-common",
  "kroma-witnessgen",
- "once_cell",
  "serde",
  "sp1-sdk",
  "tokio",
@@ -4124,7 +4125,6 @@ dependencies = [
  "jsonrpsee-core",
  "kona-host",
  "kroma-common",
- "once_cell",
  "op-succinct-host-utils",
  "serde",
  "sp1-sdk",

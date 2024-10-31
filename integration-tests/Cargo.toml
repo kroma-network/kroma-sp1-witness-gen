@@ -15,10 +15,6 @@ path = "bin/witness_scenario.rs"
 name = "proof_scenario"
 path = "bin/proof_scenario.rs"
 
-# [[bin]]
-# name = "unit_tests"
-# path = "bin/unit_test.rs"
-
 [dependencies]
 anyhow.workspace = true
 clap.workspace = true
@@ -34,3 +30,4 @@ alloy-primitives.workspace = true
 sp1-sdk.workspace = true
 kroma-witnessgen.workspace = true
 kroma-prover-proxy.workspace = true
+kroma-common.workspace = true

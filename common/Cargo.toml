@@ -13,6 +13,9 @@ bincode.workspace = true
 rocksdb.workspace = true
 serde.workspace = true
 tracing.workspace = true
+once_cell.workspace = true
+
+sp1-sdk.workspace = true
 
 # json rpc
 jsonrpc-http-server.workspace = true
