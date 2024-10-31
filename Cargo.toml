@@ -1,5 +1,5 @@
 [workspace]
-members = ["program", "script", "witnessgen", "utils", "prover", "integration-tests"]
+members = ["program", "script", "witnessgen", "utils", "prover-proxy", "integration-tests"]
 resolver = "2"
 
 [workspace.package]
@@ -67,7 +67,7 @@ op-succinct-host-utils = { git = "https://github.com/succinctlabs/op-succinct", 
 # kroma
 kroma-utils = { path = "utils" }
 kroma-witnessgen = { path = "witnessgen" }
-kroma-prover = { path = "prover" }
+kroma-prover-proxy = { path = "prover-proxy" }
 
 [profile.release-client-lto] # kroma
 inherits = "release"

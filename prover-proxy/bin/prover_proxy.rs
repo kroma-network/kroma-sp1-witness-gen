@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use jsonrpc_http_server::ServerBuilder;
-use kroma_prover::interface::{Rpc, RpcImpl};
+use kroma_prover_proxy::interface::{Rpc, RpcImpl};
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]

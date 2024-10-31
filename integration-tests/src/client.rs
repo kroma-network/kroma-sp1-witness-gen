@@ -3,7 +3,7 @@ use anyhow::Result;
 use jsonrpsee::http_client::{HttpClient, HttpClientBuilder};
 use jsonrpsee_core::{client::ClientT, rpc_params};
 
-use kroma_prover::{
+use kroma_prover_proxy::{
     errors::ProverError,
     types::{
         ProofResult, RequestResult as ProverRequest, SpecResult as ProverSpec, SINGLE_BLOCK_ELF,

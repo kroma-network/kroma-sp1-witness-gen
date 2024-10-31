@@ -3436,7 +3436,7 @@ dependencies = [
  "hex",
  "jsonrpsee",
  "jsonrpsee-core",
- "kroma-prover",
+ "kroma-prover-proxy",
  "kroma-witnessgen",
  "serde",
  "serde_json",
@@ -4065,7 +4065,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "kroma-prover"
+name = "kroma-prover-proxy"
 version = "0.1.0"
 dependencies = [
  "alloy-primitives 0.8.10",

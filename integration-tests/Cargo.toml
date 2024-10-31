@@ -33,4 +33,4 @@ serde.workspace = true
 alloy-primitives.workspace = true
 sp1-sdk.workspace = true
 kroma-witnessgen.workspace = true
-kroma-prover.workspace = true
+kroma-prover-proxy.workspace = true
