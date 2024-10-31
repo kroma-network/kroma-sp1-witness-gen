@@ -36,7 +36,7 @@ fn get_witness_from_db(l2_head: &str, l1_head_hash: &str) -> WitnessResult {
     let l1_head_hash = b256_from_str(l1_head_hash).unwrap();
 
     let db_path = "data/witness_store";
-    let witness_db = Arc::new(WitnessDB::new(db_path.into()));
+    let witness_db = Arc::new(WitnessDB::new(db_path));
     let witness: Vec<Vec<u8>> = witness_db.get(&l2_head, &l1_head_hash).unwrap();
 
     WitnessResult::new_from_witness_buf(RequestResult::Completed, witness)
@@ -77,12 +77,12 @@ async fn main() {
         .unwrap();
 
     if args.spec {
-        let _ = test_spec(http_client.clone()).await;
+        test_spec(http_client.clone()).await;
     }
     if args.request {
-        let _ = test_request(http_client.clone()).await;
+        test_request(http_client.clone()).await;
     }
     if args.get {
-        let _ = test_get(http_client.clone()).await;
+        test_get(http_client.clone()).await;
     }
 }

@@ -58,9 +58,7 @@ impl ProofDB {
         l1_head_hash: &B256,
     ) -> Option<SP1ProofWithPublicValues> {
         let request_id = self.get_request_id(l2_hash, l1_head_hash);
-        if request_id.is_none() {
-            return None;
-        }
+        request_id.as_ref()?;
         self.get_proof_by_id(&request_id.unwrap())
     }
 

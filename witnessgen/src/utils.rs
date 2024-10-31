@@ -101,7 +101,7 @@ pub fn get_status_by_local_id(
             return Ok(RequestResult::Completed);
         }
     }
-    if current_task.is_equal(l2_hash.clone(), l1_head_hash.clone()) {
+    if current_task.is_equal(*l2_hash, *l1_head_hash) {
         return Ok(RequestResult::Processing);
     }
     if current_task.is_empty() {

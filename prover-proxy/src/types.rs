@@ -58,7 +58,7 @@ impl ProofResult {
             request_status,
             program_key: PROGRAM_KEY.to_string(),
             public_values: hex::encode(&proof.public_values),
-            proof: hex::encode(&proof.bytes()),
+            proof: hex::encode(proof.bytes()),
         }
     }
 

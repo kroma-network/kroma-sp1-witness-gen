@@ -21,9 +21,9 @@ struct Args {
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
-    let client = TestClient::new();
+    let client = TestClient::default();
 
-    let _ = client.witnessgen_spec().await;
+    client.witnessgen_spec().await;
 
     // The response should be `Processing`.
     let request_result = client.request_witness(args.l2_hash, args.l1_head_hash).await.unwrap();

@@ -37,8 +37,8 @@ struct ProofFixture {
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
-    let client = TestClient::new();
-    let _ = client.prover_spec().await;
+    let client = TestClient::default();
+    client.prover_spec().await;
 
     let file = File::open(&args.witness_data)?;
     let reader = BufReader::new(file);

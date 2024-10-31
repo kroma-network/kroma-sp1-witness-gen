@@ -25,8 +25,8 @@ pub struct TestClient {
     prover_client: HttpClient,
 }
 
-impl TestClient {
-    pub fn new() -> Self {
+impl Default for TestClient {
+    fn default() -> Self {
         let witnessgen_client = HttpClientBuilder::default()
             .max_request_body_size(300 * 1024 * 1024)
             .request_timeout(Duration::from_secs(CLIENT_TIMEOUT_SEC))
@@ -41,7 +41,9 @@ impl TestClient {
 
         Self { witnessgen_client, prover_client }
     }
+}
 
+impl TestClient {
     pub async fn witnessgen_spec(&self) -> WitnessSpec {
         let params = rpc_params![];
         self.witnessgen_client.request("spec", params).await.unwrap()

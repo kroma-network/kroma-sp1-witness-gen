@@ -30,7 +30,7 @@ pub fn get_status_by_local_id(
     l2_hash: &B256,
     l1_head_hash: &B256,
 ) -> RequestResult {
-    let request_id = proof_db.get_request_id(&l2_hash, &l1_head_hash);
+    let request_id = proof_db.get_request_id(l2_hash, l1_head_hash);
     match request_id {
         Some(id) => get_status_by_remote_id(client, proof_db, &id),
         None => RequestResult::None,
@@ -69,7 +69,7 @@ pub fn get_proof_by_local_id(
     l2_hash: &B256,
     l1_head_hash: &B256,
 ) -> Option<SP1ProofWithPublicValues> {
-    let request_id = proof_db.get_request_id(&l2_hash, &l1_head_hash);
+    let request_id = proof_db.get_request_id(l2_hash, l1_head_hash);
     match request_id {
         Some(id) => proof_db.get_proof_by_id(&id),
         None => None,

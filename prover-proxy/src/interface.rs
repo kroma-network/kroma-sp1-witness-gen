@@ -38,8 +38,8 @@ impl RpcImpl {
     pub fn new(store_path: &str, sp1_private_key: &str) -> Self {
         RpcImpl {
             task_lock: Arc::new(RwLock::new(())),
-            proof_db: Arc::new(ProofDB::new(store_path.into())),
-            client: Arc::new(NetworkClient::new(&sp1_private_key)),
+            proof_db: Arc::new(ProofDB::new(store_path)),
+            client: Arc::new(NetworkClient::new(sp1_private_key)),
         }
     }
 }

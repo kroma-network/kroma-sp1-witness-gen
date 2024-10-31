@@ -68,8 +68,8 @@ impl WitnessResult {
         Self::new(status, hex_encoded_with_prefix)
     }
 
-    pub fn string_to_witness_buf(witness: &String) -> Vec<Vec<u8>> {
-        let witness = hex::decode(&witness.strip_prefix("0x").unwrap()).unwrap();
+    pub fn string_to_witness_buf(witness: &str) -> Vec<Vec<u8>> {
+        let witness = hex::decode(witness.strip_prefix("0x").unwrap()).unwrap();
         bincode::deserialize(&witness).unwrap()
     }
 

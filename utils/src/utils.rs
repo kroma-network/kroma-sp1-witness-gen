@@ -1,14 +1,14 @@
 use alloy_primitives::{hex::FromHex, B256};
 use anyhow::Result;
 
-pub fn preprocessing(l2_hash: &String, l1_head_hash: &String) -> Result<(B256, B256, String)> {
+pub fn preprocessing(l2_hash: &str, l1_head_hash: &str) -> Result<(B256, B256, String)> {
     let user_req_id = format!(
         "{}-{}",
         l2_hash.chars().take(8).collect::<String>(),
         l1_head_hash.chars().take(8).collect::<String>()
     );
-    let l2_hash = b256_from_str(&l2_hash)?;
-    let l1_head_hash = b256_from_str(&l1_head_hash)?;
+    let l2_hash = b256_from_str(l2_hash)?;
+    let l1_head_hash = b256_from_str(l1_head_hash)?;
 
     Ok((l2_hash, l1_head_hash, user_req_id))
 }

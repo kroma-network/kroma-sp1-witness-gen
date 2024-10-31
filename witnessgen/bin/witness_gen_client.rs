@@ -78,12 +78,12 @@ async fn main() {
         .unwrap();
 
     if args.spec {
-        let _ = test_spec(http_client.clone()).await;
+        test_spec(http_client.clone()).await;
     }
     if args.request {
-        let _ = test_request(http_client.clone()).await;
+        test_request(http_client.clone()).await;
     }
     if args.get {
-        let _ = test_get(http_client).await;
+        test_get(http_client).await;
     }
 }

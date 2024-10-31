@@ -40,8 +40,7 @@ impl FileDB {
     }
 
     fn set_size(db: &DB, num: usize) {
-        let _ = db
-            .put(KEY_FOR_SIZE, num.to_le_bytes())
+        db.put(KEY_FOR_SIZE, num.to_le_bytes())
             .map_err(|e| anyhow!("Failed to set key-value pair: {}", e))
             .unwrap();
     }
@@ -119,7 +118,7 @@ impl FileDB {
 
         if self.get::<Vec<u8>>(key).is_none() {
             // Increment the number of items. And set the number of items in the database.
-            *size = *size + 1;
+            *size += 1;
             Self::set_size(&self.db, *size);
         }
 
@@ -129,9 +128,7 @@ impl FileDB {
         let time_value = Self::append_timestamp(serialized_value);
         let ret = self.db.put(key, time_value);
 
-        let ret = ret.map_err(|e| anyhow!("Failed to set key-value pair: {}", e));
-
-        ret
+        ret.map_err(|e| anyhow!("Failed to set key-value pair: {}", e))
     }
 
     pub fn get_with_timestamp<T: DeserializeOwned>(&self, key: &Vec<u8>) -> Option<(u64, T)> {
