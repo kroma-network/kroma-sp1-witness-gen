@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use alloy_primitives::B256;
 use anyhow::Result;
-use kroma_utils::task_info::TaskInfo;
+use kroma_common::task_info::TaskInfo;
 use op_succinct_host_utils::{
     fetcher::{CacheMode, OPSuccinctDataFetcher},
     get_proof_stdin,

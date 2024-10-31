@@ -1,4 +1,4 @@
-use kroma_utils::deps_version::SP1_SDK_VERSION;
+use kroma_common::deps_version::SP1_SDK_VERSION;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use sp1_sdk::{HashableKey, ProverClient};
@@ -19,7 +19,11 @@ pub struct SpecResult {
 
 impl SpecResult {
     pub fn new(version: String) -> Self {
-        Self { version, sp1_version: SP1_SDK_VERSION.to_string(), program_key: PROGRAM_KEY.to_string() }
+        Self {
+            version,
+            sp1_version: SP1_SDK_VERSION.to_string(),
+            program_key: PROGRAM_KEY.to_string(),
+        }
     }
 }
 

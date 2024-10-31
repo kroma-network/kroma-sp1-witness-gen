@@ -1,6 +1,6 @@
 use jsonrpc_core::Result as JsonResult;
 use jsonrpc_derive::rpc;
-use kroma_utils::utils::preprocessing;
+use kroma_common::utils::preprocessing;
 use sp1_sdk::network::client::NetworkClient;
 use std::sync::{Arc, RwLock};
 

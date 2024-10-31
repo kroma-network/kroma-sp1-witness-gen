@@ -1,6 +1,6 @@
 use alloy_primitives::B256;
 use anyhow::{anyhow, Result};
-use kroma_utils::db::FileDB;
+use kroma_common::db::FileDB;
 
 static CAPACITY: usize = 10;
 static VALUE_EXPIRING_SECS: usize = 24 * 60 * 60; // 86400; A day in seconds.

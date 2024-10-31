@@ -1,6 +1,6 @@
 use alloy_primitives::B256;
 use anyhow::Result;
-use kroma_utils::deps_version::SP1_SDK_VERSION;
+use kroma_common::deps_version::SP1_SDK_VERSION;
 use kroma_witnessgen::types::WitnessResult;
 use sp1_sdk::network::client::NetworkClient;
 use sp1_sdk::network::proto::network::{ProofMode, ProofStatus};

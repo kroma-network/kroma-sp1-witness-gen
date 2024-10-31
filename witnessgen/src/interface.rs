@@ -2,7 +2,7 @@ use alloy_primitives::B256;
 use anyhow::Result;
 use jsonrpc_core::Result as JsonResult;
 use jsonrpc_derive::rpc;
-use kroma_utils::{task_info::TaskInfo, utils::preprocessing};
+use kroma_common::{task_info::TaskInfo, utils::preprocessing};
 use std::sync::{Arc, RwLock};
 
 use crate::errors::WitnessGenError;

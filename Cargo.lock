@@ -4065,6 +4065,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "kroma-common"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives 0.8.10",
+ "anyhow",
+ "bincode",
+ "ctor",
+ "jsonrpc-http-server",
+ "once_cell",
+ "rocksdb",
+ "serde",
+ "tracing",
+]
+
+[[package]]
 name = "kroma-prover-proxy"
 version = "0.1.0"
 dependencies = [
@@ -4080,7 +4095,7 @@ dependencies = [
  "jsonrpc-http-server",
  "jsonrpsee",
  "jsonrpsee-core",
- "kroma-utils",
+ "kroma-common",
  "kroma-witnessgen",
  "once_cell",
  "serde",
@@ -4088,21 +4103,6 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
-]
-
-[[package]]
-name = "kroma-utils"
-version = "0.1.0"
-dependencies = [
- "alloy-primitives 0.8.10",
- "anyhow",
- "bincode",
- "ctor",
- "jsonrpc-http-server",
- "once_cell",
- "rocksdb",
- "serde",
- "tracing",
 ]
 
 [[package]]
@@ -4123,7 +4123,7 @@ dependencies = [
  "jsonrpsee",
  "jsonrpsee-core",
  "kona-host",
- "kroma-utils",
+ "kroma-common",
  "once_cell",
  "op-succinct-host-utils",
  "serde",

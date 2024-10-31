@@ -1,5 +1,12 @@
 [workspace]
-members = ["program", "script", "witnessgen", "utils", "prover-proxy", "integration-tests"]
+members = [
+    "program",
+    "script",
+    "witnessgen",
+    "common",
+    "prover-proxy",
+    "integration-tests",
+]
 resolver = "2"
 
 [workspace.package]
@@ -65,7 +72,7 @@ op-succinct-client-utils = { git = "https://github.com/succinctlabs/op-succinct"
 op-succinct-host-utils = { git = "https://github.com/succinctlabs/op-succinct", rev = "053c73e" }
 
 # kroma
-kroma-utils = { path = "utils" }
+kroma-common = { path = "common" }
 kroma-witnessgen = { path = "witnessgen" }
 kroma-prover-proxy = { path = "prover-proxy" }
 

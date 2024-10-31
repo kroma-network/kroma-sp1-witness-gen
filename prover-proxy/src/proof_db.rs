@@ -1,6 +1,6 @@
 use alloy_primitives::B256;
 use anyhow::{anyhow, Result};
-use kroma_utils::db::FileDB;
+use kroma_common::db::FileDB;
 use sp1_sdk::SP1ProofWithPublicValues;
 
 static CAPACITY: usize = 1000;

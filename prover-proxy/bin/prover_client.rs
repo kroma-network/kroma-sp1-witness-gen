@@ -1,8 +1,8 @@
 use clap::Parser;
 use jsonrpsee::http_client::{HttpClient, HttpClientBuilder};
 use jsonrpsee_core::{client::ClientT, rpc_params};
+use kroma_common::utils::b256_from_str;
 use kroma_prover_proxy::types::{ProofResult, SpecResult};
-use kroma_utils::utils::b256_from_str;
 use kroma_witnessgen::{
     types::{RequestResult, WitnessResult},
     witness_db::WitnessDB,
