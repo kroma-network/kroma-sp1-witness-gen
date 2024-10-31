@@ -2,6 +2,7 @@ pub mod db;
 pub mod deps_version;
 pub mod task_info;
 pub mod utils;
+pub mod version;
 
 use once_cell::sync::Lazy;
 use sp1_sdk::{HashableKey, ProverClient};

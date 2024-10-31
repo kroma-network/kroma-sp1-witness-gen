@@ -1,5 +1,5 @@
-use kroma_common::deps_version::SP1_SDK_VERSION;
 use kroma_common::PROGRAM_KEY;
+use kroma_common::{deps_version::SP1_SDK_VERSION, version::KROMA_VERSION};
 use serde::{Deserialize, Serialize};
 use sp1_sdk::SP1ProofWithPublicValues;
 
@@ -18,7 +18,11 @@ impl SpecResult {
 
 impl Default for SpecResult {
     fn default() -> Self {
-        SpecResult::new("0.1.0".to_string(), SP1_SDK_VERSION.to_string(), PROGRAM_KEY.to_string())
+        SpecResult::new(
+            KROMA_VERSION.to_string(),
+            SP1_SDK_VERSION.to_string(),
+            PROGRAM_KEY.to_string(),
+        )
     }
 }
 
