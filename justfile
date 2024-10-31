@@ -43,6 +43,22 @@ run-proof-scenario proof_store="/tmp/proof_store" witness_data="/tmp/witness.jso
     --witness-data {{witness_data}} \
     --proof-data {{proof_data}}
 
+run-onchain-verify proof_data="/tmp/proof.json":
+    #!/usr/bin/env sh
+    anvil --accounts 1 &
+    geth_pid=$!
+    
+    trap "kill $geth_pid" EXIT QUIT INT
+
+    // Deploy the verifier contract.
+    forge create --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 sp1-contracts/contracts/src/v3.0.0/SP1VerifierPlonk.sol:SP1Verifier
+
+    program_key=$(jq -r '.program_key' {{proof_data}})
+    public_values=$(jq -r '.public_values' {{proof_data}})
+    proof=$(jq -r '.proof' {{proof_data}})
+
+    cast call 0x5FbDB2315678afecb367f032d93F642f64180aa3 "verifyProof(bytes32,bytes calldata,bytes calldata)" $program_key $public_values $proof
+
 run-integration-tests:    
     #!/usr/bin/env sh
     WITNESS_STORE_PATH="/tmp/witness_store"
@@ -50,6 +66,11 @@ run-integration-tests:
     WITNESS_DATA="/tmp/witness.json"
     PROOF_DATA="/tmp/proof.json"
     
-    # just run-witness-scenario $WITNESS_STORE_PATH $WITNESS_DATA
+    just run-witness-scenario $WITNESS_STORE_PATH $WITNESS_DATA
+    
     just run-proof-scenario $PROOF_STORE_PATH $WITNESS_DATA $PROOF_DATA
+    
+    just run-onchain-verify $PROOF_DATA
 
+    rm -rf $WITNESS_DATA
+    rm -rf $PROOF_DATA
