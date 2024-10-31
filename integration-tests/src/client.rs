@@ -49,7 +49,7 @@ impl TestClient {
 
     pub async fn prover_spec(&self) -> ProverSpec {
         let params = rpc_params![];
-        self.witnessgen_client.request("spec", params).await.unwrap()
+        self.prover_client.request("spec", params).await.unwrap()
     }
 
     pub async fn request_witness(
