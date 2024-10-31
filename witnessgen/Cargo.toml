@@ -12,11 +12,11 @@ name = "native_host_runner"
 path = "bin/native_host_runner.rs"
 
 [[bin]]
-name = "witness_gen_server"
+name = "witness-gen-server"
 path = "bin/witness_gen_server.rs"
 
 [[bin]]
-name = "witness_gen_client"
+name = "witness-gen-client"
 path = "bin/witness_gen_client.rs"
 
 [dependencies]
