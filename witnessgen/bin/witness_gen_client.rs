@@ -2,7 +2,8 @@ use clap::Parser;
 use jsonrpsee::http_client::{HttpClient, HttpClientBuilder};
 use jsonrpsee_core::client::ClientT;
 use jsonrpsee_core::rpc_params;
-use kroma_witnessgen::types::{RequestResult, SpecResult, WitnessResult, SINGLE_BLOCK_ELF};
+use kroma_common::SINGLE_BLOCK_ELF;
+use kroma_witnessgen::types::{RequestResult, SpecResult, WitnessResult};
 use sp1_sdk::{ProverClient, SP1Stdin};
 use std::time::Duration;
 
@@ -30,8 +31,8 @@ async fn test_spec(cli: HttpClient) {
 
 async fn test_request(cli: HttpClient) -> bool {
     // TODO: Change these from hard-coded values to values from the command line
-    let l2_head = "0x86df565e6a6e3e266411e3718d5ceba49026606a00624e48c08448f8bf7bc82e";
-    let l1_head = "0x42c0d60066fbd229758f8deaee337afc6cd0a75ddf120896258a4fd846aafbfd";
+    let l2_head = "0x564ec49e7c9ea0fe167c0ed3796b9c4ba884e059865c525f198306e72febedf8";
+    let l1_head = "0xe22242e0d09d8236658b67553f41b183de2ce0dbbef94daf50dba64610f509a4";
 
     let params = rpc_params![l2_head, l1_head];
     let witness_result: RequestResult = cli.request("requestWitness", params).await.unwrap();
@@ -42,8 +43,8 @@ async fn test_request(cli: HttpClient) -> bool {
 
 async fn test_get(cli: HttpClient) -> bool {
     // TODO: Change these from hard-coded values to values from the command line
-    let l2_head = "0x86df565e6a6e3e266411e3718d5ceba49026606a00624e48c08448f8bf7bc82e";
-    let l1_head = "0x42c0d60066fbd229758f8deaee337afc6cd0a75ddf120896258a4fd846aafbfd";
+    let l2_head = "0x564ec49e7c9ea0fe167c0ed3796b9c4ba884e059865c525f198306e72febedf8";
+    let l1_head = "0xe22242e0d09d8236658b67553f41b183de2ce0dbbef94daf50dba64610f509a4";
 
     let params = rpc_params![l2_head, l1_head];
     let witness_result: WitnessResult = cli.request("getWitness", params).await.unwrap();
@@ -78,12 +79,12 @@ async fn main() {
         .unwrap();
 
     if args.spec {
-        let _ = test_spec(http_client.clone()).await;
+        test_spec(http_client.clone()).await;
     }
     if args.request {
-        let _ = test_request(http_client.clone()).await;
+        test_request(http_client.clone()).await;
     }
     if args.get {
-        let _ = test_get(http_client).await;
+        test_get(http_client).await;
     }
 }

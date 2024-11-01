@@ -2,7 +2,7 @@ use alloy_primitives::B256;
 use anyhow::Result;
 use jsonrpc_core::Result as JsonResult;
 use jsonrpc_derive::rpc;
-use kroma_utils::{task_info::TaskInfo, utils::preprocessing};
+use kroma_common::{task_info::TaskInfo, utils::preprocessing};
 use std::sync::{Arc, RwLock};
 
 use crate::errors::WitnessGenError;
@@ -69,11 +69,11 @@ impl Rpc for RpcImpl {
         match get_status_by_local_id(&current_task, &self.witness_db, &l2_hash, &l1_head_hash) {
             Ok(RequestResult::Completed) => {
                 tracing::info!("The request is already completed: {:?}", user_req_id);
-                return Ok(RequestResult::Completed);
+                Ok(RequestResult::Completed)
             }
             Ok(RequestResult::Processing) => {
                 tracing::info!("the request is in progress: {:?}", user_req_id);
-                return Ok(RequestResult::Processing);
+                Ok(RequestResult::Processing)
             }
             Ok(RequestResult::Failed) | Ok(RequestResult::None) => {
                 tracing::info!("start to generate witness");
@@ -82,11 +82,11 @@ impl Rpc for RpcImpl {
                 tokio::task::spawn(
                     async move { service.generate_witness(l2_hash, l1_head_hash).await },
                 );
-                return Ok(RequestResult::Processing);
+                Ok(RequestResult::Processing)
             }
             Err(e) => {
                 tracing::error!("{:?}", e);
-                return Err(WitnessGenError::already_in_progress(e.to_string()).to_json_error());
+                Err(WitnessGenError::already_in_progress(e.to_string()).to_json_error())
             }
         }
     }
@@ -108,11 +108,11 @@ impl Rpc for RpcImpl {
             Ok(RequestResult::Completed) => {
                 let witness = self.witness_db.get(&l2_hash, &l1_head_hash).unwrap();
                 tracing::info!("The request is already completed: {:?}", user_req_id);
-                return Ok(WitnessResult::new_from_witness_buf(RequestResult::Completed, witness));
+                Ok(WitnessResult::new_from_witness_buf(RequestResult::Completed, witness))
             }
             Ok(status) => {
                 tracing::info!("the request's status: {:?}, {:?} ", user_req_id, status);
-                return Ok(WitnessResult::new_with_status(status));
+                Ok(WitnessResult::new_with_status(status))
             }
             Err(_) => {
                 tracing::info!(
@@ -120,7 +120,7 @@ impl Rpc for RpcImpl {
                     user_req_id,
                     RequestResult::None
                 );
-                return Ok(WitnessResult::new_with_status(RequestResult::None));
+                Ok(WitnessResult::new_with_status(RequestResult::None))
             }
         }
     }

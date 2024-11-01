@@ -102,6 +102,7 @@ fn main() {
             }
         }
 
+        #[allow(unused_mut)]
         let mut l1_provider = OracleL1ChainProvider::new(boot.clone(), oracle.clone());
         let l2_provider = OracleL2ChainProvider::new(boot.clone(), oracle.clone());
         let beacon = OracleBlobProvider::new(oracle.clone());

@@ -18,8 +18,8 @@ pub fn report_execution(
     l2_number: u64,
 ) {
     let mut stats = ExecutionStats::default();
-    block_on(async { stats.add_block_data(&data_fetcher, l2_number, l2_number).await });
-    stats.add_report_data(&report);
+    block_on(async { stats.add_block_data(data_fetcher, l2_number, l2_number).await });
+    stats.add_report_data(report);
     stats.add_aggregate_data();
     println!("{:#?}", stats);
 

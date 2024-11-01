@@ -12,11 +12,11 @@ name = "native_host_runner"
 path = "bin/native_host_runner.rs"
 
 [[bin]]
-name = "witness_gen_server"
+name = "witness-gen-server"
 path = "bin/witness_gen_server.rs"
 
 [[bin]]
-name = "witness_gen_client"
+name = "witness-gen-client"
 path = "bin/witness_gen_client.rs"
 
 [dependencies]
@@ -37,7 +37,6 @@ jsonrpc-core.workspace = true
 jsonrpc-core-client.workspace = true
 jsonrpc-derive.workspace = true
 hex = { workspace = true }
-once_cell.workspace = true
 serde.workspace = true
 sp1-sdk.workspace = true
 tracing.workspace = true
@@ -48,7 +47,7 @@ jsonrpsee-core = "0.16.2"
 jsonrpsee = { version = "0.16.2", features = ["full"] }
 
 # kroma
-kroma-utils.workspace = true
+kroma-common.workspace = true
 
 [dev-dependencies]
 ctor = "0.2"

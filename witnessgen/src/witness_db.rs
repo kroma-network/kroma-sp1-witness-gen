@@ -1,6 +1,9 @@
 use alloy_primitives::B256;
 use anyhow::{anyhow, Result};
-use kroma_utils::db::FileDB;
+use kroma_common::db::FileDB;
+
+static CAPACITY: usize = 10;
+static VALUE_EXPIRING_SECS: usize = 24 * 60 * 60; // 86400; A day in seconds.
 
 pub struct WitnessDB {
     db: FileDB,
@@ -8,7 +11,7 @@ pub struct WitnessDB {
 
 impl WitnessDB {
     pub fn new(db_file_path: &str) -> Self {
-        Self { db: FileDB::new(db_file_path.into()) }
+        Self { db: FileDB::new(db_file_path.into(), CAPACITY, VALUE_EXPIRING_SECS) }
     }
 
     fn build_key(l2_hash: &B256, l1_head_hash: &B256) -> Vec<u8> {

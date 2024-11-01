@@ -1,0 +1,33 @@
+[package]
+name = "integration-tests"
+version = "0.1.0"
+license.workspace = true
+edition.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "witness_scenario"
+path = "bin/witness_scenario.rs"
+
+[[bin]]
+name = "proof_scenario"
+path = "bin/proof_scenario.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+jsonrpsee-core = "0.16.2"
+jsonrpsee = { version = "0.16.2", features = ["full"] }
+tokio.workspace = true
+tracing.workspace = true
+hex.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+
+alloy-primitives.workspace = true
+sp1-sdk.workspace = true
+kroma-witnessgen.workspace = true
+kroma-prover-proxy.workspace = true
+kroma-common.workspace = true
