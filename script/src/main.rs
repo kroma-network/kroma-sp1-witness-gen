@@ -22,7 +22,7 @@ cfg_if! {
     }
 }
 
-pub const SINGLE_BLOCK_ELF: &[u8] = include_bytes!("../../program/elf/fault-proof-elf");
+pub const FAULT_PROOF_ELF: &[u8] = include_bytes!("../../program/elf/fault-proof-elf");
 
 #[derive(ValueEnum, Debug, Clone, PartialEq)]
 #[clap(rename_all = "kebab-case")]
@@ -137,7 +137,7 @@ async fn main() -> Result<()> {
         Method::Preview => {}
         Method::Execute => {
             let (mut public_values, report) =
-                prover.execute(SINGLE_BLOCK_ELF, sp1_stdin).run().unwrap();
+                prover.execute(FAULT_PROOF_ELF, sp1_stdin).run().unwrap();
 
             cfg_if! {
                 if #[cfg(feature = "kroma")] {
@@ -161,7 +161,7 @@ async fn main() -> Result<()> {
         }
         Method::Prove => {
             // If the prove flag is set, generate a proof.
-            let (pk, _) = prover.setup(SINGLE_BLOCK_ELF);
+            let (pk, _) = prover.setup(FAULT_PROOF_ELF);
 
             // Generate proofs in PLONK mode for on-chain verification.
             let proof = prover.prove(&pk, sp1_stdin).plonk().run().unwrap();
@@ -184,7 +184,7 @@ mod tests {
     use alloy_primitives::hex;
     use sp1_sdk::{HashableKey, ProverClient, SP1ProofWithPublicValues};
 
-    use crate::SINGLE_BLOCK_ELF;
+    use crate::FAULT_PROOF_ELF;
 
     #[test]
     fn print_proof() {
@@ -192,7 +192,7 @@ mod tests {
         let client = ProverClient::new();
 
         // Setup the program.
-        let (pk, vk) = client.setup(SINGLE_BLOCK_ELF);
+        let (pk, vk) = client.setup(FAULT_PROOF_ELF);
         println!("{:?}", vk.bytes32().to_string());
 
         let proof = SP1ProofWithPublicValues::load(

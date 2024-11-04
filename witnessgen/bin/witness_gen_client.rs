@@ -2,7 +2,7 @@ use clap::Parser;
 use jsonrpsee::http_client::{HttpClient, HttpClientBuilder};
 use jsonrpsee_core::client::ClientT;
 use jsonrpsee_core::rpc_params;
-use kroma_common::SINGLE_BLOCK_ELF;
+use kroma_common::FAULT_PROOF_ELF;
 use kroma_witnessgen::types::{RequestResult, SpecResult, WitnessResult};
 use sp1_sdk::{ProverClient, SP1Stdin};
 use std::time::Duration;
@@ -55,7 +55,7 @@ async fn test_get(cli: HttpClient) -> bool {
             let mut sp1_stdin = SP1Stdin::new();
             sp1_stdin.buffer = witness_result.get_witness_buf();
 
-            let (_, report) = prover.execute(SINGLE_BLOCK_ELF, sp1_stdin).run().unwrap();
+            let (_, report) = prover.execute(FAULT_PROOF_ELF, sp1_stdin).run().unwrap();
             println!("report: {:?}", report);
         }
         _ => {
