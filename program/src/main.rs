@@ -12,13 +12,20 @@ extern crate alloc;
 
 use alloc::sync::Arc;
 
+use alloy_consensus::{BlockBody, Sealed};
+use alloy_eips::eip2718::Decodable2718;
 use cfg_if::cfg_if;
 use kona_client::{
-    l1::{DerivationDriver, OracleBlobProvider, OracleL1ChainProvider},
-    l2::OracleL2ChainProvider,
+    l1::{OracleBlobProvider, OracleL1ChainProvider},
     BootInfo,
 };
-use op_succinct_client_utils::precompiles::zkvm_handle_register;
+use kona_executor::StatelessL2BlockExecutor;
+use log::info;
+use op_alloy_consensus::{OpBlock, OpTxEnvelope};
+use op_succinct_client_utils::{
+    driver::MultiBlockDerivationDriver, l2_chain_provider::MultiblockOracleL2ChainProvider,
+    precompiles::zkvm_handle_register,
+};
 cfg_if! {
     if #[cfg(feature = "kroma")] {
         mod utils;
@@ -104,7 +111,7 @@ fn main() {
 
         #[allow(unused_mut)]
         let mut l1_provider = OracleL1ChainProvider::new(boot.clone(), oracle.clone());
-        let l2_provider = OracleL2ChainProvider::new(boot.clone(), oracle.clone());
+        let mut l2_provider = MultiblockOracleL2ChainProvider::new(boot.clone(), oracle.clone());
         let beacon = OracleBlobProvider::new(oracle.clone());
 
         ////////////////////////////////////////////////////////////////
@@ -112,7 +119,7 @@ fn main() {
         ////////////////////////////////////////////////////////////////
 
         println!("cycle-tracker-start: derivation-instantiation");
-        let mut driver = DerivationDriver::new(
+        let mut driver = MultiBlockDerivationDriver::new(
             boot.as_ref(),
             oracle.as_ref(),
             beacon,
@@ -126,16 +133,16 @@ fn main() {
         #[cfg(feature = "kroma")]
         {
             println!("cycle-tracker-start: compute-parent-output-root");
-            let l2_safe_header = driver.l2_safe_head_header();
+            let l2_safe_header = driver.clone_l2_safe_head_header();
             let parent_output_root =
-                compute_output_root_at(l2_safe_header, l2_provider.clone(), l2_provider.clone());
+                compute_output_root_at(&l2_safe_header, l2_provider.clone(), l2_provider.clone());
             #[cfg(target_os = "zkvm")]
             sp1_zkvm::io::commit(&parent_output_root);
             println!("Validated Parent Output Root: {}", parent_output_root);
             println!("cycle-tracker-end: compute-parent-output-root");
 
             println!("cycle-tracker-start: check-l1-connectivity");
-            let l1_origin = driver.l2_safe_head().l1_origin;
+            let l1_origin = driver.l2_safe_head.l1_origin;
             let mut current_header = l1_provider.header_by_hash(boot.l1_head).await.unwrap();
 
             let loop_num = current_header.number - l1_origin.number;
@@ -150,23 +157,85 @@ fn main() {
             println!("cycle-tracker-end: check-l1-connectivity");
         }
 
-        println!("cycle-tracker-start: produce-output");
-        let (number, output_root) = driver
-            .produce_output(
-                &boot.rollup_config,
-                &l2_provider.clone(),
-                &l2_provider.clone(),
-                zkvm_handle_register,
-            )
-            .await
-            .unwrap();
+        // The initial payload requires block derivation.
+        println!("cycle-tracker-report-start: payload-derivation");
+        let mut payload = driver.produce_payload().await.unwrap();
+        println!("cycle-tracker-report-end: payload-derivation");
+
+        println!("cycle-tracker-start: execution-instantiation");
+        let mut executor = StatelessL2BlockExecutor::builder(
+            &boot.rollup_config,
+            l2_provider.clone(),
+            l2_provider.clone(),
+        )
+        .with_parent_header(driver.clone_l2_safe_head_header())
+        .with_handle_register(zkvm_handle_register)
+        .build();
+        println!("cycle-tracker-end: execution-instantiation");
+
+        // The initial payload requires block derivation.
+        let mut l2_block_info;
+        let mut new_block_header;
+        'step: loop {
+            // Execute the payload to generate a new block header.
+            info!("Executing Payload for L2 Block: {}", payload.parent.block_info.number + 1);
+            println!("cycle-tracker-report-start: block-execution");
+            new_block_header = executor.execute_payload(payload.attributes.clone()).unwrap();
+            println!("cycle-tracker-report-end: block-execution");
+            let new_block_number = new_block_header.number;
+            assert_eq!(new_block_number, payload.parent.block_info.number + 1);
+
+            // Increment last_block_num and check if we have reached the claim block.
+            if new_block_number == boot.claimed_l2_block_number {
+                break 'step;
+            }
+
+            // Generate the Payload Envelope, which can be used to derive cached data.
+            let optimism_block = OpBlock {
+                header: new_block_header.clone(),
+                body: BlockBody {
+                    transactions: payload
+                        .attributes
+                        .transactions
+                        .unwrap()
+                        .iter()
+                        .map(|raw_tx| OpTxEnvelope::decode_2718(&mut raw_tx.as_ref()).unwrap())
+                        .collect::<Vec<OpTxEnvelope>>(),
+                    ommers: Vec::new(),
+                    withdrawals: boot
+                        .rollup_config
+                        .is_canyon_active(new_block_header.timestamp)
+                        .then(Vec::new),
+                    requests: None,
+                },
+            };
+            // Add all data from this block's execution to the cache.
+            l2_block_info = l2_provider
+                .update_cache(new_block_header, optimism_block, &boot.rollup_config)
+                .unwrap();
+
+            // Update data for the next iteration.
+            driver.update_safe_head(
+                l2_block_info,
+                Sealed::new_unchecked(new_block_header.clone(), new_block_header.hash_slow()),
+            );
+
+            println!("cycle-tracker-report-start: payload-derivation");
+            // Produce the next payload. If a span batch boundary is passed, the driver will step until the next batch.
+            payload = driver.produce_payload().await.unwrap();
+            println!("cycle-tracker-report-end: payload-derivation");
+        }
+
+        println!("cycle-tracker-start: output-root");
+        let output_root = executor.compute_output_root().unwrap();
         println!("cycle-tracker-end: produce-output");
 
         ////////////////////////////////////////////////////////////////
         //                          EPILOGUE                          //
         ////////////////////////////////////////////////////////////////
 
-        assert_eq!(number, boot.claimed_l2_block_number);
+        // Note: We don't need the last_block_num == claim_block check, because it's the only way to
+        // exit the loop in `driver.produce_output`.
         assert_eq!(output_root, boot.claimed_l2_output_root);
 
         cfg_if! {
