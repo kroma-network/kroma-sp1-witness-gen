@@ -1,13 +1,11 @@
 #![allow(unused_mut)]
 mod utils;
 
-use std::env;
-
 use anyhow::Result;
 use cfg_if::cfg_if;
 use clap::{Parser, ValueEnum};
 use op_succinct_host_utils::{
-    fetcher::{CacheMode, OPSuccinctDataFetcher, RPCConfig},
+    fetcher::{CacheMode, OPSuccinctDataFetcher},
     get_proof_stdin,
     witnessgen::WitnessGenExecutor,
     ProgramType,
@@ -83,15 +81,7 @@ async fn main() -> Result<()> {
     let mut args = Args::parse();
     sdk_utils::setup_logger();
 
-    let data_fetcher = OPSuccinctDataFetcher {
-        rpc_config: RPCConfig {
-            l1_rpc: env::var("L1_RPC").expect("L1_RPC is not set."),
-            l1_beacon_rpc: env::var("L1_BEACON_RPC").expect("L1_BEACON_RPC is not set."),
-            l2_rpc: env::var("L2_RPC").expect("L2_RPC is not set."),
-            l2_node_rpc: env::var("L2_NODE_RPC").expect("L2_NODE_RPC is not set."),
-        },
-        ..Default::default()
-    };
+    let data_fetcher = OPSuccinctDataFetcher::default();
 
     if args.method == Method::Preview {
         let output_root = get_output_at(&data_fetcher, args.l2_block);
