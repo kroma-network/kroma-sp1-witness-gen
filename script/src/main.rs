@@ -11,6 +11,7 @@ use op_succinct_host_utils::{
     ProgramType,
 };
 use sp1_sdk::{utils as sdk_utils, ProverClient};
+use std::time::Instant;
 use utils::{get_l1_origin_of, get_output_at};
 cfg_if! {
     if #[cfg(feature = "kroma")] {
@@ -110,12 +111,14 @@ async fn main() -> Result<()> {
     }
 
     // By default, re-run the native execution unless the user passes `--use-cache`.
+    let start_time = Instant::now();
     if !args.use_cache {
         // Start the server and native client.
         let mut witnessgen_executor = WitnessGenExecutor::default();
         witnessgen_executor.spawn_witnessgen(&host_cli).await?;
         witnessgen_executor.flush().await?;
     }
+    let witness_generation_time_sec = start_time.elapsed();
 
     // Get the stdin for the block.
     let sp1_stdin = get_proof_stdin(&host_cli)?;
@@ -126,8 +129,10 @@ async fn main() -> Result<()> {
     match args.method {
         Method::Preview => {}
         Method::Execute => {
+            let start_time = Instant::now();
             let (mut public_values, report) =
                 prover.execute(FAULT_PROOF_ELF, sp1_stdin).run().unwrap();
+            let execution_duration = start_time.elapsed();
 
             cfg_if! {
                 if #[cfg(feature = "kroma")] {
@@ -147,7 +152,17 @@ async fn main() -> Result<()> {
                 }
             }
 
-            utils::report_execution(&data_fetcher, &report, l2_chain_id, args.l2_block);
+            utils::report_execution(
+                &data_fetcher,
+                args.l2_block,
+                args.l2_block,
+                &report,
+                witness_generation_time_sec,
+                execution_duration,
+                l2_chain_id,
+                args.l2_block,
+            )
+            .await;
         }
         Method::Prove => {
             // If the prove flag is set, generate a proof.

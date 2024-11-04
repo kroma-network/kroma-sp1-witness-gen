@@ -11,16 +11,21 @@ use sp1_sdk::{block_on, ExecutionReport};
 
 const REPORT_DIR: &str = "execution-reports";
 
-pub fn report_execution(
+pub async fn report_execution(
     data_fetcher: &OPSuccinctDataFetcher,
+    start: u64,
+    end: u64,
     report: &ExecutionReport,
+    witness_generation_time_sec: std::time::Duration,
+    execution_duration: std::time::Duration,
     l2_chain_id: u64,
     l2_number: u64,
 ) {
     let mut stats = ExecutionStats::default();
-    block_on(async { stats.add_block_data(data_fetcher, l2_number, l2_number).await });
+    stats.add_block_data(data_fetcher, start, end).await;
     stats.add_report_data(report);
     stats.add_aggregate_data();
+    stats.add_timing_data(execution_duration.as_secs(), witness_generation_time_sec.as_secs());
     println!("{:#?}", stats);
 
     let mut report_path = PathBuf::from_str(REPORT_DIR).unwrap();
