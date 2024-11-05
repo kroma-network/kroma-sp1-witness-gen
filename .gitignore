@@ -34,3 +34,7 @@ db/proofs.db
 **/bin/op-proposer
 
 artifact_*
+
+cache/
+
+out/

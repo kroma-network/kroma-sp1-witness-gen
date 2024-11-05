@@ -8,11 +8,11 @@ homepage.workspace = true
 repository.workspace = true
 
 [[bin]]
-name = "witness_scenario"
+name = "witness-scenario"
 path = "bin/witness_scenario.rs"
 
 [[bin]]
-name = "proof_scenario"
+name = "proof-scenario"
 path = "bin/proof_scenario.rs"
 
 [dependencies]
