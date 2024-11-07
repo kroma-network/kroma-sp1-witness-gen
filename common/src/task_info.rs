@@ -2,8 +2,8 @@ use alloy_primitives::B256;
 
 #[derive(Clone, Debug, Default)]
 pub struct TaskInfo {
-    l2_hash: B256,
-    l1_head_hash: B256,
+    pub l2_hash: B256,
+    pub l1_head_hash: B256,
 }
 
 impl TaskInfo {

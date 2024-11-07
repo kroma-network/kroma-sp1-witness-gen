@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use alloy_primitives::B256;
 use anyhow::Result;
 use kroma_common::{task_info::TaskInfo, FAULT_PROOF_ELF};
@@ -8,12 +6,17 @@ use op_succinct_host_utils::{
     get_proof_stdin,
     witnessgen::WitnessGenExecutor,
 };
-use sp1_sdk::{block_on, ProverClient, SP1Stdin};
+use sp1_sdk::{ProverClient, SP1Stdin};
+use std::{
+    panic::{self, AssertUnwindSafe},
+    sync::Arc,
+};
 
-use crate::{interface::RpcImpl, types::RequestResult, witness_db::WitnessDB};
+use crate::{types::RequestResult, witness_db::WitnessDB};
 
 pub async fn generate_witness_impl(l2_hash: B256, l1_head_hash: B256) -> Result<SP1Stdin> {
-    let data_fetcher = OPSuccinctDataFetcher::new().await;
+    let data_fetcher = panic::catch_unwind(AssertUnwindSafe(|| OPSuccinctDataFetcher::default()))
+        .map_err(|e| anyhow::anyhow!("Failed to create data fetcher: {:?}", e))?;
 
     // Check the l2 block exists in the chain.
     let l2_header = data_fetcher.get_l2_header(l2_hash.into()).await?;
@@ -53,56 +56,24 @@ pub async fn generate_witness_impl(l2_hash: B256, l1_head_hash: B256) -> Result<
     Ok(sp1_stdin)
 }
 
-pub async fn generate_witness(rpc_impl: &RpcImpl, l2_hash: B256, l1_head_hash: B256) -> Result<()> {
-    tracing::info!("start to generate witness");
-
-    // Get lock to update the current task.
-    let mut task_lock = rpc_impl.current_task.write().unwrap();
-    task_lock.set(l2_hash, l1_head_hash);
-    drop(task_lock);
-
-    // Generate witness.
-    let sp1_stdin = block_on(async { generate_witness_impl(l2_hash, l1_head_hash).await });
-    // Get lock to release the current task.
-    let mut task_lock = rpc_impl.current_task.write().unwrap();
-    task_lock.release();
-    drop(task_lock);
-
-    // Store the witness to db.
-    match sp1_stdin {
-        Ok(value) => {
-            tracing::info!("successfully witness result generated");
-            rpc_impl.witness_db.set(&l2_hash, &l1_head_hash, value.buffer)?;
-        }
-        Err(e) => {
-            tracing::info!("failed to generate witness: {:?}", e);
-            rpc_impl.witness_db.set(&l2_hash, &l1_head_hash, vec![vec![]])?;
-        }
-    }
-
-    Ok(())
-}
-
 pub fn get_status_by_local_id(
-    current_task: &TaskInfo,
-    witness_db: &Arc<WitnessDB>,
+    current_task: &mut TaskInfo,
+    witness_db: Arc<WitnessDB>,
     l2_hash: &B256,
     l1_head_hash: &B256,
 ) -> Result<RequestResult> {
     // If the witness is empty, it means the witness generation failed.
     if let Some(witness) = witness_db.get(l2_hash, l1_head_hash) {
         if witness.is_empty() {
-            return Ok(RequestResult::Failed);
+            Ok(RequestResult::Failed)
         } else {
-            return Ok(RequestResult::Completed);
+            Ok(RequestResult::Completed)
         }
+    } else if current_task.is_equal(*l2_hash, *l1_head_hash) {
+        Ok(RequestResult::Processing)
+    } else if !current_task.is_empty() {
+        Err(anyhow::anyhow!("Another request is in progress"))
+    } else {
+        Ok(RequestResult::None)
     }
-    if current_task.is_equal(*l2_hash, *l1_head_hash) {
-        return Ok(RequestResult::Processing);
-    }
-    if current_task.is_empty() {
-        return Ok(RequestResult::None);
-    }
-
-    Err(anyhow::anyhow!("Another request is in progress"))
 }

@@ -1,5 +1,3 @@
-use alloy_primitives::B256;
-use anyhow::Result;
 use jsonrpc_core::Result as JsonResult;
 use jsonrpc_derive::rpc;
 use kroma_common::{task_info::TaskInfo, utils::preprocessing};
@@ -9,8 +7,6 @@ use crate::errors::WitnessGenError;
 use crate::types::{RequestResult, SpecResult, WitnessResult};
 use crate::utils::get_status_by_local_id;
 use crate::witness_db::WitnessDB;
-
-static DEFAULT_WITNESS_STORE_PATH: &str = "data/witness_store";
 
 #[rpc]
 pub trait Rpc {
@@ -24,28 +20,27 @@ pub trait Rpc {
     fn get_witness(&self, l2_hash: String, l1_head_hash: String) -> JsonResult<WitnessResult>;
 }
 
-#[derive(Clone)]
 pub struct RpcImpl {
+    pub tx: tokio::sync::mpsc::Sender<TaskInfo>,
     pub current_task: Arc<RwLock<TaskInfo>>,
     pub witness_db: Arc<WitnessDB>,
 }
 
-impl Default for RpcImpl {
-    fn default() -> Self {
-        Self::new(DEFAULT_WITNESS_STORE_PATH)
-    }
-}
-
 impl RpcImpl {
-    pub fn new(store_path: &str) -> Self {
-        RpcImpl {
-            current_task: Arc::new(RwLock::new(TaskInfo::default())),
-            witness_db: Arc::new(WitnessDB::new(store_path)),
-        }
+    pub fn new(tx: tokio::sync::mpsc::Sender<TaskInfo>, witness_db: Arc<WitnessDB>) -> Self {
+        RpcImpl { tx, current_task: Arc::new(RwLock::new(TaskInfo::default())), witness_db }
     }
 
-    async fn generate_witness(&self, l2_hash: B256, l1_head_hash: B256) -> Result<()> {
-        crate::utils::generate_witness(self, l2_hash, l1_head_hash).await
+    pub fn update_prev_req_status(&self) {
+        let mut current_task = self.current_task.write().unwrap();
+        if current_task.is_empty() {
+            return;
+        }
+
+        // Flush `current_task` if the previous request has been completed.
+        if self.witness_db.get(&current_task.l2_hash, &current_task.l2_hash).is_some() {
+            current_task.release();
+        }
     }
 }
 
@@ -64,11 +59,18 @@ impl Rpc for RpcImpl {
                 );
                 WitnessGenError::invalid_input_hash(e.to_string()).to_json_error()
             })?;
+        self.update_prev_req_status();
 
-        let current_task = self.current_task.read().unwrap();
-        match get_status_by_local_id(&current_task, &self.witness_db, &l2_hash, &l1_head_hash) {
+        let mut current_task = self.current_task.write().unwrap();
+        match get_status_by_local_id(
+            &mut current_task,
+            self.witness_db.clone(),
+            &l2_hash,
+            &l1_head_hash,
+        ) {
             Ok(RequestResult::Completed) => {
                 tracing::info!("The request is already completed: {:?}", user_req_id);
+                current_task.release();
                 Ok(RequestResult::Completed)
             }
             Ok(RequestResult::Processing) => {
@@ -77,11 +79,14 @@ impl Rpc for RpcImpl {
             }
             Ok(RequestResult::Failed) | Ok(RequestResult::None) => {
                 tracing::info!("start to generate witness");
-                let service = self.clone();
-                drop(current_task);
-                tokio::task::spawn(
-                    async move { service.generate_witness(l2_hash, l1_head_hash).await },
-                );
+                current_task.set(l2_hash, l1_head_hash);
+
+                let tx = self.tx.clone();
+                tokio::task::spawn(async move {
+                    let task =
+                        TaskInfo { l2_hash: l2_hash.clone(), l1_head_hash: l1_head_hash.clone() };
+                    tx.send(task).await.unwrap();
+                });
                 Ok(RequestResult::Processing)
             }
             Err(e) => {
@@ -101,10 +106,16 @@ impl Rpc for RpcImpl {
                 );
                 WitnessGenError::invalid_input_hash(e.to_string()).to_json_error()
             })?;
+        self.update_prev_req_status();
 
         // Return cached witness if it exists. Otherwise, start to generate witness.
-        let current_task = self.current_task.read().unwrap();
-        match get_status_by_local_id(&current_task, &self.witness_db, &l2_hash, &l1_head_hash) {
+        let mut current_task = self.current_task.write().unwrap();
+        match get_status_by_local_id(
+            &mut current_task,
+            self.witness_db.clone(),
+            &l2_hash,
+            &l1_head_hash,
+        ) {
             Ok(RequestResult::Completed) => {
                 let witness = self.witness_db.get(&l2_hash, &l1_head_hash).unwrap();
                 tracing::info!("The request is already completed: {:?}", user_req_id);

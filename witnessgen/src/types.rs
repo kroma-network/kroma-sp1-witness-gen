@@ -48,6 +48,8 @@ impl Default for WitnessResult {
 }
 
 impl WitnessResult {
+    pub const EMPTY_WITNESS: Vec<Vec<u8>> = Vec::new();
+
     pub fn new<T: ToString>(status: RequestResult, witness: T) -> Self {
         Self { status, program_key: PROGRAM_KEY.to_string(), witness: witness.to_string() }
     }
