@@ -3,7 +3,7 @@ use anyhow::Result;
 use jsonrpsee::http_client::{HttpClient, HttpClientBuilder};
 use jsonrpsee_core::{client::ClientT, rpc_params};
 
-use kroma_common::SINGLE_BLOCK_ELF;
+use kroma_common::FAULT_PROOF_ELF;
 use kroma_prover_proxy::{
     errors::ProverError,
     types::{ProofResult, RequestResult as ProverRequest, SpecResult as ProverSpec},
@@ -76,7 +76,7 @@ impl TestClient {
         let mut sp1_stdin = SP1Stdin::new();
         sp1_stdin.buffer = witness_result.get_witness_buf();
 
-        let (_, report) = prover.execute(SINGLE_BLOCK_ELF, sp1_stdin).run()?;
+        let (_, report) = prover.execute(FAULT_PROOF_ELF, sp1_stdin).run()?;
         Ok(report)
     }
 

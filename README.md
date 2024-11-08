@@ -31,12 +31,12 @@ L2_NODE_RPC=
 ### Run
 
 ``` shell
-> cargo run --bin witness-gen-server --release -- --endpoint <IP_WITH_PORT> --data-path <DB_PATH>
+> cargo run --bin witness-gen-server --release -- --endpoint <IP_WITH_PORT> --data <DB_PATH>
 ```
 
 ``` shell
 # example
-> cargo run --bin witness-gen-server --release -- --endpoint 127.0.0.1:3030 --data-path /data/witness_store
+> cargo run --bin witness-gen-server --release -- --endpoint 127.0.0.1:3030 --data /data/witness_store
 ```
 
 ### API Overview
@@ -81,12 +81,12 @@ SP1_PRIVATE_KEY=
 ### Run
 
 ``` shell
-> cargo run --bin prover-proxy --release -- --endpoint <IP_WITH_PORT> --data-path <DB_PATH>
+> cargo run --bin prover-proxy --release -- --endpoint <IP_WITH_PORT> --data <DB_PATH>
 ```
 
 ``` shell
 # example
-> cargo run --bin prover-proxy --release -- --endpoint 127.0.0.1:3030 --data-path /data/proof_store
+> cargo run --bin prover-proxy --release -- --endpoint 127.0.0.1:3030 --data /data/proof_store
 ```
 
 ### API Overview
@@ -141,4 +141,13 @@ Execute the specific l2 block.
 
 # Or
 > cargo run --release --bin script -- --method execute --l2-block <L2Number> --l1-head-hash <L2HeadHash>
+```
+
+## Integration Test
+
+The `test-client` generates a `Witness` through the `WitnessGenerator` and creates a `proof` through
+the `ProverProxy`. Finally, the `proof` is verified in the `Verifier` Contract.
+
+``` shell
+> just run-integration-tests <0xL2Hash> <0xL1HeadHash>
 ```

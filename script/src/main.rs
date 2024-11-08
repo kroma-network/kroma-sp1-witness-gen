@@ -1,18 +1,17 @@
 #![allow(unused_mut)]
 mod utils;
 
-use std::env;
-
 use anyhow::Result;
 use cfg_if::cfg_if;
 use clap::{Parser, ValueEnum};
 use op_succinct_host_utils::{
-    fetcher::{CacheMode, OPSuccinctDataFetcher, RPCConfig},
+    fetcher::{CacheMode, OPSuccinctDataFetcher},
     get_proof_stdin,
     witnessgen::WitnessGenExecutor,
     ProgramType,
 };
 use sp1_sdk::{utils as sdk_utils, ProverClient};
+use std::time::Instant;
 use utils::{get_l1_origin_of, get_output_at};
 cfg_if! {
     if #[cfg(feature = "kroma")] {
@@ -22,7 +21,7 @@ cfg_if! {
     }
 }
 
-pub const SINGLE_BLOCK_ELF: &[u8] = include_bytes!("../../program/elf/fault-proof-elf");
+pub const FAULT_PROOF_ELF: &[u8] = include_bytes!("../../program/elf/fault-proof-elf");
 
 #[derive(ValueEnum, Debug, Clone, PartialEq)]
 #[clap(rename_all = "kebab-case")]
@@ -83,15 +82,7 @@ async fn main() -> Result<()> {
     let mut args = Args::parse();
     sdk_utils::setup_logger();
 
-    let data_fetcher = OPSuccinctDataFetcher {
-        rpc_config: RPCConfig {
-            l1_rpc: env::var("L1_RPC").expect("L1_RPC is not set."),
-            l1_beacon_rpc: env::var("L1_BEACON_RPC").expect("L1_BEACON_RPC is not set."),
-            l2_rpc: env::var("L2_RPC").expect("L2_RPC is not set."),
-            l2_node_rpc: env::var("L2_NODE_RPC").expect("L2_NODE_RPC is not set."),
-        },
-        ..Default::default()
-    };
+    let data_fetcher = OPSuccinctDataFetcher::default();
 
     if args.method == Method::Preview {
         let output_root = get_output_at(&data_fetcher, args.l2_block);
@@ -120,12 +111,14 @@ async fn main() -> Result<()> {
     }
 
     // By default, re-run the native execution unless the user passes `--use-cache`.
+    let start_time = Instant::now();
     if !args.use_cache {
         // Start the server and native client.
         let mut witnessgen_executor = WitnessGenExecutor::default();
         witnessgen_executor.spawn_witnessgen(&host_cli).await?;
         witnessgen_executor.flush().await?;
     }
+    let witness_generation_time_sec = start_time.elapsed();
 
     // Get the stdin for the block.
     let sp1_stdin = get_proof_stdin(&host_cli)?;
@@ -136,8 +129,10 @@ async fn main() -> Result<()> {
     match args.method {
         Method::Preview => {}
         Method::Execute => {
+            let start_time = Instant::now();
             let (mut public_values, report) =
-                prover.execute(SINGLE_BLOCK_ELF, sp1_stdin).run().unwrap();
+                prover.execute(FAULT_PROOF_ELF, sp1_stdin).run().unwrap();
+            let execution_duration = start_time.elapsed();
 
             cfg_if! {
                 if #[cfg(feature = "kroma")] {
@@ -157,11 +152,21 @@ async fn main() -> Result<()> {
                 }
             }
 
-            utils::report_execution(&data_fetcher, &report, l2_chain_id, args.l2_block);
+            utils::report_execution(
+                &data_fetcher,
+                args.l2_block,
+                args.l2_block,
+                &report,
+                witness_generation_time_sec,
+                execution_duration,
+                l2_chain_id,
+                args.l2_block,
+            )
+            .await;
         }
         Method::Prove => {
             // If the prove flag is set, generate a proof.
-            let (pk, _) = prover.setup(SINGLE_BLOCK_ELF);
+            let (pk, _) = prover.setup(FAULT_PROOF_ELF);
 
             // Generate proofs in PLONK mode for on-chain verification.
             let proof = prover.prove(&pk, sp1_stdin).plonk().run().unwrap();
@@ -184,7 +189,7 @@ mod tests {
     use alloy_primitives::hex;
     use sp1_sdk::{HashableKey, ProverClient, SP1ProofWithPublicValues};
 
-    use crate::SINGLE_BLOCK_ELF;
+    use crate::FAULT_PROOF_ELF;
 
     #[test]
     fn print_proof() {
@@ -192,7 +197,7 @@ mod tests {
         let client = ProverClient::new();
 
         // Setup the program.
-        let (pk, vk) = client.setup(SINGLE_BLOCK_ELF);
+        let (pk, vk) = client.setup(FAULT_PROOF_ELF);
         println!("{:?}", vk.bytes32().to_string());
 
         let proof = SP1ProofWithPublicValues::load(

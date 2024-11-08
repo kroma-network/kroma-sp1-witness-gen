@@ -1,7 +1,7 @@
 use alloy_primitives::B256;
 use anyhow::Result;
 use kroma_common::deps_version::SP1_SDK_VERSION;
-use kroma_common::SINGLE_BLOCK_ELF;
+use kroma_common::FAULT_PROOF_ELF;
 use kroma_witnessgen::types::WitnessResult;
 use sp1_sdk::network::client::NetworkClient;
 use sp1_sdk::network::proto::network::{ProofMode, ProofStatus};
@@ -19,7 +19,7 @@ pub fn request_prove_to_sp1(client: &Arc<NetworkClient>, witness: String) -> Res
     // Send a request to generate a proof to the sp1 network.
     tracing::debug!("ready to send request to SP1 network prover");
     let request_id = block_on(async move {
-        client.create_proof(SINGLE_BLOCK_ELF, &sp1_stdin, ProofMode::Plonk, SP1_SDK_VERSION).await
+        client.create_proof(FAULT_PROOF_ELF, &sp1_stdin, ProofMode::Plonk, SP1_SDK_VERSION).await
     })?;
     tracing::debug!("Sent the request to SP1 network prover: {:?}", request_id);
     Ok(request_id)

@@ -2551,6 +2551,7 @@ name = "fault-proof"
 version = "0.1.0"
 dependencies = [
  "alloy-consensus",
+ "alloy-eips",
  "alloy-primitives 0.8.10",
  "cfg-if 1.0.0",
  "kona-client",
@@ -2559,6 +2560,8 @@ dependencies = [
  "kona-mpt",
  "kona-primitives",
  "kona-providers",
+ "log",
+ "op-alloy-consensus",
  "op-alloy-genesis",
  "op-succinct-client-utils",
  "serde_json",

@@ -1,7 +1,10 @@
 use clap::Parser;
 use jsonrpsee::http_client::{HttpClient, HttpClientBuilder};
 use jsonrpsee_core::{client::ClientT, rpc_params};
-use kroma_common::utils::b256_from_str;
+use kroma_common::{
+    test_ctx::{OP_SEPOLIA_L2_HEAD, SEPOLIA_L1_HEAD},
+    utils::b256_from_str,
+};
 use kroma_prover_proxy::types::{ProofResult, SpecResult};
 use kroma_witnessgen::{
     types::{RequestResult, WitnessResult},
@@ -43,23 +46,15 @@ fn get_witness_from_db(l2_head: &str, l1_head_hash: &str) -> WitnessResult {
 }
 
 async fn test_request(cli: HttpClient) {
-    // TODO: Change these from hard-coded values to values from the command line
-    let l2_head = "0x564ec49e7c9ea0fe167c0ed3796b9c4ba884e059865c525f198306e72febedf8";
-    let l1_head = "0xe22242e0d09d8236658b67553f41b183de2ce0dbbef94daf50dba64610f509a4";
+    let witness_result = get_witness_from_db(OP_SEPOLIA_L2_HEAD, SEPOLIA_L1_HEAD);
 
-    let witness_result = get_witness_from_db(l2_head, l1_head);
-
-    let params = rpc_params![l2_head, l1_head, &witness_result.witness];
+    let params = rpc_params![OP_SEPOLIA_L2_HEAD, SEPOLIA_L1_HEAD, &witness_result.witness];
     let result: RequestResult = cli.request("requestProve", params).await.unwrap();
     println!("request result: {:?}", result);
 }
 
 async fn test_get(cli: HttpClient) {
-    // TODO: Change these from hard-coded values to values from the command line
-    let l2_head = "0x564ec49e7c9ea0fe167c0ed3796b9c4ba884e059865c525f198306e72febedf8";
-    let l1_head = "0xe22242e0d09d8236658b67553f41b183de2ce0dbbef94daf50dba64610f509a4";
-
-    let params = rpc_params![l2_head, l1_head];
+    let params = rpc_params![OP_SEPOLIA_L2_HEAD, SEPOLIA_L1_HEAD];
     let result: ProofResult = cli.request("getProof", params).await.unwrap();
     println!("proof result: {:?}", result);
 }
