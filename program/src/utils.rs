@@ -8,8 +8,12 @@ fn get_storage_root<F: TrieProvider, H: TrieHinter>(
     provider: F,
     hinter: H,
 ) -> B256 {
+    #[cfg(not(feature = "kroma"))]
     const L2_TO_L1_MESSAGE_PASSER_ADDRESS: Address =
         address!("4200000000000000000000000000000000000016");
+    #[cfg(feature = "kroma")]
+    const L2_TO_L1_MESSAGE_PASSER_ADDRESS: Address =
+        address!("4200000000000000000000000000000000000003");
 
     let mut trie_db = TrieDB::new(header.state_root, header.clone(), provider, hinter);
     trie_db
