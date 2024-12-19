@@ -56,13 +56,13 @@ op-alloy-genesis = { version = "0.4.0", default-features = false, features = [
 op-alloy-protocol = { version = "0.4.0", default-features = false }
 
 # kona
-kona-primitives = { git = "https://github.com/moongate-forks/kona", branch = "patch-10-17-kona" }
-kona-executor = { git = "https://github.com/moongate-forks/kona", branch = "patch-10-17-kona" }
-kona-client = { git = "https://github.com/moongate-forks/kona", branch = "patch-10-17-kona" }
-kona-host = { git = "https://github.com/moongate-forks/kona", branch = "patch-10-17-kona" }
-kona-derive = { git = "https://github.com/moongate-forks/kona", branch = "patch-10-17-kona" }
-kona-mpt = { git = "https://github.com/moongate-forks/kona", branch = "patch-10-17-kona" }
-kona-providers = { git = "https://github.com/moongate-forks/kona", branch = "patch-10-17-kona" }
+kona-primitives = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-12-06" }
+kona-executor = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-12-06" }
+kona-client = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-12-06" }
+kona-host = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-12-06" }
+kona-derive = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-12-06" }
+kona-mpt = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-12-06" }
+kona-providers = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-12-06" }
 
 # sp1
 sp1-zkvm = { version = "3.0.0", features = ["verify"] }
@@ -70,8 +70,8 @@ sp1-sdk = { version = "3.0.0" }
 sp1-build = { version = "3.0.0" }
 
 # op-succinct
-op-succinct-client-utils = { git = "https://github.com/succinctlabs/op-succinct", rev = "053c73e" }
-op-succinct-host-utils = { git = "https://github.com/succinctlabs/op-succinct", rev = "053c73e" }
+op-succinct-client-utils = { git = "https://github.com/kroma-network/op-succinct", branch = "kroma-patch-12-06" }
+op-succinct-host-utils = { git = "https://github.com/kroma-network/op-succinct", branch = "kroma-patch-12-06" }
 
 # kroma
 kroma-common = { path = "common" }

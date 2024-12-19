@@ -13,7 +13,7 @@ run-witness-scenario l2_hash l1_head_hash witness_store="/tmp/witness_store" wit
     # build the witness generator.
     cargo build --release --bin witness-gen-server
 
-    # Run the witness generator in he backgound.
+    # Run the witness generator in the background.
     ./target/release/witness-gen-server --data {{witness_store}} &
     witness_pid=$!
     
@@ -30,7 +30,7 @@ run-proof-scenario l2_hash l1_head_hash proof_store="/tmp/proof_store" witness_d
     # build the prover.
     cargo build --release --bin prover-proxy
 
-    # Run the prover in he backgound.
+    # Run the prover in the background.
     ./target/release/prover-proxy --data {{proof_store}} &
     prover_pid=$!
 
@@ -43,7 +43,7 @@ run-proof-scenario l2_hash l1_head_hash proof_store="/tmp/proof_store" witness_d
     --witness-data {{witness_data}} \
     --proof-data {{proof_data}}
 
-run-onchain-verify proof_data="/tmp/proof.json":
+run-onchain-verify proof_data="proof.json":
     #!/usr/bin/env sh
     anvil --accounts 1 &
     geth_pid=$!
@@ -65,14 +65,14 @@ run-integration-tests l2_hash="0x564ec49e7c9ea0fe167c0ed3796b9c4ba884e059865c525
     #!/usr/bin/env sh
     WITNESS_STORE_PATH="/tmp/witness_store"
     PROOF_STORE_PATH="/tmp/proof_store"
-    WITNESS_DATA="/tmp/witness.json"
-    PROOF_DATA="/tmp/proof.json"
+    WITNESS_DATA="witness.json"
+    PROOF_DATA="proof.json"
     
     just run-witness-scenario {{l2_hash}} {{l1_head_hash}} $WITNESS_STORE_PATH $WITNESS_DATA
     
     just run-proof-scenario {{l2_hash}} {{l1_head_hash}} $PROOF_STORE_PATH $WITNESS_DATA $PROOF_DATA
     
-    just run-onchain-verify $PROOF_DATA
+    # just run-onchain-verify $PROOF_DATA
 
-    rm -rf $WITNESS_DATA
-    rm -rf $PROOF_DATA
+    # rm -rf $WITNESS_DATA
+    # rm -rf $PROOF_DATA

@@ -36,4 +36,5 @@ sp1-zkvm = { workspace = true }
 op-succinct-client-utils.workspace = true
 
 [features]
+default = ["kroma"]
 kroma = []
