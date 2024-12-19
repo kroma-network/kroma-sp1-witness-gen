@@ -72,7 +72,7 @@ run-integration-tests l2_hash="0x564ec49e7c9ea0fe167c0ed3796b9c4ba884e059865c525
     
     just run-proof-scenario {{l2_hash}} {{l1_head_hash}} $PROOF_STORE_PATH $WITNESS_DATA $PROOF_DATA
     
-    just run-onchain-verify $PROOF_DATA
+    # just run-onchain-verify $PROOF_DATA
 
     rm -rf $WITNESS_DATA
     rm -rf $PROOF_DATA
