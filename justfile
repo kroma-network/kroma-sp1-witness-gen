@@ -13,7 +13,7 @@ run-witness-scenario l2_hash l1_head_hash witness_store="/tmp/witness_store" wit
     # build the witness generator.
     cargo build --release --bin witness-gen-server
 
-    # Run the witness generator in he backgound.
+    # Run the witness generator in the background.
     ./target/release/witness-gen-server --data {{witness_store}} &
     witness_pid=$!
     
@@ -30,7 +30,7 @@ run-proof-scenario l2_hash l1_head_hash proof_store="/tmp/proof_store" witness_d
     # build the prover.
     cargo build --release --bin prover-proxy
 
-    # Run the prover in he backgound.
+    # Run the prover in the background.
     ./target/release/prover-proxy --data {{proof_store}} &
     prover_pid=$!
 
