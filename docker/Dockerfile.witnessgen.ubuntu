@@ -1,0 +1,23 @@
+FROM ubuntu:latest
+WORKDIR /app
+
+RUN apt-get update
+RUN apt-get install -y ca-certificates
+RUN update-ca-certificates
+
+ENV NATIVE_HOST_RUNNER_PATH ./native_host_runner
+ENV WORKSPACE_ROOT ./
+
+# The following 2 lines are only necessary between the Upgrade time and the MPT time.
+# TODO(ethan): Remove these lines after the MPT time.
+ENV CHAIN_CONFIGS_FROM_JSON=true
+COPY ./chain_configs ./chain_configs
+
+COPY ./target/native_host_runner/release/native_host_runner .
+COPY ./target/release/witness-gen-server .
+COPY ./configs ./configs
+RUN mkdir -p target/release-client-lto/
+COPY ./target/release-client-lto/fault-proof target/release-client-lto/
+
+EXPOSE 3030
+CMD ["./witness-gen-server","--data","./witness_store","--endpoint","0.0.0.0:3030"]

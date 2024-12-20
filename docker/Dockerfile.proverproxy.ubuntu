@@ -1,0 +1,11 @@
+FROM ubuntu:latest
+WORKDIR /app
+
+RUN apt-get update
+RUN apt-get install -y ca-certificates
+RUN update-ca-certificates
+
+COPY ./target/release/prover-proxy .
+
+EXPOSE 3031
+CMD ["./prover-proxy","--data","./prover_store","--endpoint","0.0.0.0:3031"]

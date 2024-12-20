@@ -7,11 +7,14 @@ build-native-host-runner:
 build-native-program: 
 	cargo build --workspace --bin fault-proof --profile release-client-lto --features kroma
 
-build-witness-generator: 
+build-witness-generator:
 	$(MAKE) generate-rollup-config
 	$(MAKE) build-native-host-runner
 	$(MAKE) build-native-program
 	cargo build --bin witness-gen-server --release
+
+build-prover-proxy:
+	cargo build --release --bin prover-proxy
 
 run-witness-generator:
 	END_POINT ?= "127.0.0.1:3030"
@@ -19,3 +22,10 @@ run-witness-generator:
 	
 	$(MAKE) build-witness-generator
 	./target/release/witness-gen-server --endpoint $(END_POINT) --data $(WITNESS_DB)
+
+run-prover-proxy:
+	END_POINT ?= "127.0.0.1:3031"
+	PROVER_DB ?= "/tmp/prover_db"
+
+	$(MAKE) build-prover-proxy
+	./target/release/prover-proxy --endpoint $(END_POINT) --data $(PROVER_DB)

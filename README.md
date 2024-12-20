@@ -151,3 +151,40 @@ the `ProverProxy`. Finally, the `proof` is verified in the `Verifier` Contract.
 ``` shell
 > just run-integration-tests <0xL2Hash> <0xL1HeadHash>
 ```
+
+## Build Docker Images
+
+### How to write `.env` file
+
+``` txt
+# In both cases, these MUST be filled in.
+L1_RPC=
+L1_BEACON_RPC=
+L2_RPC=
+L2_NODE_RPC=
+
+# In the case of prover proxy, it MUST be filled in.
+SP1_PRIVATE_KEY=<NEED_TO_BE_ISSUED_FROM_SP1_TEAM>
+
+# In the case of witness generator, it MUST be filled in.
+MAX_BATCH_POST_DELAY_MIN=<MAXIMUM_DELAY_BETWEEN_L2BATCHES>
+
+# Optional
+SKIP_SIMULATION=false
+```
+
+### Witness Generator
+
+``` shell
+> make build-witness-generator
+> docker build -f docker/Dockerfile.witnessgen.ubuntu -t witness-gen .
+> docker run -itd --env-file .env witness-gen
+```
+
+### Prover Proxy
+
+``` shell
+> make build-prover-proxy
+> docker build -f docker/Dockerfile.proverproxy.ubuntu -t prover-proxy .
+> docker run -itd --env-file .env prover-proxy
+```
