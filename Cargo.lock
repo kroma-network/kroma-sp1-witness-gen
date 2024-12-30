@@ -4740,7 +4740,7 @@ dependencies = [
 [[package]]
 name = "op-succinct-client-utils"
 version = "0.1.0"
-source = "git+https://github.com/kroma-network/op-succinct?branch=kroma-patch-12-20#7361435c016835a584999c553dbe57c3e305af14"
+source = "git+https://github.com/kroma-network/op-succinct?branch=kroma-patch-12-30#22993455814b72836a8095c4e44bb9c7fc9bfd31"
 dependencies = [
  "alloy-consensus",
  "alloy-eips",
@@ -4772,7 +4772,7 @@ dependencies = [
 [[package]]
 name = "op-succinct-host-utils"
 version = "0.1.0"
-source = "git+https://github.com/kroma-network/op-succinct?branch=kroma-patch-12-20#7361435c016835a584999c553dbe57c3e305af14"
+source = "git+https://github.com/kroma-network/op-succinct?branch=kroma-patch-12-30#22993455814b72836a8095c4e44bb9c7fc9bfd31"
 dependencies = [
  "alloy",
  "alloy-consensus",
