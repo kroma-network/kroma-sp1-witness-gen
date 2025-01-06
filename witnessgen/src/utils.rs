@@ -8,6 +8,7 @@ use op_succinct_host_utils::{
 };
 use sp1_sdk::{ProverClient, SP1Stdin};
 use std::{
+    env,
     panic::{self, AssertUnwindSafe},
     sync::Arc,
 };
@@ -43,6 +44,9 @@ pub async fn generate_witness_impl(l2_hash: B256, l1_head_hash: B256) -> Result<
 
     let sp1_stdin = get_proof_stdin(&host_cli)
         .map_err(|e| anyhow::anyhow!("Failed to get proof stdin: {:?}", e.to_string()))?;
+
+    if env::var("SKIP_SIMULATION").unwrap_or("false".to_string()) == "true" {
+        tracing::info!("Simulation has been started");
     let executor = ProverClient::new();
     let (_, report) = executor
         .execute(FAULT_PROOF_ELF, sp1_stdin.clone())
@@ -52,6 +56,7 @@ pub async fn generate_witness_impl(l2_hash: B256, l1_head_hash: B256) -> Result<
         "successfully witness result generated - cycle: {:?}",
         report.total_instruction_count()
     );
+    }
 
     Ok(sp1_stdin)
 }
