@@ -31,7 +31,7 @@ pub enum RequestResult {
     None,
     Processing,
     Completed,
-    Failed(String),
+    Failed,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
@@ -78,10 +78,10 @@ impl ProofResult {
         }
     }
 
-    pub fn failed(request_id: String, message: String) -> Self {
+    pub fn failed(request_id: String) -> Self {
         Self {
             request_id,
-            request_status: RequestResult::Failed(message),
+            request_status: RequestResult::Failed,
             program_key: PROGRAM_KEY.to_string(),
             public_values: "".to_string(),
             proof: "".to_string(),
