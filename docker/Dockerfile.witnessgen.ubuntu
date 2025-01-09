@@ -11,7 +11,6 @@ ENV WORKSPACE_ROOT ./
 # The following 2 lines are only necessary between the Upgrade time and the MPT time.
 # TODO(ethan): Remove these lines after the MPT time.
 ENV CHAIN_CONFIGS_FROM_JSON=true
-COPY ./chain_configs ./chain_configs
 
 COPY ./target/native_host_runner/release/native_host_runner .
 COPY ./target/release/witness-gen-server .

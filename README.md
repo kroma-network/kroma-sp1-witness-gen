@@ -178,7 +178,7 @@ SKIP_SIMULATION=false
 ``` shell
 > make build-witness-generator
 > docker build -f docker/Dockerfile.witnessgen.ubuntu -t witness-gen .
-> docker run -itd --env-file .env witness-gen
+> docker run -itd --env-file .env -p 3030:3030 witness-gen
 ```
 
 ### Prover Proxy
@@ -186,5 +186,5 @@ SKIP_SIMULATION=false
 ``` shell
 > make build-prover-proxy
 > docker build -f docker/Dockerfile.proverproxy.ubuntu -t prover-proxy .
-> docker run -itd --env-file .env prover-proxy
+> docker run -itd --env-file .env -p 3031:3031 prover-proxy
 ```
