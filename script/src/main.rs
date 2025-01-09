@@ -26,6 +26,8 @@ pub const FAULT_PROOF_ELF: &[u8] = include_bytes!("../../program/elf/fault-proof
 #[derive(ValueEnum, Debug, Clone, PartialEq)]
 #[clap(rename_all = "kebab-case")]
 enum Method {
+    /// Create a rollup config.
+    Config,
     /// Preview an argument to execute.
     Preview,
     /// Native-execute the guest program.
@@ -38,7 +40,7 @@ enum Method {
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// L2 block number for derivation.
-    #[arg(short, long)]
+    #[arg(short, long, default_value_t = 0)]
     l2_block: u64,
 
     /// L1 head hash (optional).
@@ -83,6 +85,10 @@ async fn main() -> Result<()> {
     sdk_utils::setup_logger();
 
     let data_fetcher = OPSuccinctDataFetcher::default();
+    if args.method == Method::Config {
+        // NOTE(ethan): rollup config has been saved when `data_fetcher` is initialized.
+        return Ok(());
+    }
 
     if args.method == Method::Preview {
         let output_root = get_output_at(&data_fetcher, args.l2_block);
@@ -127,7 +133,7 @@ async fn main() -> Result<()> {
     let prover = ProverClient::new();
 
     match args.method {
-        Method::Preview => {}
+        Method::Preview | Method::Config => {}
         Method::Execute => {
             let start_time = Instant::now();
             let (mut public_values, report) =

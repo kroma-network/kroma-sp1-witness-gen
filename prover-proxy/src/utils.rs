@@ -52,9 +52,7 @@ pub fn get_status_by_remote_id(
             ProofStatus::ProofPreparing
             | ProofStatus::ProofRequested
             | ProofStatus::ProofClaimed => RequestResult::Processing,
-            ProofStatus::ProofUnclaimed => {
-                RequestResult::Failed(response.unclaim_description.unwrap())
-            }
+            ProofStatus::ProofUnclaimed => RequestResult::Failed,
             ProofStatus::ProofUnspecifiedStatus => {
                 tracing::error!("The proof status is unspecified: {:?}", request_id);
                 RequestResult::None

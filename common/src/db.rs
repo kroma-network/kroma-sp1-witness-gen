@@ -131,6 +131,18 @@ impl FileDB {
         ret.map_err(|e| anyhow!("Failed to set key-value pair: {}", e))
     }
 
+    pub fn remove(&self, key: &Vec<u8>) -> Result<()> {
+        let mut size = self.size.write().unwrap();
+        if self.get::<Vec<u8>>(key).is_none() {
+            return Ok(());
+        }
+
+        self.db.delete(key).map_err(|e| anyhow!("Failed to remove key-value pair: {}", e))?;
+        *size -= 1;
+        Self::set_size(&self.db, *size);
+        Ok(())
+    }
+
     pub fn get_with_timestamp<T: DeserializeOwned>(&self, key: &Vec<u8>) -> Option<(u64, T)> {
         let result = self.db.get(key);
 
@@ -228,6 +240,9 @@ mod tests {
         assert!(store.get::<Vec<Vec<u8>>>(&vec![0, 0, 0, 2]).is_none()); // removed by compaction.
         assert!(store.get::<Vec<Vec<u8>>>(&vec![0, 0, 0, 3]).is_none()); // removed by compaction.
 
+        store.remove(&vec![0, 0, 0, 4]).unwrap();
+        assert_eq!(get_store_size(&store), 1);
+        
         drop(store);
         fs::remove_dir_all(store_dir).unwrap();
     }

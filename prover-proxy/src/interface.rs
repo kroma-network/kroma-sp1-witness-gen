@@ -142,7 +142,7 @@ impl Rpc for RpcImpl {
             }
             RequestResult::Processing => ProofResult::processing(user_req_id),
             RequestResult::None => ProofResult::none(),
-            RequestResult::Failed(msg) => ProofResult::failed(user_req_id, msg),
+            RequestResult::Failed => ProofResult::failed(user_req_id),
         };
         tracing::info!("return the proof result: {:?}", proof_result);
 

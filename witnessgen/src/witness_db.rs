@@ -35,4 +35,9 @@ impl WitnessDB {
         let key = Self::build_key(l2_hash, l1_head_hash);
         self.db.set(&key, &witness_buf).map_err(|e| anyhow!("Failed to set witness: {}", e))
     }
+
+    pub fn remove(&self, l2_hash: &B256, l1_head_hash: &B256) -> Result<()> {
+        let key = Self::build_key(l2_hash, l1_head_hash);
+        self.db.remove(&key).map_err(|e| anyhow!("Failed to remove witness: {}", e))
+    }
 }

@@ -42,6 +42,28 @@ impl RpcImpl {
             current_task.release();
         }
     }
+
+    // Release `current_task` if the witness related to the `current_task` is already generated.
+    pub fn release_current_task_if_completed(&self, current_task: &mut TaskInfo) {
+        if let Some(witness) =
+            self.witness_db.get(&current_task.l2_hash, &current_task.l1_head_hash)
+        {
+            if !witness.is_empty() {
+                current_task.release();
+            }
+        }
+    }
+
+    // Release `current_task` if the witness related to the `current_task` has been faild.
+    pub fn release_current_task_if_failed(&self, current_task: &mut TaskInfo) {
+        if let Some(witness) =
+            self.witness_db.get(&current_task.l2_hash, &current_task.l1_head_hash)
+        {
+            if witness.is_empty() {
+                current_task.release();
+            }
+        }
+    }
 }
 
 impl Rpc for RpcImpl {
@@ -62,15 +84,18 @@ impl Rpc for RpcImpl {
         self.update_prev_req_status();
 
         let mut current_task = self.current_task.write().unwrap();
+        self.release_current_task_if_completed(&mut current_task);
+        self.release_current_task_if_failed(&mut current_task);
+
         match get_status_by_local_id(
             &mut current_task,
             self.witness_db.clone(),
             &l2_hash,
             &l1_head_hash,
+            true,
         ) {
             Ok(RequestResult::Completed) => {
                 tracing::info!("The request is already completed: {:?}", user_req_id);
-                current_task.release();
                 Ok(RequestResult::Completed)
             }
             Ok(RequestResult::Processing) => {
@@ -110,11 +135,15 @@ impl Rpc for RpcImpl {
 
         // Return cached witness if it exists. Otherwise, start to generate witness.
         let mut current_task = self.current_task.write().unwrap();
+        self.release_current_task_if_completed(&mut current_task);
+        self.release_current_task_if_failed(&mut current_task);
+
         match get_status_by_local_id(
             &mut current_task,
             self.witness_db.clone(),
             &l2_hash,
             &l1_head_hash,
+            false,
         ) {
             Ok(RequestResult::Completed) => {
                 let witness = self.witness_db.get(&l2_hash, &l1_head_hash).unwrap();

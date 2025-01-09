@@ -59,7 +59,7 @@ async fn main() -> Result<()> {
         if proof_result.request_status == ProverRequest::Completed {
             break proof_result;
         }
-        if let ProverRequest::Failed(_) = proof_result.request_status {
+        if let ProverRequest::Failed = proof_result.request_status {
             panic!("Failed to get witness");
         }
         sleep(Duration::from_secs(20));

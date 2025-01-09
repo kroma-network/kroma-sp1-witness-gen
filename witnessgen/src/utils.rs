@@ -8,6 +8,7 @@ use op_succinct_host_utils::{
 };
 use sp1_sdk::{ProverClient, SP1Stdin};
 use std::{
+    env,
     panic::{self, AssertUnwindSafe},
     sync::Arc,
 };
@@ -43,6 +44,9 @@ pub async fn generate_witness_impl(l2_hash: B256, l1_head_hash: B256) -> Result<
 
     let sp1_stdin = get_proof_stdin(&host_cli)
         .map_err(|e| anyhow::anyhow!("Failed to get proof stdin: {:?}", e.to_string()))?;
+
+    if env::var("SKIP_SIMULATION").unwrap_or("false".to_string()) == "true" {
+        tracing::info!("Simulation has been started");
     let executor = ProverClient::new();
     let (_, report) = executor
         .execute(FAULT_PROOF_ELF, sp1_stdin.clone())
@@ -52,6 +56,7 @@ pub async fn generate_witness_impl(l2_hash: B256, l1_head_hash: B256) -> Result<
         "successfully witness result generated - cycle: {:?}",
         report.total_instruction_count()
     );
+    }
 
     Ok(sp1_stdin)
 }
@@ -61,19 +66,56 @@ pub fn get_status_by_local_id(
     witness_db: Arc<WitnessDB>,
     l2_hash: &B256,
     l1_head_hash: &B256,
+    is_mutable: bool,
 ) -> Result<RequestResult> {
-    // If the witness is empty, it means the witness generation failed.
-    if let Some(witness) = witness_db.get(l2_hash, l1_head_hash) {
-        if witness.is_empty() {
-            Ok(RequestResult::Failed)
-        } else {
-            Ok(RequestResult::Completed)
+    // `idle` is `true` if the witness generator is in idle (i.e., current task is empty).
+    let idle = current_task.is_empty();
+    // `processing` is `true` if the request with local id (`l2_hash` and `l1_head_hash`) is in progress.
+    let processing = current_task.is_equal(*l2_hash, *l1_head_hash);
+
+    // `found_witness` is `true` if the witness is found from the db.
+    let mut found_witness = false;
+    // `meaningful_witness` is `true` if the found witness does not equals to `WitnessResult::EMPTY_WITNESS`.
+    // Note that if the witness equals to `WitnessResult::EMPTY_WITNESS` implies that the previous task has been failed.
+    let mut meaningful_witness = false;
+    let witness = witness_db.get(l2_hash, l1_head_hash);
+    if let Some(witness) = witness {
+        found_witness = true;
+        if !witness.is_empty() {
+            meaningful_witness = true;
         }
-    } else if current_task.is_equal(*l2_hash, *l1_head_hash) {
-        Ok(RequestResult::Processing)
-    } else if !current_task.is_empty() {
-        Err(anyhow::anyhow!("Another request is in progress"))
+    }
+
+    // If a meaningful witness exists regardless of the current task, consider it `Complete`.
+    if meaningful_witness {
+        return Ok(RequestResult::Completed);
+    }
+
+    // If there is no currently running task.
+    if idle && found_witness {
+        if is_mutable {
+            println!("db remove: {:#?}", l2_hash);
+            witness_db.remove(l2_hash, l1_head_hash).unwrap();
+        }
+        return Ok(RequestResult::Failed);
+    } else if idle && !found_witness {
+        return Ok(RequestResult::None);
     } else {
-        Ok(RequestResult::None)
+        // Do nothing.
+    }
+
+    // If there is a currently running task.
+    if processing && found_witness {
+        if is_mutable {
+            println!("db remove: {:#?}", l2_hash);
+            witness_db.remove(l2_hash, l1_head_hash).unwrap();
+        }
+        return Ok(RequestResult::Failed);
+    } else if processing && !found_witness {
+        // The same request is already being processed.
+        return Ok(RequestResult::Processing);
+    } else {
+        // A reqeust is in progress but not equals to this request.
+        return Err(anyhow::anyhow!("Another request is in progress"));
     }
 }
