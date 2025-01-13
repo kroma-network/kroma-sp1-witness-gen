@@ -8,9 +8,9 @@ RUN update-ca-certificates
 ENV NATIVE_HOST_RUNNER_PATH ./native_host_runner
 ENV WORKSPACE_ROOT ./
 
-# The following 2 lines are only necessary between the Upgrade time and the MPT time.
-# TODO(ethan): Remove these lines after the MPT time.
-ENV CHAIN_CONFIGS_FROM_JSON=true
+# ROLLUP_CONFIG_FROM_FILE is only necessary between the Upgrade time and the MPT time.
+# TODO(ethan): Remove it after the MPT time.
+ENV ROLLUP_CONFIG_FROM_FILE=true
 
 COPY ./target/native_host_runner/release/native_host_runner .
 COPY ./target/release/witness-gen-server .
