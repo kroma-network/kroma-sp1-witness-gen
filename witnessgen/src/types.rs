@@ -1,5 +1,5 @@
+use kroma_common::version::{KROMA_VERSION, SP1_SDK_VERSION};
 use kroma_common::PROGRAM_KEY;
-use kroma_common::{deps_version::SP1_SDK_VERSION, version::KROMA_VERSION};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
