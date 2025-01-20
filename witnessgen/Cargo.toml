@@ -15,10 +15,6 @@ path = "bin/native_host_runner.rs"
 name = "witness-gen-server"
 path = "bin/witness_gen_server.rs"
 
-[[bin]]
-name = "witness-gen-client"
-path = "bin/witness_gen_client.rs"
-
 [dependencies]
 kona-host = { workspace = true }
 tokio = { workspace = true }
