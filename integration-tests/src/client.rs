@@ -16,33 +16,51 @@ use sp1_sdk::{ExecutionReport, ProverClient, SP1Stdin};
 use std::time::Duration;
 
 const CLIENT_TIMEOUT_SEC: u64 = 10800;
-const WITNESSGEN_RPC_ENDPOINT: &str = "http://127.0.0.1:3030";
-const PROVER_RPC_ENDPOINT: &str = "http://127.0.0.1:3031";
+const DEFAULT_WITNESSGEN_RPC_ENDPOINT: &str = "http://0.0.0.0:3030";
+const DEFAULT_PROVER_RPC_ENDPOINT: &str = "http://0.0.0.0:3031";
 
-pub struct TestClient {
+pub struct IntegratedClient {
     witnessgen_client: HttpClient,
     prover_client: HttpClient,
 }
 
-impl Default for TestClient {
-    fn default() -> Self {
+impl IntegratedClient {
+    pub fn new(witnessgen_url: &str, prover_proxy_url: &str) -> Self {
         let witnessgen_client = HttpClientBuilder::default()
             .max_request_body_size(300 * 1024 * 1024)
             .request_timeout(Duration::from_secs(CLIENT_TIMEOUT_SEC))
-            .build(WITNESSGEN_RPC_ENDPOINT)
+            .build(witnessgen_url)
             .unwrap();
 
         let prover_client = HttpClientBuilder::default()
             .max_request_body_size(300 * 1024 * 1024)
             .request_timeout(Duration::from_secs(CLIENT_TIMEOUT_SEC))
-            .build(PROVER_RPC_ENDPOINT)
+            .build(prover_proxy_url)
             .unwrap();
 
         Self { witnessgen_client, prover_client }
     }
 }
 
-impl TestClient {
+impl Default for IntegratedClient {
+    fn default() -> Self {
+        let witnessgen_client = HttpClientBuilder::default()
+            .max_request_body_size(300 * 1024 * 1024)
+            .request_timeout(Duration::from_secs(CLIENT_TIMEOUT_SEC))
+            .build(DEFAULT_WITNESSGEN_RPC_ENDPOINT)
+            .unwrap();
+
+        let prover_client = HttpClientBuilder::default()
+            .max_request_body_size(300 * 1024 * 1024)
+            .request_timeout(Duration::from_secs(CLIENT_TIMEOUT_SEC))
+            .build(DEFAULT_PROVER_RPC_ENDPOINT)
+            .unwrap();
+
+        Self { witnessgen_client, prover_client }
+    }
+}
+
+impl IntegratedClient {
     pub async fn witnessgen_spec(&self) -> WitnessSpec {
         let params = rpc_params![];
         self.witnessgen_client.request("spec", params).await.unwrap()

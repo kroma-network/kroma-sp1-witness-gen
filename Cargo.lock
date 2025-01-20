@@ -3442,6 +3442,7 @@ dependencies = [
  "kroma-common",
  "kroma-prover-proxy",
  "kroma-witnessgen",
+ "log",
  "serde",
  "serde_json",
  "sp1-sdk",
