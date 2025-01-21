@@ -47,6 +47,7 @@ alloy-primitives = { version = "0.8.4", default-features = false, features = [
     "sha3-keccak",
 ] }
 alloy-provider = { version = "0.4.2", default-features = false }
+alloy-rlp = { version = "0.3.8", default-features = false }
 
 # optimism
 op-alloy-consensus = { version = "0.4.0", default-features = false }

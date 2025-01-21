@@ -3,6 +3,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use clap::Parser;
 use jsonrpc_http_server::ServerBuilder;
+use kroma_common::checker::assert_if_invalid_rpcs;
 use kroma_witnessgen::{
     executor::Executor,
     interface::{Rpc, RpcImpl},
@@ -25,8 +26,8 @@ async fn main() -> Result<()> {
     dotenv::dotenv().ok();
     tracing_subscriber::fmt::Subscriber::builder().init();
 
-    // Check if the endpoints are empty.
-    // TODO: implement check_endpoints
+    // Check if All the RPCs are valid.
+    assert_if_invalid_rpcs().await?;
 
     let args = Args::parse();
 

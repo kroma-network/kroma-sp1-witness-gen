@@ -4073,15 +4073,21 @@ dependencies = [
 name = "kroma-common"
 version = "0.1.0"
 dependencies = [
+ "alloy-consensus",
  "alloy-primitives 0.8.10",
+ "alloy-rlp",
  "anyhow",
  "bincode",
  "ctor",
+ "dotenv",
  "jsonrpc-http-server",
  "once_cell",
+ "op-succinct-host-utils",
  "rocksdb",
  "serde",
+ "serde_json",
  "sp1-sdk",
+ "tokio",
  "tracing",
 ]
 

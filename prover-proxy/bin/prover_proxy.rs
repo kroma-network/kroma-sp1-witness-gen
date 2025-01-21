@@ -17,9 +17,6 @@ fn main() -> Result<()> {
     dotenv::dotenv().ok();
     tracing_subscriber::fmt::Subscriber::builder().init();
 
-    // Check if the endpoints are empty.
-    // TODO: implement check_endpoints
-
     let args = Args::parse();
 
     let sp1_private_key =
