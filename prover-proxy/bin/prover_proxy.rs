@@ -25,7 +25,7 @@ fn main() -> Result<()> {
     io.extend_with(RpcImpl::new(&args.data_path, &sp1_private_key).to_delegate());
 
     tracing::info!("Starting Prover at {}", args.endpoint);
-    tracing::info!("Program Key: {:#?}", kroma_common::PROGRAM_KEY);
+    tracing::info!("Program Key: {:#?}", kroma_common::PROGRAM_KEY.to_string());
     let server = ServerBuilder::new(io)
         .threads(3)
         .max_request_body_size(200 * 1024 * 1024)
