@@ -11,6 +11,7 @@ use sp1_sdk::{block_on, ExecutionReport};
 
 const REPORT_DIR: &str = "execution-reports";
 
+#[allow(clippy::too_many_arguments)]
 pub async fn report_execution(
     data_fetcher: &OPSuccinctDataFetcher,
     start: u64,

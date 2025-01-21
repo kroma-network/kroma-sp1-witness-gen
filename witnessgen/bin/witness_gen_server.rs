@@ -51,7 +51,7 @@ async fn main() -> Result<()> {
     io.extend_with(RpcImpl::new(tx, witness_db).to_delegate());
 
     tracing::info!("Starting Witness Generator at {}", args.endpoint);
-    tracing::info!("Program Key: {:#?}", kroma_common::PROGRAM_KEY.to_string());
+    tracing::info!("Program Key: {:#?}", kroma_common::PROGRAM_KEY);
     let server = ServerBuilder::new(io)
         .threads(3)
         .max_request_body_size(200 * 1024 * 1024)

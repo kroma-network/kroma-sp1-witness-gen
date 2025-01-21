@@ -15,6 +15,7 @@ use std::{
 
 use crate::{types::RequestResult, witness_db::WitnessDB};
 
+#[allow(clippy::redundant_closure)]
 pub async fn generate_witness_impl(l2_hash: B256, l1_head_hash: B256) -> Result<SP1Stdin> {
     let data_fetcher = panic::catch_unwind(AssertUnwindSafe(|| OPSuccinctDataFetcher::default()))
         .map_err(|e| anyhow::anyhow!("Failed to create data fetcher: {:?}", e))?;
@@ -47,15 +48,15 @@ pub async fn generate_witness_impl(l2_hash: B256, l1_head_hash: B256) -> Result<
 
     if env::var("SKIP_SIMULATION").unwrap_or("false".to_string()) == "true" {
         tracing::info!("Simulation has been started");
-    let executor = ProverClient::new();
-    let (_, report) = executor
-        .execute(FAULT_PROOF_ELF, sp1_stdin.clone())
-        .run()
-        .map_err(|e| anyhow::anyhow!("Failed to get proof stdin: {:?}", e.to_string()))?;
-    tracing::info!(
-        "successfully witness result generated - cycle: {:?}",
-        report.total_instruction_count()
-    );
+        let executor = ProverClient::new();
+        let (_, report) = executor
+            .execute(FAULT_PROOF_ELF, sp1_stdin.clone())
+            .run()
+            .map_err(|e| anyhow::anyhow!("Failed to get proof stdin: {:?}", e.to_string()))?;
+        tracing::info!(
+            "successfully witness result generated - cycle: {:?}",
+            report.total_instruction_count()
+        );
     }
 
     Ok(sp1_stdin)
@@ -110,12 +111,12 @@ pub fn get_status_by_local_id(
             println!("db remove: {:#?}", l2_hash);
             witness_db.remove(l2_hash, l1_head_hash).unwrap();
         }
-        return Ok(RequestResult::Failed);
+        Ok(RequestResult::Failed)
     } else if processing && !found_witness {
         // The same request is already being processed.
-        return Ok(RequestResult::Processing);
+        Ok(RequestResult::Processing)
     } else {
         // A reqeust is in progress but not equals to this request.
-        return Err(anyhow::anyhow!("Another request is in progress"));
+        Err(anyhow::anyhow!("Another request is in progress"))
     }
 }
