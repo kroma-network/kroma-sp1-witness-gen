@@ -11,10 +11,6 @@ homepage.workspace = true
 name = "prover-proxy"
 path = "bin/prover_proxy.rs"
 
-[[bin]]
-name = "prover_client"
-path = "bin/prover_client.rs"
-
 [dependencies]
 anyhow.workspace = true
 bincode.workspace = true

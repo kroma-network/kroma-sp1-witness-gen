@@ -108,8 +108,7 @@ impl Rpc for RpcImpl {
 
                 let tx = self.tx.clone();
                 tokio::task::spawn(async move {
-                    let task =
-                        TaskInfo { l2_hash: l2_hash.clone(), l1_head_hash: l1_head_hash.clone() };
+                    let task = TaskInfo { l2_hash, l1_head_hash };
                     tx.send(task).await.unwrap();
                 });
                 Ok(RequestResult::Processing)
