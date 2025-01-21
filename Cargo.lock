@@ -4083,6 +4083,7 @@ dependencies = [
  "jsonrpc-http-server",
  "once_cell",
  "op-succinct-host-utils",
+ "reqwest 0.12.7",
  "rocksdb",
  "serde",
  "serde_json",

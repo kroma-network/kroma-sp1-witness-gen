@@ -3,7 +3,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use clap::Parser;
 use jsonrpc_http_server::ServerBuilder;
-use kroma_common::checker::assert_if_invalid_rpcs;
+use kroma_common::checker::{assert_if_invalid_rpcs, check_rollup_config_before_mpt_time};
 use kroma_witnessgen::{
     executor::Executor,
     interface::{Rpc, RpcImpl},
@@ -26,8 +26,13 @@ async fn main() -> Result<()> {
     dotenv::dotenv().ok();
     tracing_subscriber::fmt::Subscriber::builder().init();
 
+    // NOTE(Ethan)Before the `MPT time`, the rollup configuration must be read from a JSON file instead of via RPC.
+    // If the launch time is before the MPT time, set `ROLLUP_CONFIG_FROM_FILE` to `true`.
+    check_rollup_config_before_mpt_time().await?;
+
     // Check if All the RPCs are valid.
     assert_if_invalid_rpcs().await?;
+    tracing::info!("All validation for safe launching has been passed.");
 
     let args = Args::parse();
 
