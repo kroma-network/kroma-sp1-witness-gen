@@ -75,13 +75,9 @@ pub async fn assert_if_invalid_rpcs() -> Result<()> {
     // Check if L2 Node is alive.
     let header = Header::decode(&mut raw_header.as_ref())
         .map_err(|e| anyhow!("Failed to decode header: {e}"))?;
-    let l2_latest_number = header.number;
+    let latest = format!("0x{:x}", header.number - 1);
     let _: Value = fetcher
-        .fetch_rpc_data(
-            RPCMode::L2Node,
-            "optimism_outputAtBlock",
-            vec![format!("{:#x}", l2_latest_number).into()],
-        )
+        .fetch_rpc_data(RPCMode::L2Node, "optimism_outputAtBlock", vec![latest.into()])
         .await
         .expect("L2 Node is not alive");
 
