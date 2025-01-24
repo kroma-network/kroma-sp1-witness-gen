@@ -1,14 +1,13 @@
 use jsonrpc_core::Result as JsonResult;
 use jsonrpc_derive::rpc;
 use kroma_common::utils::preprocessing;
-use sp1_sdk::network::client::NetworkClient;
+use sp1_sdk::network::NetworkClient;
 use std::sync::{Arc, RwLock};
 
 use crate::errors::ProverError;
 use crate::proof_db::ProofDB;
 use crate::types::{ProofResult, RequestResult, SpecResult};
-
-static DEFAULT_PROOF_STORE_PATH: &str = "data/proof_store";
+use crate::{DEFAULT_NETWORK_RPC_URL, DEFAULT_PROOF_STORE_PATH};
 
 #[rpc]
 pub trait Rpc {
@@ -35,11 +34,11 @@ pub struct RpcImpl {
 }
 
 impl RpcImpl {
-    pub fn new(store_path: &str, sp1_private_key: &str) -> Self {
+    pub fn new(store_path: &str, sp1_private_key: &str, network_rpc_url: &str) -> Self {
         RpcImpl {
             task_lock: Arc::new(RwLock::new(())),
             proof_db: Arc::new(ProofDB::new(store_path)),
-            client: Arc::new(NetworkClient::new(sp1_private_key)),
+            client: Arc::new(NetworkClient::new(sp1_private_key, network_rpc_url)),
         }
     }
 }
@@ -48,7 +47,7 @@ impl Default for RpcImpl {
     fn default() -> Self {
         let sp1_private_key = std::env::var("SP1_PRIVATE_KEY")
             .expect("SP1_PRIVATE_KEY must be set for remote proving");
-        Self::new(DEFAULT_PROOF_STORE_PATH, &sp1_private_key)
+        Self::new(DEFAULT_PROOF_STORE_PATH, &sp1_private_key, DEFAULT_NETWORK_RPC_URL)
     }
 }
 

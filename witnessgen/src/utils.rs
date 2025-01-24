@@ -48,9 +48,9 @@ pub async fn generate_witness_impl(l2_hash: B256, l1_head_hash: B256) -> Result<
 
     if env::var("SKIP_SIMULATION").unwrap_or("false".to_string()) == "true" {
         tracing::info!("Simulation has been started");
-        let executor = ProverClient::new();
+        let executor = ProverClient::from_env();
         let (_, report) = executor
-            .execute(FAULT_PROOF_ELF, sp1_stdin.clone())
+            .execute(FAULT_PROOF_ELF, &sp1_stdin)
             .run()
             .map_err(|e| anyhow::anyhow!("Failed to get proof stdin: {:?}", e.to_string()))?;
         tracing::info!(

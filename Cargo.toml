@@ -41,39 +41,46 @@ tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
 rocksdb = { version = "0.22", default-features = false, features = ["snappy"] }
 
-# ethreum
-alloy-consensus = { version = "0.4.2", default-features = false }
-alloy-eips = { version = "0.4.2", default-features = false }
-alloy-primitives = { version = "0.8.4", default-features = false, features = [
+# ethereum
+alloy = { version = "0.6.4", default-features = false, features = ["full"] }
+alloy-consensus = { version = "0.6.4", default-features = false }
+alloy-eips = { version = "0.6.4", default-features = false }
+alloy-primitives = { version = "0.8.12", default-features = false, features = [
     "sha3-keccak",
 ] }
-alloy-provider = { version = "0.4.2", default-features = false }
-alloy-rlp = { version = "0.3.8", default-features = false }
+alloy-provider = { version = "0.6.4", default-features = false }
+alloy-rlp = { version = "0.3.9", default-features = false }
 
 # optimism
-op-alloy-consensus = { version = "0.4.0", default-features = false }
-op-alloy-genesis = { version = "0.4.0", default-features = false, features = [
+op-alloy-consensus = { version = "0.6.8", default-features = false }
+op-alloy-genesis = { version = "0.6.8", default-features = false, features = [
     "serde",
 ] }
-op-alloy-protocol = { version = "0.4.0", default-features = false }
+op-alloy-protocol = { version = "0.6.8", default-features = false }
+op-alloy-rpc-types-engine = { version = "0.6.8", default-features = false }
 
 # kona
-kona-primitives = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-12-06" }
-kona-executor = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-12-06" }
-kona-client = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-12-06" }
-kona-host = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-12-06" }
-kona-derive = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-12-06" }
-kona-mpt = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-12-06" }
-kona-providers = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-12-06" }
+# `kroma-patch-01-23` is based on the following commit:
+# - repo: https://github.com/succinctlabs/kona/branch/patch-kona-proof-v0.1.0 (commit: 8ec836eae1cfe2ebad4624ae4f29839011382425)
+kona-executor = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-01-23" }
+kona-client = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-01-23" }
+kona-host = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-01-23" }
+kona-derive = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-01-23" }
+kona-mpt = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-01-23" }
+kona-proof = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-01-23" }
+kona-driver = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-01-23" }
+kona-preimage = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-01-23", features = [
+    "rkyv",
+] }
 
 # sp1
-sp1-zkvm = { version = "3.0.0", features = ["verify"] }
-sp1-sdk = { version = "3.0.0" }
-sp1-build = { version = "3.0.0" }
+sp1-zkvm = { version = "4.0.1", features = ["verify"] }
+sp1-sdk = { version = "4.0.1", features = ["network"] }
+sp1-build = { version = "4.0.1" }
 
 # op-succinct
-op-succinct-client-utils = { git = "https://github.com/kroma-network/op-succinct", branch = "kroma-patch-01-09" }
-op-succinct-host-utils = { git = "https://github.com/kroma-network/op-succinct", branch = "kroma-patch-01-09" }
+op-succinct-client-utils = { git = "https://github.com/kroma-network/op-succinct", branch = "kroma-patch-01-23" }
+op-succinct-host-utils = { git = "https://github.com/kroma-network/op-succinct", branch = "kroma-patch-01-23" }
 
 # kroma
 kroma-common = { path = "common" }

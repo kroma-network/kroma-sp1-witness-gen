@@ -1,13 +1,14 @@
-use std::{env, path::PathBuf, str::FromStr};
+use std::{path::PathBuf, str::FromStr};
 
 use alloy_primitives::{hex::FromHex, B256};
-use alloy_provider::Provider;
+use alloy_provider::{network::primitives::BlockTransactionsKind, Provider};
+use op_succinct_client_utils::block_on;
 use op_succinct_host_utils::{
-    fetcher::{OPSuccinctDataFetcher, RPCConfig, RPCMode},
+    fetcher::{OPSuccinctDataFetcher, RPCMode, RunContext},
     stats::ExecutionStats,
 };
 use serde_json::Value;
-use sp1_sdk::{block_on, ExecutionReport};
+use sp1_sdk::ExecutionReport;
 
 const REPORT_DIR: &str = "execution-reports";
 
@@ -22,11 +23,17 @@ pub async fn report_execution(
     l2_chain_id: u64,
     l2_number: u64,
 ) {
-    let mut stats = ExecutionStats::default();
-    stats.add_block_data(data_fetcher, start, end).await;
-    stats.add_report_data(report);
-    stats.add_aggregate_data();
-    stats.add_timing_data(execution_duration.as_secs(), witness_generation_time_sec.as_secs());
+    let block_data = data_fetcher
+        .get_l2_block_data_range(start, end)
+        .await
+        .expect("Failed to fetch block data range.");
+
+    let mut stats = ExecutionStats::new(
+        &block_data,
+        report,
+        witness_generation_time_sec.as_secs(),
+        execution_duration.as_secs(),
+    );
     println!("{:#?}", stats);
 
     let mut report_path = PathBuf::from_str(REPORT_DIR).unwrap();
@@ -44,17 +51,11 @@ pub async fn report_execution(
 
 #[allow(dead_code)]
 pub fn get_l1_block_hash(block_number: u64) -> B256 {
-    let data_fetcher = OPSuccinctDataFetcher {
-        rpc_config: RPCConfig {
-            l1_rpc: env::var("L1_RPC").expect("L1_RPC is not set."),
-            ..Default::default()
-        },
-        ..Default::default()
-    };
+    let data_fetcher = OPSuccinctDataFetcher::new(RunContext::Dev);
     let l1_provider = data_fetcher.l1_provider;
     let l1_head_block = block_on(async move {
         l1_provider
-            .get_block_by_number(block_number.into(), false)
+            .get_block_by_number(block_number.into(), BlockTransactionsKind::Hashes)
             .await?
             .ok_or_else(|| anyhow::anyhow!("Block not found for block number {}", block_number))
     })
@@ -66,7 +67,7 @@ fn get_output_at_impl(data_fetcher: &OPSuccinctDataFetcher, block_number: u64) -
     let block_number_hex = format!("0x{:x}", block_number);
     let result: Value = block_on(async {
         data_fetcher
-            .fetch_rpc_data(
+            .fetch_rpc_data_with_mode(
                 RPCMode::L2Node,
                 "optimism_outputAtBlock",
                 vec![block_number_hex.into()],

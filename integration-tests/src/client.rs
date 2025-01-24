@@ -90,11 +90,11 @@ impl IntegratedClient {
     }
 
     pub async fn execute_witness(witness_result: &WitnessResult) -> Result<ExecutionReport> {
-        let prover = ProverClient::new();
+        let prover = ProverClient::from_env();
         let mut sp1_stdin = SP1Stdin::new();
         sp1_stdin.buffer = witness_result.get_witness_buf();
 
-        let (_, report) = prover.execute(FAULT_PROOF_ELF, sp1_stdin).run()?;
+        let (_, report) = prover.execute(FAULT_PROOF_ELF, &sp1_stdin).run()?;
         Ok(report)
     }
 

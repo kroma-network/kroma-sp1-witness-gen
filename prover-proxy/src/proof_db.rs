@@ -32,7 +32,7 @@ impl ProofDB {
         &self,
         l2_hash: &B256,
         l1_head_hash: &B256,
-        request_id: &String,
+        request_id: &B256,
     ) -> Result<()> {
         let key = Self::build_key(l2_hash, l1_head_hash);
         self.db.set(&key, &request_id).map_err(|e| anyhow!("Failed to set request id: {}", e))
@@ -47,7 +47,7 @@ impl ProofDB {
         self.db.set(&req_id_key, &proof)
     }
 
-    pub fn get_request_id(&self, l2_hash: &B256, l1_head_hash: &B256) -> Option<String> {
+    pub fn get_request_id(&self, l2_hash: &B256, l1_head_hash: &B256) -> Option<B256> {
         let key = Self::build_key(l2_hash, l1_head_hash);
         self.db.get(&key)
     }
@@ -62,7 +62,7 @@ impl ProofDB {
         self.get_proof_by_id(&request_id.unwrap())
     }
 
-    pub fn get_proof_by_id(&self, request_id: &str) -> Option<SP1ProofWithPublicValues> {
+    pub fn get_proof_by_id(&self, request_id: &B256) -> Option<SP1ProofWithPublicValues> {
         let req_id_key = Self::convert_req_id_as_key(&request_id);
         self.db.get(&req_id_key)
     }

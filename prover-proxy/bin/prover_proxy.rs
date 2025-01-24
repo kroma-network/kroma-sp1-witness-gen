@@ -1,7 +1,10 @@
 use anyhow::Result;
 use clap::Parser;
 use jsonrpc_http_server::ServerBuilder;
-use kroma_prover_proxy::interface::{Rpc, RpcImpl};
+use kroma_prover_proxy::{
+    interface::{Rpc, RpcImpl},
+    DEFAULT_PROOF_STORE_PATH,
+};
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -22,7 +25,9 @@ fn main() -> Result<()> {
     let sp1_private_key =
         std::env::var("SP1_PRIVATE_KEY").expect("SP1_PRIVATE_KEY must be set for remote proving");
     let mut io = jsonrpc_core::IoHandler::new();
-    io.extend_with(RpcImpl::new(&args.data_path, &sp1_private_key).to_delegate());
+    io.extend_with(
+        RpcImpl::new(&args.data_path, &sp1_private_key, DEFAULT_PROOF_STORE_PATH).to_delegate(),
+    );
 
     tracing::info!("Starting Prover at {}", args.endpoint);
     tracing::info!("Program Key: {:#?}", kroma_common::PROGRAM_KEY.to_string());

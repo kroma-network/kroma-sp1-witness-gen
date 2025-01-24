@@ -50,25 +50,25 @@ pub async fn assert_if_invalid_rpcs() -> Result<()> {
 
     // Check if L1 Geth is alive.
     let _: Value = fetcher
-        .fetch_rpc_data(RPCMode::L1, "net_version", vec![])
+        .fetch_rpc_data_with_mode(RPCMode::L1, "net_version", vec![])
         .await
         .expect("L1 Geth is not alive");
 
     // Check if L2 Geth is alive.
     let _: Value = fetcher
-        .fetch_rpc_data(RPCMode::L2, "net_version", vec![])
+        .fetch_rpc_data_with_mode(RPCMode::L2, "net_version", vec![])
         .await
         .expect("L2 Geth is not alive");
 
     // Check if L1 Geth is in debug mode
     let _: Value = fetcher
-        .fetch_rpc_data(RPCMode::L1, "debug_getRawHeader", vec!["latest".into()])
+        .fetch_rpc_data_with_mode(RPCMode::L1, "debug_getRawHeader", vec!["latest".into()])
         .await
         .expect("L1 Geth is not in debug mode");
 
     // Check L2 Geth is in debug mode
     let raw_header: Bytes = fetcher
-        .fetch_rpc_data(RPCMode::L2, "debug_getRawHeader", vec!["latest".into()])
+        .fetch_rpc_data_with_mode(RPCMode::L2, "debug_getRawHeader", vec!["latest".into()])
         .await
         .expect("L2 Geth is not in debug mode");
 
@@ -77,7 +77,7 @@ pub async fn assert_if_invalid_rpcs() -> Result<()> {
         .map_err(|e| anyhow!("Failed to decode header: {e}"))?;
     let latest = format!("0x{:x}", header.number - 1);
     let _: Value = fetcher
-        .fetch_rpc_data(RPCMode::L2Node, "optimism_outputAtBlock", vec![latest.into()])
+        .fetch_rpc_data_with_mode(RPCMode::L2Node, "optimism_outputAtBlock", vec![latest.into()])
         .await
         .expect("L2 Node is not alive");
 

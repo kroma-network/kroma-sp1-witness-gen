@@ -130,14 +130,14 @@ async fn main() -> Result<()> {
     let sp1_stdin = get_proof_stdin(&host_cli)?;
 
     let l2_chain_id = data_fetcher.get_l2_chain_id().await?;
-    let prover = ProverClient::new();
+    let prover = ProverClient::from_env();
 
     match args.method {
         Method::Preview | Method::Config => {}
         Method::Execute => {
             let start_time = Instant::now();
             let (mut public_values, report) =
-                prover.execute(FAULT_PROOF_ELF, sp1_stdin).run().unwrap();
+                prover.execute(FAULT_PROOF_ELF, &sp1_stdin).run().unwrap();
             let execution_duration = start_time.elapsed();
 
             cfg_if! {
@@ -175,7 +175,7 @@ async fn main() -> Result<()> {
             let (pk, _) = prover.setup(FAULT_PROOF_ELF);
 
             // Generate proofs in PLONK mode for on-chain verification.
-            let proof = prover.prove(&pk, sp1_stdin).plonk().run().unwrap();
+            let proof = prover.prove(&pk, &sp1_stdin).plonk().run().unwrap();
 
             // Create a proof directory for the chain ID if it doesn't exist.
             let proof_dir = format!("data/{}/proofs", data_fetcher.get_l2_chain_id().await?);
