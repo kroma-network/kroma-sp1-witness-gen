@@ -3850,6 +3850,7 @@ dependencies = [
 name = "kroma-witnessgen"
 version = "0.1.0"
 dependencies = [
+ "alloy",
  "alloy-primitives",
  "anyhow",
  "bincode",
@@ -4514,7 +4515,6 @@ dependencies = [
 [[package]]
 name = "op-succinct-client-utils"
 version = "0.1.0"
-source = "git+https://github.com/kroma-network/op-succinct?branch=kroma-patch-01-23#b72c8ec1e5071030f57afdae56c0bfbcef7a8621"
 dependencies = [
  "alloy-consensus 0.6.4",
  "alloy-eips 0.6.4",
@@ -4551,7 +4551,6 @@ dependencies = [
 [[package]]
 name = "op-succinct-host-utils"
 version = "0.1.0"
-source = "git+https://github.com/kroma-network/op-succinct?branch=kroma-patch-01-23#b72c8ec1e5071030f57afdae56c0bfbcef7a8621"
 dependencies = [
  "alloy",
  "alloy-consensus 0.6.4",

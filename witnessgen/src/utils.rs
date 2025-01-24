@@ -19,14 +19,14 @@ use crate::{types::RequestResult, witness_db::WitnessDB};
 pub async fn generate_witness_impl(l2_hash: B256, l1_head_hash: B256) -> Result<SP1Stdin> {
     let data_fetcher = panic::catch_unwind(AssertUnwindSafe(|| OPSuccinctDataFetcher::default()))
         .map_err(|e| anyhow::anyhow!("Failed to create data fetcher: {:?}", e))?;
-
+    println!("1");
     // Check the l2 block exists in the chain.
     let l2_header = data_fetcher.get_l2_header(l2_hash.into()).await?;
     let l2_number = l2_header.number;
-
+    println!("2");
     // Check the l1 block exists in the chain.
     data_fetcher.get_l1_header(l1_head_hash.into()).await?;
-
+    println!("3");
     // Prepare the host CLI args.
     let mut host_cli = data_fetcher
         .get_host_cli_args(
@@ -36,12 +36,16 @@ pub async fn generate_witness_impl(l2_hash: B256, l1_head_hash: B256) -> Result<
             CacheMode::KeepCache,
         )
         .await?;
+    println!("4");
     host_cli.l1_head = l1_head_hash;
 
     // Start the server and native client.
     let mut witnessgen_executor = WitnessGenExecutor::default();
+    println!("5");
     witnessgen_executor.spawn_witnessgen(&host_cli).await?;
+    println!("6");
     witnessgen_executor.flush().await?;
+    println!("7");
 
     let sp1_stdin = get_proof_stdin(&host_cli)
         .map_err(|e| anyhow::anyhow!("Failed to get proof stdin: {:?}", e.to_string()))?;

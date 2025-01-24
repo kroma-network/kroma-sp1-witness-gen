@@ -79,8 +79,10 @@ sp1-sdk = { version = "4.0.1", features = ["network"] }
 sp1-build = { version = "4.0.1" }
 
 # op-succinct
-op-succinct-client-utils = { git = "https://github.com/kroma-network/op-succinct", branch = "kroma-patch-01-23" }
-op-succinct-host-utils = { git = "https://github.com/kroma-network/op-succinct", branch = "kroma-patch-01-23" }
+# op-succinct-client-utils = { git = "https://github.com/kroma-network/op-succinct", branch = "kroma-patch-01-23" }
+# op-succinct-host-utils = { git = "https://github.com/kroma-network/op-succinct", branch = "kroma-patch-01-23" }
+op-succinct-client-utils = { path = "../op-succinct/utils/client" }
+op-succinct-host-utils = { path = "../op-succinct/utils/host" }
 
 # kroma
 kroma-common = { path = "common" }

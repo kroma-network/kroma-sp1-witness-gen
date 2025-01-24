@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use alloy_primitives::b256;
 use anyhow::Result;
 use clap::Parser;
 use jsonrpc_http_server::ServerBuilder;
@@ -8,6 +9,7 @@ use kroma_witnessgen::{
     executor::Executor,
     interface::{Rpc, RpcImpl},
 };
+use op_succinct_host_utils::fetcher::OPSuccinctDataFetcher;
 
 static DEFAULT_WITNESS_STORE_PATH: &str = "data/witness_store";
 
@@ -35,6 +37,15 @@ async fn main() -> Result<()> {
     tracing::info!("All validation for safe launching has been passed.");
 
     let args = Args::parse();
+
+    // let fetcher = OPSuccinctDataFetcher::default();
+    // fetcher
+    //     .l2_provider
+    //     .get_block(
+    //         b256!("0xabef4fd64a81faadb0e5e968f28353c10227c04ec0e14068ffd0a91143185267"),
+    //         alloy::rpc::types::BlockTransactionsKind::Full,
+    //     )
+    //     .await?;
 
     let witness_db = Arc::new(kroma_witnessgen::witness_db::WitnessDB::new(&args.data_path));
     let (tx, rx) = tokio::sync::mpsc::channel(10);

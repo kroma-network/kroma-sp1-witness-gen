@@ -37,6 +37,7 @@ serde.workspace = true
 sp1-sdk.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
+alloy.workspace = true
 
 # client
 jsonrpsee-core = "0.16.2"
