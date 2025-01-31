@@ -1,11 +1,5 @@
 [workspace]
-members = [
-    "program",
-    "script",
-    "witnessgen",
-    "prover-proxy",
-    "integration-tests",
-]
+members = ["program", "script", "witnessgen", "integration-tests"]
 resolver = "2"
 
 [workspace.package]
@@ -76,7 +70,6 @@ op-succinct-host-utils = { git = "https://github.com/kroma-network/op-succinct",
 # kroma
 kroma-zkvm-common = { git = "https://github.com/kroma-network/zkvm-common", branch = "feat/release-v1.0.0" }
 kroma-witnessgen = { path = "witnessgen" }
-kroma-prover-proxy = { path = "prover-proxy" }
 
 [profile.release-client-lto] # kroma
 inherits = "release"

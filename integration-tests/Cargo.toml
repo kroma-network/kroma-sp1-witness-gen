@@ -11,10 +11,6 @@ repository.workspace = true
 name = "witness-scenario"
 path = "bin/witness_scenario.rs"
 
-[[bin]]
-name = "proof-scenario"
-path = "bin/proof_scenario.rs"
-
 [dependencies]
 anyhow.workspace = true
 clap.workspace = true
@@ -30,4 +26,3 @@ serde.workspace = true
 alloy-primitives.workspace = true
 sp1-sdk.workspace = true
 kroma-witnessgen.workspace = true
-kroma-prover-proxy.workspace = true

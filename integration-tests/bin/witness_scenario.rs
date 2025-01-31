@@ -1,7 +1,7 @@
 use alloy_primitives::{b256, B256};
 use anyhow::Result;
 use clap::Parser;
-use integration_tests::{save_witness, IntegratedClient, Method, WitnessRequest};
+use integration_tests::{save_witness, Method, TestClient, WitnessRequest};
 use kroma_witnessgen::errors::ErrorCode as WitnessErrorCode;
 use std::{thread::sleep, time::Duration};
 
@@ -31,7 +31,7 @@ impl Args {
 }
 
 async fn scenario(
-    client: &IntegratedClient,
+    client: &TestClient,
     l2_hash: B256,
     l1_head_hash: B256,
     witness_data: &String,
@@ -66,9 +66,8 @@ async fn scenario(
         sleep(Duration::from_secs(20));
     };
 
-    let report = IntegratedClient::execute_witness(&witness_result)
-        .await
-        .expect("Failed to execute witness");
+    let report =
+        TestClient::execute_witness(&witness_result).await.expect("Failed to execute witness");
     println!("Witness execution succeeded: {:?}", report.total_instruction_count());
     save_witness(witness_data, &witness_result)
 }
@@ -76,7 +75,7 @@ async fn scenario(
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
-    let client = IntegratedClient::default();
+    let client = TestClient::default();
 
     match args.method {
         Method::Spec => {

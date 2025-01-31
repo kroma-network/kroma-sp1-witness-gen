@@ -3439,7 +3439,6 @@ dependencies = [
  "hex",
  "jsonrpsee",
  "jsonrpsee-core",
- "kroma-prover-proxy",
  "kroma-witnessgen",
  "log",
  "serde",
@@ -4066,32 +4065,6 @@ dependencies = [
  "op-alloy-protocol",
  "reqwest 0.12.7",
  "tracing",
-]
-
-[[package]]
-name = "kroma-prover-proxy"
-version = "0.1.0"
-dependencies = [
- "alloy-primitives 0.8.10",
- "anyhow",
- "bincode",
- "clap",
- "dotenv",
- "hex",
- "jsonrpc-core",
- "jsonrpc-core-client",
- "jsonrpc-derive",
- "jsonrpc-http-server",
- "jsonrpsee",
- "jsonrpsee-core",
- "kroma-witnessgen",
- "kroma-zkvm-common",
- "once_cell",
- "serde",
- "sp1-sdk",
- "tokio",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]
