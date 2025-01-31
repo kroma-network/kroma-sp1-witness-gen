@@ -1,10 +1,10 @@
 use jsonrpc_core::Result as JsonResult;
 use jsonrpc_derive::rpc;
-use kroma_common::{task_info::TaskInfo, utils::preprocessing};
+use kroma_common::utils::preprocessing;
 use std::sync::{Arc, RwLock};
 
 use crate::errors::WitnessGenError;
-use crate::types::{RequestResult, SpecResult, WitnessResult};
+use crate::types::{RequestResult, SpecResult, TaskInfo, WitnessResult};
 use crate::utils::get_status_by_local_id;
 use crate::witness_db::WitnessDB;
 

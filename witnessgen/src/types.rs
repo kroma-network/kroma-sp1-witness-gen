@@ -1,3 +1,4 @@
+use alloy_primitives::B256;
 use kroma_common::version::{KROMA_VERSION, SP1_SDK_VERSION};
 use serde::{Deserialize, Serialize};
 
@@ -73,6 +74,33 @@ impl WitnessResult {
 
     pub fn get_witness_buf(&self) -> Vec<Vec<u8>> {
         Self::string_to_witness_buf(&self.witness)
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct TaskInfo {
+    pub l2_hash: B256,
+    pub l1_head_hash: B256,
+}
+
+impl TaskInfo {
+    pub fn set(&mut self, l2_hash: B256, l1_head_hash: B256) {
+        self.l2_hash = l2_hash;
+        self.l1_head_hash = l1_head_hash;
+    }
+
+    pub fn release(&mut self) {
+        self.l2_hash = B256::default();
+        self.l1_head_hash = B256::default();
+    }
+
+    pub fn is_equal(&self, l2_hash: B256, l1_head_hash: B256) -> bool {
+        self.l2_hash == l2_hash && self.l1_head_hash == l1_head_hash
+    }
+
+    pub fn is_empty(&self) -> bool {
+        let default_value = B256::default();
+        self.l2_hash == default_value && self.l1_head_hash == default_value
     }
 }
 

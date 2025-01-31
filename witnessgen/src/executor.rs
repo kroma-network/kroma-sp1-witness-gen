@@ -1,7 +1,10 @@
 use std::sync::Arc;
 
-use crate::{types::WitnessResult, utils::generate_witness_impl, witness_db::WitnessDB};
-use kroma_common::task_info::TaskInfo;
+use crate::{
+    types::{TaskInfo, WitnessResult},
+    utils::generate_witness_impl,
+    witness_db::WitnessDB,
+};
 
 pub struct Executor {
     rx: tokio::sync::mpsc::Receiver<TaskInfo>,
