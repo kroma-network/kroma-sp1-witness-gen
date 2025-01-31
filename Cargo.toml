@@ -3,7 +3,6 @@ members = [
     "program",
     "script",
     "witnessgen",
-    "common",
     "prover-proxy",
     "integration-tests",
 ]
@@ -76,7 +75,7 @@ op-succinct-client-utils = { git = "https://github.com/kroma-network/op-succinct
 op-succinct-host-utils = { git = "https://github.com/kroma-network/op-succinct", branch = "kroma-patch-01-09" }
 
 # kroma
-kroma-common = { path = "common" }
+kroma-zkvm-common = { git = "https://github.com/kroma-network/zkvm-common", branch = "feat/release-v1.0.0" }
 kroma-witnessgen = { path = "witnessgen" }
 kroma-prover-proxy = { path = "prover-proxy" }
 

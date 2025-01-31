@@ -40,5 +40,5 @@ jsonrpsee-core = "0.16.2"
 jsonrpsee = { version = "0.16.2", features = ["full"] }
 
 # kroma
-kroma-common.workspace = true
+kroma-zkvm-common.workspace = true
 kroma-witnessgen.workspace = true

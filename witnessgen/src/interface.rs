@@ -1,6 +1,6 @@
 use jsonrpc_core::Result as JsonResult;
 use jsonrpc_derive::rpc;
-use kroma_common::utils::preprocessing;
+use kroma_zkvm_common::types::preprocessing;
 use std::sync::{Arc, RwLock};
 
 use crate::errors::WitnessGenError;

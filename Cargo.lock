@@ -3439,7 +3439,6 @@ dependencies = [
  "hex",
  "jsonrpsee",
  "jsonrpsee-core",
- "kroma-common",
  "kroma-prover-proxy",
  "kroma-witnessgen",
  "log",
@@ -4070,29 +4069,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kroma-common"
-version = "0.1.0"
-dependencies = [
- "alloy-consensus",
- "alloy-primitives 0.8.10",
- "alloy-rlp",
- "anyhow",
- "bincode",
- "ctor",
- "dotenv",
- "jsonrpc-http-server",
- "once_cell",
- "op-succinct-host-utils",
- "reqwest 0.12.7",
- "rocksdb",
- "serde",
- "serde_json",
- "sp1-sdk",
- "tokio",
- "tracing",
-]
-
-[[package]]
 name = "kroma-prover-proxy"
 version = "0.1.0"
 dependencies = [
@@ -4108,8 +4084,8 @@ dependencies = [
  "jsonrpc-http-server",
  "jsonrpsee",
  "jsonrpsee-core",
- "kroma-common",
  "kroma-witnessgen",
+ "kroma-zkvm-common",
  "once_cell",
  "serde",
  "sp1-sdk",
@@ -4138,7 +4114,7 @@ dependencies = [
  "jsonrpsee",
  "jsonrpsee-core",
  "kona-host",
- "kroma-common",
+ "kroma-zkvm-common",
  "once_cell",
  "op-succinct-host-utils",
  "reqwest 0.12.7",
@@ -4148,6 +4124,20 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "kroma-zkvm-common"
+version = "1.0.0"
+source = "git+https://github.com/kroma-network/zkvm-common?branch=feat/release-v1.0.0#ee8ca29d3a8a1bd73abac09a55d47f45865f585f"
+dependencies = [
+ "alloy-primitives 0.8.10",
+ "anyhow",
+ "bincode",
+ "const-hex",
+ "rocksdb",
+ "serde",
+ "tracing",
 ]
 
 [[package]]

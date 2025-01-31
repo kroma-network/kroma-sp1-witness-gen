@@ -50,7 +50,7 @@ op-succinct-host-utils = { workspace = true }
 sp1-sdk.workspace = true
 
 # kroma
-kroma-common.workspace = true
+kroma-zkvm-common.workspace = true
 
 [dev-dependencies]
 ctor = "0.2"
