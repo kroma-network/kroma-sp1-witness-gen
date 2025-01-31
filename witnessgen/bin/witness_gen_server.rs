@@ -15,7 +15,7 @@ static DEFAULT_WITNESS_STORE_PATH: &str = "data/witness_store";
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
-    #[clap(short, long = "endpoint", default_value = "127.0.0.1:3030")]
+    #[clap(short, long = "endpoint", default_value = "0.0.0.0:3030")]
     endpoint: String,
 
     #[clap(short, long = "data", default_value = DEFAULT_WITNESS_STORE_PATH)]

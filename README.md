@@ -36,7 +36,7 @@ L2_NODE_RPC=
 
 ``` shell
 # example
-> cargo run --bin witness-gen-server --release -- --endpoint 127.0.0.1:3030 --data /data/witness_store
+> cargo run --bin witness-gen-server --release -- --endpoint 0.0.0.0:3030 --data /data/witness_store
 ```
 
 ### API Overview
@@ -86,7 +86,7 @@ SP1_PRIVATE_KEY=
 
 ``` shell
 # example
-> cargo run --bin prover-proxy --release -- --endpoint 127.0.0.1:3030 --data /data/proof_store
+> cargo run --bin prover-proxy --release -- --endpoint 0.0.0.0:3030 --data /data/proof_store
 ```
 
 ### API Overview

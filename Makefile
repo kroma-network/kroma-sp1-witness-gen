@@ -13,14 +13,14 @@ build-prover-proxy:
 	cargo build --release --bin prover-proxy
 
 run-witness-generator:
-	END_POINT ?= "127.0.0.1:3030"
+	END_POINT ?= "0.0.0.0:3030"
 	WITNESS_DB ?= "/tmp/witness_db"
 	
 	$(MAKE) build-witness-generator
 	./target/release/witness-gen-server --endpoint $(END_POINT) --data $(WITNESS_DB)
 
 run-prover-proxy:
-	END_POINT ?= "127.0.0.1:3031"
+	END_POINT ?= "0.0.0.0:3031"
 	PROVER_DB ?= "/tmp/prover_db"
 
 	$(MAKE) build-prover-proxy

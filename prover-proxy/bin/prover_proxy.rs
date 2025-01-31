@@ -9,7 +9,7 @@ use kroma_prover_proxy::{
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
-    #[clap(short, long = "endpoint", default_value = "127.0.0.1:3031")]
+    #[clap(short, long = "endpoint", default_value = "0.0.0.0:3031")]
     endpoint: String,
 
     #[clap(short, long = "data", default_value = "data/proof_store")]
