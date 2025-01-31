@@ -38,7 +38,6 @@ reqwest = "0.12.7"
 serde = { version = "1.0.198", features = ["derive"] }
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
-rocksdb = { version = "0.22", default-features = false, features = ["snappy"] }
 
 # ethreum
 alloy-consensus = { version = "0.4.2", default-features = false }
