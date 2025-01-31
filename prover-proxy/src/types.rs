@@ -1,7 +1,8 @@
 use kroma_common::version::{KROMA_VERSION, SP1_SDK_VERSION};
-use kroma_common::PROGRAM_KEY;
 use serde::{Deserialize, Serialize};
 use sp1_sdk::SP1ProofWithPublicValues;
+
+use crate::PROGRAM_KEY;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SpecResult {

@@ -3,7 +3,6 @@ use anyhow::Result;
 use jsonrpsee::http_client::{HttpClient, HttpClientBuilder};
 use jsonrpsee_core::{client::ClientT, rpc_params};
 
-use kroma_common::FAULT_PROOF_ELF;
 use kroma_prover_proxy::{
     errors::ProverError,
     types::{ProofResult, RequestResult as ProverRequest, SpecResult as ProverSpec},
@@ -11,6 +10,7 @@ use kroma_prover_proxy::{
 use kroma_witnessgen::{
     errors::WitnessGenError,
     types::{RequestResult as WitnessRequest, SpecResult as WitnessSpec, WitnessResult},
+    FAULT_PROOF_ELF,
 };
 use sp1_sdk::{ExecutionReport, ProverClient, SP1Stdin};
 use std::time::Duration;

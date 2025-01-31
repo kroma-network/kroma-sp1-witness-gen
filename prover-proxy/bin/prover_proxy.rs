@@ -1,7 +1,10 @@
 use anyhow::Result;
 use clap::Parser;
 use jsonrpc_http_server::ServerBuilder;
-use kroma_prover_proxy::interface::{Rpc, RpcImpl};
+use kroma_prover_proxy::{
+    interface::{Rpc, RpcImpl},
+    PROGRAM_KEY,
+};
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -25,7 +28,7 @@ fn main() -> Result<()> {
     io.extend_with(RpcImpl::new(&args.data_path, &sp1_private_key).to_delegate());
 
     tracing::info!("Starting Prover at {}", args.endpoint);
-    tracing::info!("Program Key: {:#?}", kroma_common::PROGRAM_KEY.to_string());
+    tracing::info!("Program Key: {:#?}", PROGRAM_KEY.to_string());
     let server = ServerBuilder::new(io)
         .threads(3)
         .max_request_body_size(200 * 1024 * 1024)

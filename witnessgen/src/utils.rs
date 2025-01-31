@@ -1,6 +1,6 @@
 use alloy_primitives::B256;
 use anyhow::Result;
-use kroma_common::{task_info::TaskInfo, FAULT_PROOF_ELF};
+use kroma_common::task_info::TaskInfo;
 use op_succinct_host_utils::{
     fetcher::{CacheMode, OPSuccinctDataFetcher},
     get_proof_stdin,
@@ -13,7 +13,7 @@ use std::{
     sync::Arc,
 };
 
-use crate::{types::RequestResult, witness_db::WitnessDB};
+use crate::{types::RequestResult, witness_db::WitnessDB, FAULT_PROOF_ELF};
 
 #[allow(clippy::redundant_closure)]
 pub async fn generate_witness_impl(l2_hash: B256, l1_head_hash: B256) -> Result<SP1Stdin> {

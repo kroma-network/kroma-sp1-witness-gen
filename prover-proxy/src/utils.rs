@@ -1,7 +1,6 @@
 use alloy_primitives::B256;
 use anyhow::Result;
 use kroma_common::version::SP1_SDK_VERSION;
-use kroma_common::FAULT_PROOF_ELF;
 use kroma_witnessgen::types::WitnessResult;
 use sp1_sdk::network::client::NetworkClient;
 use sp1_sdk::network::proto::network::{ProofMode, ProofStatus};
@@ -10,6 +9,7 @@ use std::sync::Arc;
 
 use crate::proof_db::ProofDB;
 use crate::types::RequestResult;
+use crate::FAULT_PROOF_ELF;
 
 pub fn request_prove_to_sp1(client: &Arc<NetworkClient>, witness: String) -> Result<String> {
     // Recover a SP1Stdin from the witness string.
