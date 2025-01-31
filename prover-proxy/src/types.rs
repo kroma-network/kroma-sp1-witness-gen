@@ -1,8 +1,7 @@
-use kroma_common::version::{KROMA_VERSION, SP1_SDK_VERSION};
 use serde::{Deserialize, Serialize};
-use sp1_sdk::SP1ProofWithPublicValues;
+use sp1_sdk::{SP1ProofWithPublicValues, SP1_CIRCUIT_VERSION as SP1_SDK_VERSION};
 
-use crate::PROGRAM_KEY;
+use crate::{version::PROVER_PROXY_VERSION, PROGRAM_KEY};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SpecResult {
@@ -20,7 +19,7 @@ impl SpecResult {
 impl Default for SpecResult {
     fn default() -> Self {
         SpecResult::new(
-            KROMA_VERSION.to_string(),
+            PROVER_PROXY_VERSION.to_string(),
             SP1_SDK_VERSION.to_string(),
             PROGRAM_KEY.to_string(),
         )

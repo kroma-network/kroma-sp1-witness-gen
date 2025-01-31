@@ -1,15 +1,16 @@
 use alloy_primitives::B256;
 use anyhow::Result;
-use kroma_common::version::SP1_SDK_VERSION;
 use kroma_witnessgen::types::WitnessResult;
-use sp1_sdk::network::client::NetworkClient;
-use sp1_sdk::network::proto::network::{ProofMode, ProofStatus};
-use sp1_sdk::{block_on, SP1ProofWithPublicValues, SP1Stdin};
+use sp1_sdk::{
+    network::{
+        client::NetworkClient,
+        proto::network::{ProofMode, ProofStatus},
+    },
+    SP1_CIRCUIT_VERSION as SP1_SDK_VERSION, {block_on, SP1ProofWithPublicValues, SP1Stdin},
+};
 use std::sync::Arc;
 
-use crate::proof_db::ProofDB;
-use crate::types::RequestResult;
-use crate::FAULT_PROOF_ELF;
+use crate::{proof_db::ProofDB, types::RequestResult, FAULT_PROOF_ELF};
 
 pub fn request_prove_to_sp1(client: &Arc<NetworkClient>, witness: String) -> Result<String> {
     // Recover a SP1Stdin from the witness string.

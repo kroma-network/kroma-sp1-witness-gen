@@ -1,8 +1,9 @@
 use alloy_primitives::B256;
-use kroma_common::version::{KROMA_VERSION, SP1_SDK_VERSION};
 use serde::{Deserialize, Serialize};
 
-use crate::PROGRAM_KEY;
+use crate::{version::SP1_WITNESS_GEN_VERSION, PROGRAM_KEY};
+
+const SP1_SDK_VERSION: &str = sp1_sdk::SP1_CIRCUIT_VERSION;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SpecResult {
@@ -23,7 +24,7 @@ impl SpecResult {
 
 impl Default for SpecResult {
     fn default() -> Self {
-        Self::new(KROMA_VERSION.to_string())
+        Self::new(SP1_WITNESS_GEN_VERSION.to_string())
     }
 }
 

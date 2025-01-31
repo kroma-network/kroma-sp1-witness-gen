@@ -3,6 +3,7 @@ pub mod interface;
 pub mod proof_db;
 pub mod types;
 pub mod utils;
+pub mod version;
 
 use once_cell::sync::Lazy;
 use sp1_sdk::{HashableKey, ProverClient};

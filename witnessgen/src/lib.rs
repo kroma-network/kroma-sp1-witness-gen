@@ -4,6 +4,7 @@ pub mod executor;
 pub mod interface;
 pub mod types;
 pub mod utils;
+pub mod version;
 pub mod witness_db;
 
 use once_cell::sync::Lazy;
