@@ -3,8 +3,8 @@ use std::sync::Arc;
 use anyhow::Result;
 use clap::Parser;
 use jsonrpc_http_server::ServerBuilder;
-use kroma_common::checker::{assert_if_invalid_rpcs, check_rollup_config_before_mpt_time};
 use kroma_witnessgen::{
+    checker::{assert_if_invalid_rpcs, check_rollup_config_before_mpt_time},
     executor::Executor,
     interface::{Rpc, RpcImpl},
     PROGRAM_KEY,

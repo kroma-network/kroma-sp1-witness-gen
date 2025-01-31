@@ -1,3 +1,4 @@
+pub mod checker;
 pub mod errors;
 pub mod executor;
 pub mod interface;

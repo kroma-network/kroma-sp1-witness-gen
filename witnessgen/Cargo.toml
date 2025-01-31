@@ -16,32 +16,38 @@ name = "witness-gen-server"
 path = "bin/witness_gen_server.rs"
 
 [dependencies]
-kona-host = { workspace = true }
-tokio = { workspace = true }
-clap = { workspace = true }
 anyhow = { workspace = true }
+bincode.workspace = true
+clap = { workspace = true }
+dotenv.workspace = true
+hex.workspace = true
+jsonrpc-core.workspace = true
+jsonrpc-core-client.workspace = true
+jsonrpc-derive.workspace = true
+jsonrpc-http-server.workspace = true
+jsonrpsee = { version = "0.16.2", features = ["full"] }
+jsonrpsee-core = "0.16.2"
+once_cell.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio = { workspace = true }
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+# kona
+kona-host = { workspace = true }
+
+# alloy
+alloy-consensus.workspace = true
+alloy-primitives.workspace = true
+alloy-rlp.workspace = true
 
 # succinct
 op-succinct-host-utils = { workspace = true }
 
-# server
-alloy-primitives.workspace = true
-bincode.workspace = true
-dotenv.workspace = true
-jsonrpc-http-server.workspace = true
-jsonrpc-core.workspace = true
-jsonrpc-core-client.workspace = true
-jsonrpc-derive.workspace = true
-hex = { workspace = true }
-once_cell.workspace = true
-serde.workspace = true
+# sp1
 sp1-sdk.workspace = true
-tracing.workspace = true
-tracing-subscriber.workspace = true
-
-# client
-jsonrpsee-core = "0.16.2"
-jsonrpsee = { version = "0.16.2", features = ["full"] }
 
 # kroma
 kroma-common.workspace = true

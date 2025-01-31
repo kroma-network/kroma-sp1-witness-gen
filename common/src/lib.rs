@@ -1,4 +1,3 @@
-pub mod checker;
 pub mod db;
 pub mod task_info;
 pub mod utils;
