@@ -61,8 +61,8 @@ fn build_zkvm_program(
     build_program_with_args(
         program_path,
         BuildArgs {
-            output_directory: out_dir.to_string(),
-            elf_name: format!("{}-elf", program_name),
+            output_directory: Some(out_dir.to_string()),
+            elf_name: Some(format!("{}-elf", program_name)),
             features,
             ..Default::default()
         },
@@ -77,9 +77,9 @@ fn main() {
 
     cfg_if::cfg_if! {
         if #[cfg(feature = "kroma")] {
-            build_zkvm_program("../program", program_name, "program/elf", vec!["kroma".to_string()]);
+            build_zkvm_program("../program", program_name, "../program/elf", vec!["kroma".to_string()]);
         } else {
-            build_zkvm_program("../program", program_name, "program/elf", vec!["".to_string()]);
+            build_zkvm_program("../program", program_name, "../program/elf", vec!["".to_string()]);
         }
     }
 
