@@ -8,10 +8,6 @@ homepage.workspace = true
 repository.workspace = true
 
 [[bin]]
-name = "native_host_runner"
-path = "bin/native_host_runner.rs"
-
-[[bin]]
 name = "witness-gen-server"
 path = "bin/witness_gen_server.rs"
 
@@ -34,9 +30,6 @@ serde_json.workspace = true
 tokio = { workspace = true }
 tracing.workspace = true
 tracing-subscriber.workspace = true
-
-# kona
-kona-host = { workspace = true }
 
 # alloy
 alloy-consensus.workspace = true

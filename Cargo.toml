@@ -1,5 +1,11 @@
 [workspace]
-members = ["program", "script", "witnessgen", "integration-tests"]
+members = [
+    "program",
+    "script",
+    "witnessgen",
+    "integration-tests",
+    "native_host_runner",
+]
 resolver = "2"
 
 [workspace.package]

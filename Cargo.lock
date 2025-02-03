@@ -4068,6 +4068,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "kroma-native-host-runner"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "kona-host",
+ "tokio",
+]
+
+[[package]]
 name = "kroma-witnessgen"
 version = "0.1.0"
 dependencies = [
@@ -4086,7 +4096,6 @@ dependencies = [
  "jsonrpc-http-server",
  "jsonrpsee",
  "jsonrpsee-core",
- "kona-host",
  "kroma-zkvm-common",
  "once_cell",
  "op-succinct-host-utils",
