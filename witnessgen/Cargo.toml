@@ -47,3 +47,12 @@ kroma-zkvm-common.workspace = true
 
 [dev-dependencies]
 ctor = "0.2"
+
+[build-dependencies]
+cargo_metadata.workspace = true
+cfg-if.workspace = true
+sp1-build.workspace = true
+
+[features]
+default = ["kroma"]
+kroma = []
