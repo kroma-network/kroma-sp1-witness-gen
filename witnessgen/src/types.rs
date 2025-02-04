@@ -14,11 +14,9 @@ pub struct SpecResult {
 
 impl SpecResult {
     pub fn new(version: String) -> Self {
-        Self {
-            version,
-            sp1_version: SP1_SDK_VERSION.to_string(),
-            program_key: PROGRAM_KEY.to_string(),
-        }
+        // NOTE(Ethan): We don’t want this v3 program key to be used
+        // so we will temporarily set its value to an empty string.
+        Self { version, sp1_version: SP1_SDK_VERSION.to_string(), program_key: "".to_string() }
     }
 }
 

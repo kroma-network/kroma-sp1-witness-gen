@@ -7,7 +7,6 @@ use kroma_witnessgen::{
     checker::{assert_if_invalid_rpcs, check_rollup_config_before_mpt_time},
     executor::Executor,
     interface::{Rpc, RpcImpl},
-    PROGRAM_KEY,
 };
 
 static DEFAULT_WITNESS_STORE_PATH: &str = "data/witness_store";
@@ -52,7 +51,8 @@ async fn main() -> Result<()> {
     io.extend_with(RpcImpl::new(tx, witness_db).to_delegate());
 
     tracing::info!("Starting Witness Generator at {}", args.endpoint);
-    tracing::info!("Program Key: {:#?}", PROGRAM_KEY.to_string());
+    // NOTE(Ethan): We don’t want this v3 program key to be used.
+    // tracing::info!("Program Key: {:#?}", PROGRAM_KEY.to_string());
     let server = ServerBuilder::new(io)
         .threads(3)
         .max_request_body_size(200 * 1024 * 1024)
