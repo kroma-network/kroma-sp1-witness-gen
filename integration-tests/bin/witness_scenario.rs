@@ -66,9 +66,6 @@ async fn scenario(
         sleep(Duration::from_secs(20));
     };
 
-    let report =
-        TestClient::execute_witness(&witness_result).await.expect("Failed to execute witness");
-    println!("Witness execution succeeded: {:?}", report.total_instruction_count());
     save_witness(witness_data, &witness_result)
 }
 

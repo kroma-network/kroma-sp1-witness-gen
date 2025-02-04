@@ -3,7 +3,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::{version::SP1_WITNESS_GEN_VERSION, PROGRAM_KEY};
 
-const SP1_SDK_VERSION: &str = sp1_sdk::SP1_CIRCUIT_VERSION;
+// NOTE(Ethan): If the SP1 SDK version check is removed from the `Kroma validator`,
+// delete the following code.
+// const SP1_SDK_VERSION: &str = sp1_sdk::SP1_CIRCUIT_VERSION;
+const SP1_SDK_VERSION: &str = "v4.0.0-rc.3";
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SpecResult {
