@@ -10,10 +10,9 @@ resolver = "2"
 
 [workspace.package]
 edition = "2021"
+version = "1.1.0"
 license = "MIT"
-authors = ["dongchangYoo"]
-repository = "https://github.com/kroma-network/kroma-sp1-prover"
-homepage = "https://github.com/kroma-network/kroma-sp1-prover"
+authors = ["Ethan Yoo"]
 
 [workspace.dependencies]
 anyhow = { version = "1.0.86", default-features = false }

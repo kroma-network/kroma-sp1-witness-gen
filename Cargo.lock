@@ -2561,7 +2561,7 @@ dependencies = [
 
 [[package]]
 name = "fault-proof"
-version = "0.1.0"
+version = "1.1.0"
 dependencies = [
  "alloy-consensus",
  "alloy-eips",
@@ -3444,7 +3444,7 @@ dependencies = [
 
 [[package]]
 name = "integration-tests"
-version = "0.1.0"
+version = "1.1.0"
 dependencies = [
  "alloy-primitives 0.8.10",
  "anyhow",
@@ -4082,7 +4082,7 @@ dependencies = [
 
 [[package]]
 name = "kroma-native-host-runner"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -4092,7 +4092,7 @@ dependencies = [
 
 [[package]]
 name = "kroma-witnessgen"
-version = "0.1.0"
+version = "1.1.0"
 dependencies = [
  "alloy-consensus",
  "alloy-primitives 0.8.10",
@@ -6609,7 +6609,7 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "script"
-version = "0.1.0"
+version = "1.1.0"
 dependencies = [
  "alloy-primitives 0.8.10",
  "alloy-provider",
