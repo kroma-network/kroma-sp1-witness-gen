@@ -1,19 +1,13 @@
 [package]
 name = "integration-tests"
-version = "0.1.0"
+version.workspace = true
 license.workspace = true
 edition.workspace = true
 authors.workspace = true
-homepage.workspace = true
-repository.workspace = true
 
 [[bin]]
 name = "witness-scenario"
 path = "bin/witness_scenario.rs"
-
-[[bin]]
-name = "proof-scenario"
-path = "bin/proof_scenario.rs"
 
 [dependencies]
 anyhow.workspace = true
@@ -30,5 +24,3 @@ serde.workspace = true
 alloy-primitives.workspace = true
 sp1-sdk.workspace = true
 kroma-witnessgen.workspace = true
-kroma-prover-proxy.workspace = true
-kroma-common.workspace = true

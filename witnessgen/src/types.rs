@@ -1,6 +1,12 @@
-use kroma_common::version::{KROMA_VERSION, SP1_SDK_VERSION};
-use kroma_common::PROGRAM_KEY;
+use alloy_primitives::B256;
 use serde::{Deserialize, Serialize};
+
+use crate::{version::SP1_WITNESS_GEN_VERSION, PROGRAM_KEY};
+
+// NOTE(Ethan): If the SP1 SDK version check is removed from the `Kroma validator`,
+// delete the following code.
+// const SP1_SDK_VERSION: &str = sp1_sdk::SP1_CIRCUIT_VERSION;
+const SP1_SDK_VERSION: &str = "v4.0.0-rc.3";
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SpecResult {
@@ -11,17 +17,15 @@ pub struct SpecResult {
 
 impl SpecResult {
     pub fn new(version: String) -> Self {
-        Self {
-            version,
-            sp1_version: SP1_SDK_VERSION.to_string(),
-            program_key: PROGRAM_KEY.to_string(),
-        }
+        // NOTE(Ethan): We don’t want this v3 program key to be used
+        // so we will temporarily set its value to an empty string.
+        Self { version, sp1_version: SP1_SDK_VERSION.to_string(), program_key: "".to_string() }
     }
 }
 
 impl Default for SpecResult {
     fn default() -> Self {
-        Self::new(KROMA_VERSION.to_string())
+        Self::new(SP1_WITNESS_GEN_VERSION.to_string())
     }
 }
 
@@ -72,6 +76,33 @@ impl WitnessResult {
 
     pub fn get_witness_buf(&self) -> Vec<Vec<u8>> {
         Self::string_to_witness_buf(&self.witness)
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct TaskInfo {
+    pub l2_hash: B256,
+    pub l1_head_hash: B256,
+}
+
+impl TaskInfo {
+    pub fn set(&mut self, l2_hash: B256, l1_head_hash: B256) {
+        self.l2_hash = l2_hash;
+        self.l1_head_hash = l1_head_hash;
+    }
+
+    pub fn release(&mut self) {
+        self.l2_hash = B256::default();
+        self.l1_head_hash = B256::default();
+    }
+
+    pub fn is_equal(&self, l2_hash: B256, l1_head_hash: B256) -> bool {
+        self.l2_hash == l2_hash && self.l1_head_hash == l1_head_hash
+    }
+
+    pub fn is_empty(&self) -> bool {
+        let default_value = B256::default();
+        self.l2_hash == default_value && self.l1_head_hash == default_value
     }
 }
 

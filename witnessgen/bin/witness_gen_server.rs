@@ -3,8 +3,8 @@ use std::sync::Arc;
 use anyhow::Result;
 use clap::Parser;
 use jsonrpc_http_server::ServerBuilder;
-use kroma_common::checker::{assert_if_invalid_rpcs, check_rollup_config_before_mpt_time};
 use kroma_witnessgen::{
+    checker::{assert_if_invalid_rpcs, check_rollup_config_before_mpt_time},
     executor::Executor,
     interface::{Rpc, RpcImpl},
 };
@@ -14,7 +14,7 @@ static DEFAULT_WITNESS_STORE_PATH: &str = "data/witness_store";
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
-    #[clap(short, long = "endpoint", default_value = "127.0.0.1:3030")]
+    #[clap(short, long = "endpoint", default_value = "0.0.0.0:3030")]
     endpoint: String,
 
     #[clap(short, long = "data", default_value = DEFAULT_WITNESS_STORE_PATH)]
@@ -51,7 +51,8 @@ async fn main() -> Result<()> {
     io.extend_with(RpcImpl::new(tx, witness_db).to_delegate());
 
     tracing::info!("Starting Witness Generator at {}", args.endpoint);
-    tracing::info!("Program Key: {:#?}", kroma_common::PROGRAM_KEY.to_string());
+    // NOTE(Ethan): We don’t want this v3 program key to be used.
+    // tracing::info!("Program Key: {:#?}", PROGRAM_KEY.to_string());
     let server = ServerBuilder::new(io)
         .threads(3)
         .max_request_body_size(200 * 1024 * 1024)

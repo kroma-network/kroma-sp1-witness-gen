@@ -1,0 +1,19 @@
+
+[package]
+name = "kroma-native-host-runner"
+version.workspace = true
+license.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "native_host_runner"
+path = "src/native_host_runner.rs"
+
+[dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true }
+tokio = { workspace = true }
+
+# kona
+kona-host = { workspace = true }
