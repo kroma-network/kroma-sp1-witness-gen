@@ -5,9 +5,8 @@ use op_succinct_host_utils::{
     get_proof_stdin,
     witnessgen::WitnessGenExecutor,
 };
-use sp1_sdk::{ProverClient, SP1Stdin};
+use sp1_sdk::SP1Stdin;
 use std::{
-    env,
     fs::File,
     io::Write,
     panic::{self, AssertUnwindSafe},
@@ -17,7 +16,6 @@ use std::{
 use crate::{
     types::{RequestResult, TaskInfo, WitnessResult},
     witness_db::WitnessDB,
-    FAULT_PROOF_ELF,
 };
 
 #[allow(clippy::redundant_closure)]
@@ -48,21 +46,28 @@ pub async fn generate_witness_impl(l2_hash: B256, l1_head_hash: B256) -> Result<
     witnessgen_executor.spawn_witnessgen(&host_cli).await?;
     witnessgen_executor.flush().await?;
 
-    let sp1_stdin = get_proof_stdin(&host_cli)
-        .map_err(|e| anyhow::anyhow!("Failed to get proof stdin: {:?}", e.to_string()))?;
-
-    if env::var("SKIP_SIMULATION").unwrap_or("false".to_string()) == "true" {
-        tracing::info!("Simulation has been started");
-        let executor = ProverClient::new();
-        let (_, report) = executor
-            .execute(FAULT_PROOF_ELF, sp1_stdin.clone())
-            .run()
+    // TODO(Ethan): currently, the versions are different between the witnessgen and the op-succinct. it can be simplified after updating the `sp1-sdk`.
+    let sp1_stdin = {
+        let sp1_stdin_v3_4 = get_proof_stdin(&host_cli)
             .map_err(|e| anyhow::anyhow!("Failed to get proof stdin: {:?}", e.to_string()))?;
-        tracing::info!(
-            "successfully witness result generated - cycle: {:?}",
-            report.total_instruction_count()
-        );
-    }
+        let mut sp1_stdin_v3_0 = SP1Stdin::default();
+        sp1_stdin_v3_0.buffer = sp1_stdin_v3_4.buffer;
+        sp1_stdin_v3_0
+    };
+
+    // TODO(Ethan): Uncomment this code block after updating `sp1-sdk`.
+    // if env::var("SKIP_SIMULATION").unwrap_or("false".to_string()) == "true" {
+    //     tracing::info!("Simulation has been started");
+    //     let executor = ProverClient::new();
+    //     let (_, report) = executor
+    //         .execute(FAULT_PROOF_ELF, sp1_stdin.clone())
+    //         .run()
+    //         .map_err(|e| anyhow::anyhow!("Failed to get proof stdin: {:?}", e.to_string()))?;
+    //     tracing::info!(
+    //         "successfully witness result generated - cycle: {:?}",
+    //         report.total_instruction_count()
+    //     );
+    // }
 
     Ok(sp1_stdin)
 }

@@ -113,7 +113,7 @@ mod tests {
     #[test]
     fn test_vkey_hash() {
         let expected_vkey_hash =
-            "0x0021371b01dc6a154c8fc27649ca4399028fa8d5166de3545bd7f9e7dc0aded7";
+            "0x009be3ffcfcbc348e96d5b5a23294c7afa2f67b812821bd1bada13a6026c19b1";
         assert_eq!(PROGRAM_KEY.to_string(), expected_vkey_hash);
     }
 }

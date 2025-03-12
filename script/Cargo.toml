@@ -32,9 +32,9 @@ serde_json.workspace = true
 tokio.workspace = true
 
 # ethreum
+alloy.workspace = true
 alloy-eips.workspace = true
 alloy-primitives.workspace = true
-alloy-provider.workspace = true
 
 # sp1
 sp1-sdk.workspace = true
