@@ -39,14 +39,14 @@ pub async fn check_rollup_config_before_mpt_time() -> Result<()> {
         env::set_var("ROLLUP_CONFIG_FROM_FILE", "true");
         println!("It should be before MPT time. `ROLLUP_CONFIG_FROM_FILE` is set as true.");
     }
-    let _ = OPSuccinctDataFetcher::default();
+    let _ = OPSuccinctDataFetcher::new_with_rollup_config().await.unwrap();
 
     Ok(())
 }
 
 pub async fn assert_if_invalid_rpcs() -> Result<()> {
     dotenv::dotenv().ok();
-    let fetcher = OPSuccinctDataFetcher::default();
+    let fetcher = OPSuccinctDataFetcher::new_with_rollup_config().await.unwrap();
 
     // Check if L1 Geth is alive.
     let _: Value = fetcher

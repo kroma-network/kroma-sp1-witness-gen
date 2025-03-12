@@ -20,8 +20,11 @@ use crate::{
 
 #[allow(clippy::redundant_closure)]
 pub async fn generate_witness_impl(l2_hash: B256, l1_head_hash: B256) -> Result<SP1Stdin> {
-    let data_fetcher = panic::catch_unwind(AssertUnwindSafe(|| OPSuccinctDataFetcher::default()))
-        .map_err(|e| anyhow::anyhow!("Failed to create data fetcher: {:?}", e))?;
+    let data_fetcher_future = panic::catch_unwind(AssertUnwindSafe(|| async {
+        OPSuccinctDataFetcher::new_with_rollup_config().await.unwrap()
+    }))
+    .map_err(|e| anyhow::anyhow!("Failed to create data fetcher: {:?}", e))?;
+    let data_fetcher = data_fetcher_future.await;
 
     // Check the l2 block exists in the chain.
     let l2_header = data_fetcher.get_l2_header(l2_hash.into()).await?;

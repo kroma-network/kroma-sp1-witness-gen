@@ -21,9 +21,9 @@ pub fn init_env() {
     sdk_utils::setup_logger();
 }
 
-pub fn init_fetcher() -> OPSuccinctDataFetcher {
+pub async fn init_fetcher() -> Result<OPSuccinctDataFetcher> {
     init_env();
-    OPSuccinctDataFetcher::default()
+    OPSuccinctDataFetcher::new_with_rollup_config().await
 }
 
 pub fn parse_u64(s: &str) -> Result<u64, ParseIntError> {
@@ -40,7 +40,7 @@ pub async fn get_kroma_host_cli_impl(
 ) -> Result<HostCli> {
     let fetcher = match fetcher_opt {
         Some(fetcher) => fetcher,
-        _ => &init_fetcher(),
+        _ => &init_fetcher().await?,
     };
 
     Ok(fetcher
@@ -66,7 +66,7 @@ pub async fn get_kroma_host_cli_by_distance(
 ) -> Result<HostCli> {
     let fetcher = match fetcher_opt {
         Some(fetcher) => fetcher,
-        _ => &init_fetcher(),
+        _ => &init_fetcher().await?,
     };
 
     let mut host_cli = get_kroma_host_cli_impl(l2_block, Some(&fetcher)).await?;
@@ -144,10 +144,13 @@ pub async fn report_execution(
 }
 
 #[allow(dead_code)]
-pub fn get_l1_block_hash(block_number: u64, fetcher_opt: Option<&OPSuccinctDataFetcher>) -> B256 {
+pub async fn get_l1_block_hash(
+    block_number: u64,
+    fetcher_opt: Option<&OPSuccinctDataFetcher>,
+) -> B256 {
     let fetcher = match fetcher_opt {
         Some(fetcher) => fetcher,
-        _ => &init_fetcher(),
+        _ => &init_fetcher().await.unwrap(),
     };
 
     let l1_head_block = block_on(async move {
@@ -177,10 +180,10 @@ fn get_output_at_impl(data_fetcher: &OPSuccinctDataFetcher, block_number: u64) -
     result
 }
 
-pub fn get_output_at(block_number: u64, fetcher_opt: Option<&OPSuccinctDataFetcher>) -> B256 {
+pub async fn get_output_at(block_number: u64, fetcher_opt: Option<&OPSuccinctDataFetcher>) -> B256 {
     let fetcher = match fetcher_opt {
         Some(fetcher) => fetcher,
-        _ => &init_fetcher(),
+        _ => &init_fetcher().await.unwrap(),
     };
 
     let result = get_output_at_impl(fetcher, block_number);
@@ -188,13 +191,13 @@ pub fn get_output_at(block_number: u64, fetcher_opt: Option<&OPSuccinctDataFetch
     B256::from_hex(output_root).unwrap()
 }
 
-pub fn get_l1_origin_of(
+pub async fn get_l1_origin_of(
     block_number: u64,
     fetcher_opt: Option<&OPSuccinctDataFetcher>,
 ) -> (B256, u64) {
     let fetcher = match fetcher_opt {
         Some(fetcher) => fetcher,
-        _ => &init_fetcher(),
+        _ => &init_fetcher().await.unwrap(),
     };
 
     let result = get_output_at_impl(fetcher, block_number);

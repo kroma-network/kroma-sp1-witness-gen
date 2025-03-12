@@ -5,7 +5,7 @@ use std::io::BufReader;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let fetcher = init_fetcher();
+    let fetcher = init_fetcher().await.unwrap();
 
     let l2_chain_id = fetcher.get_l2_chain_id().await.unwrap();
 

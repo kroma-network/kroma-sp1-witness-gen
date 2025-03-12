@@ -17,6 +17,9 @@ run-witness-scenario l2_hash l1_head_hash witness_store="/tmp/witness_store" wit
     ./target/release/witness-gen-server --data {{witness_store}} &
     witness_pid=$!
     
+    # Wait for the witness generator to start.
+    sleep 10
+
     trap "kill $witness_pid; rm -rf {{witness_store}};" EXIT QUIT INT
 
     # Do test

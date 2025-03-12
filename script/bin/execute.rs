@@ -29,14 +29,14 @@ struct Args {
 
 #[cfg(feature = "kroma")]
 impl Args {
-    fn get_l1_head_hash(&mut self) -> B256 {
+    async fn get_l1_head_hash(&mut self) -> B256 {
         if self.l1_head_hash.is_none() && self.l1_head_number.is_none() {
             panic!("Missing L1 Head Hash or Number");
         }
         if self.l1_head_hash.is_some() {
             self.l1_head_hash.unwrap()
         } else {
-            self.l1_head_hash = Some(get_l1_block_hash(self.l1_head_number.unwrap(), None));
+            self.l1_head_hash = Some(get_l1_block_hash(self.l1_head_number.unwrap(), None).await);
             self.l1_head_hash.unwrap()
         }
     }
@@ -47,11 +47,14 @@ pub const FAULT_PROOF_ELF: &[u8] = include_bytes!("../../program/elf/fault-proof
 #[tokio::main]
 async fn main() -> Result<()> {
     let mut args = Args::parse();
-    let fetcher = init_fetcher();
+    let fetcher = init_fetcher().await?;
 
-    let host_cli =
-        get_kroma_host_cli_by_l1_head_hash(args.l2_block, args.get_l1_head_hash(), Some(&fetcher))
-            .await?;
+    let host_cli = get_kroma_host_cli_by_l1_head_hash(
+        args.l2_block,
+        args.get_l1_head_hash().await,
+        Some(&fetcher),
+    )
+    .await?;
 
     // Start the server and native client.
     let mut witnessgen_executor = WitnessGenExecutor::default();

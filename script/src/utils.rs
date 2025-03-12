@@ -23,7 +23,7 @@ impl Block {
     ) -> Self {
         let fetcher = match fetcher_opt {
             Some(fetcher) => fetcher,
-            _ => &init_fetcher(),
+            _ => &init_fetcher().await.unwrap(),
         };
 
         let header = fetcher.get_l1_header(l1_number_or_hash.into()).await.unwrap();
@@ -50,12 +50,12 @@ impl PreviewReport {
         l2_block_number: u64,
         fetcher_opt: Option<&OPSuccinctDataFetcher>,
     ) -> Self {
-        let (_, origin_number) = get_l1_origin_of(l2_block_number, fetcher_opt);
+        let (_, origin_number) = get_l1_origin_of(l2_block_number, fetcher_opt).await;
 
         Self {
             l2_block_number,
-            output_root: get_output_at(l2_block_number, fetcher_opt),
-            parent_output_root: get_output_at(l2_block_number - 1, fetcher_opt),
+            output_root: get_output_at(l2_block_number, fetcher_opt).await,
+            parent_output_root: get_output_at(l2_block_number - 1, fetcher_opt).await,
             l1_origin: Block::from_l1_block_id(origin_number.into(), fetcher_opt).await,
         }
     }
@@ -69,7 +69,7 @@ impl PreviewReport {
 
         let fetcher = match fetcher_opt {
             Some(fetcher) => fetcher,
-            _ => &init_fetcher(),
+            _ => &init_fetcher().await.unwrap(),
         };
 
         let latest_l1_header =

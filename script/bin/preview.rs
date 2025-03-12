@@ -18,7 +18,7 @@ struct Args {
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
-    let fetcher = init_fetcher();
+    let fetcher = init_fetcher().await?;
 
     let report_base = PreviewReport::from_fetcher(args.l2_block, Some(&fetcher)).await;
     let report_head = report_base.l1_head(args.distance, Some(&fetcher)).await;
