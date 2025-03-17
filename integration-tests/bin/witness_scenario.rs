@@ -1,8 +1,8 @@
 use alloy_primitives::{b256, B256};
 use anyhow::Result;
 use clap::Parser;
-use integration_tests::{save_witness, Method, TestClient, WitnessRequest};
-use kroma_witnessgen::errors::ErrorCode as WitnessErrorCode;
+use integration_tests::{Method, TestClient, WitnessRequest};
+use kroma_witnessgen::{errors::ErrorCode as WitnessErrorCode, utils::save_witness};
 use std::{thread::sleep, time::Duration};
 
 #[derive(Parser, Debug)]

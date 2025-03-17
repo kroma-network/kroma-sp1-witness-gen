@@ -8,12 +8,14 @@ use op_succinct_host_utils::{
 use sp1_sdk::{ProverClient, SP1Stdin};
 use std::{
     env,
+    fs::File,
+    io::Write,
     panic::{self, AssertUnwindSafe},
     sync::Arc,
 };
 
 use crate::{
-    types::{RequestResult, TaskInfo},
+    types::{RequestResult, TaskInfo, WitnessResult},
     witness_db::WitnessDB,
     FAULT_PROOF_ELF,
 };
@@ -122,4 +124,12 @@ pub fn get_status_by_local_id(
         // A reqeust is in progress but not equals to this request.
         Err(anyhow::anyhow!("Another request is in progress"))
     }
+}
+
+pub fn save_witness(witness_data: &String, witness_result: &WitnessResult) -> Result<()> {
+    let witness_json = serde_json::to_string_pretty(&witness_result)?;
+    let mut file = File::create(witness_data)?;
+    file.write_all(witness_json.as_bytes())?;
+    println!("Witness was saved");
+    Ok(())
 }
