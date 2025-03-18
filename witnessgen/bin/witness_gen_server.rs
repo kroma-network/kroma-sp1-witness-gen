@@ -51,8 +51,8 @@ async fn main() -> Result<()> {
     io.extend_with(RpcImpl::new(tx, witness_db).to_delegate());
 
     tracing::info!("Starting Witness Generator at {}", args.endpoint);
-    // NOTE(Ethan): We don’t want this v3 program key to be used.
-    // tracing::info!("Program Key: {:#?}", PROGRAM_KEY.to_string());
+    // NOTE(Ethan): We don’t want this v3 verification key hash to be used.
+    // tracing::info!("verification key hash: {:#?}", VERIFICATION_KEY_HASH.to_string());
     let server = ServerBuilder::new(io)
         .threads(3)
         .max_request_body_size(200 * 1024 * 1024)

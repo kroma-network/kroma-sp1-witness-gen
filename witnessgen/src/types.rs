@@ -1,7 +1,7 @@
 use alloy_primitives::B256;
 use serde::{Deserialize, Serialize};
 
-use crate::{version::SP1_WITNESS_GEN_VERSION, PROGRAM_KEY};
+use crate::{version::SP1_WITNESS_GEN_VERSION, VERIFICATION_KEY_HASH};
 
 // NOTE(Ethan): If the SP1 SDK version check is removed from the `Kroma validator`,
 // delete the following code.
@@ -55,7 +55,7 @@ impl WitnessResult {
     pub const EMPTY_WITNESS: Vec<Vec<u8>> = Vec::new();
 
     pub fn new<T: ToString>(status: RequestResult, witness: T) -> Self {
-        Self { status, program_key: PROGRAM_KEY.to_string(), witness: witness.to_string() }
+        Self { status, program_key: VERIFICATION_KEY_HASH.to_string(), witness: witness.to_string() }
     }
 
     pub fn new_with_status(status: RequestResult) -> Self {
@@ -114,6 +114,6 @@ mod tests {
     fn test_vkey_hash() {
         let expected_vkey_hash =
             "0x009be3ffcfcbc348e96d5b5a23294c7afa2f67b812821bd1bada13a6026c19b1";
-        assert_eq!(PROGRAM_KEY.to_string(), expected_vkey_hash);
+        assert_eq!(VERIFICATION_KEY_HASH.to_string(), expected_vkey_hash);
     }
 }
