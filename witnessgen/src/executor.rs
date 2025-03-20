@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use tokio::{sync::mpsc::Receiver, task::JoinHandle};
 
 use crate::{
     types::{TaskInfo, WitnessResult},
@@ -37,6 +38,15 @@ impl Executor {
                         .unwrap();
                 }
             }
+
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
         }
     }
+}
+
+pub async fn run(db: Arc<WitnessDB>, rx: Receiver<TaskInfo>) -> JoinHandle<()> {
+    tokio::spawn(async move {
+        let mut executor = Executor::new(rx, db);
+        executor.run().await;
+    })
 }
