@@ -5,23 +5,17 @@ use anyhow::Result;
 use client::TestClient;
 use kroma_witnessgen::{
     errors::ErrorCode as WitnessErrorCode, types::RequestResult as WitnessRequest,
-    utils::save_witness,
 };
 use std::{thread::sleep, time::Duration};
 
 struct TestCtx {
     l2_hash: B256,
     l1_head_hash: B256,
-    witness_data_path: String,
 }
 
 impl TestCtx {
-    fn new<T: ToString>(l2_hash: B256, l1_head_hash: B256, path: T) -> Self {
-        Self { l2_hash, l1_head_hash, witness_data_path: path.to_string() }
-    }
-
-    fn from_hashes(l2_hash: B256, l1_head_hash: B256) -> Self {
-        Self::new(l2_hash, l1_head_hash, "./witness.json")
+    fn new(l2_hash: B256, l1_head_hash: B256) -> Self {
+        Self { l2_hash, l1_head_hash }
     }
 }
 
@@ -45,7 +39,7 @@ async fn scenario(client: &TestClient, ctx: TestCtx) {
     let request_result = client.request_witness(tweaked_l2_hash, ctx.l1_head_hash).await;
     assert!(matches!(request_result.err().unwrap().code, WitnessErrorCode::AlreadyInProgress));
 
-    let witness_result = loop {
+    let _ = loop {
         let witness_result = client.get_witness(ctx.l2_hash, ctx.l1_head_hash).await;
         if witness_result.status == WitnessRequest::Completed {
             break witness_result;
@@ -66,7 +60,7 @@ async fn test_online_scenario() -> Result<()> {
         cargo_metadata::MetadataCommand::new().exec().expect("Failed to get cargo metadata");
     let witnessgen_bin_path = metadata.target_directory.join("release/witness-gen-server");
     let mut child = tokio::process::Command::new(witnessgen_bin_path)
-        .args(vec!["--data", "/tmp/witness_store"])
+        .args(vec!["--data", "data/witness_store"])
         .spawn()?;
 
     let client = TestClient::default();
@@ -75,7 +69,7 @@ async fn test_online_scenario() -> Result<()> {
     }
     println!("Witness generator server is ready.");
 
-    let ctx = TestCtx::from_hashes(
+    let ctx = TestCtx::new(
         b256!("c620c1601621527b982fd8a9b781629edad908d7917c043e243f2277a48f561b"),
         b256!("b00118b43ea791285813f88bf1774508b6c495de9ec17f3f58cc810248d15d5d"),
     );
@@ -93,6 +87,8 @@ async fn test_online_scenario() -> Result<()> {
         }
         child.kill().await?
     }
+
+    std::fs::remove_dir_all("data")?;
 
     Ok(())
 }
