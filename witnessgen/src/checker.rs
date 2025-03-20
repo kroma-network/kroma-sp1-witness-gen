@@ -95,7 +95,7 @@ mod tests {
     use super::{assert_if_invalid_rpcs, check_rollup_config_before_mpt_time};
 
     #[test]
-    fn test_rpc_valid() {
+    fn test_online_rpc_valid() {
         let rt = Runtime::new().unwrap();
         rt.block_on(async {
             assert_if_invalid_rpcs().await.unwrap();
@@ -103,7 +103,7 @@ mod tests {
     }
 
     #[test]
-    fn test_rollup_config() {
+    fn test_online_rollup_config() {
         let _ = Command::new("cp")
             .args(&["-r", "../configs", "."])
             .output()
