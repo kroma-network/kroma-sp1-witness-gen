@@ -19,6 +19,7 @@ pub struct TestClient {
 }
 
 impl TestClient {
+    #[allow(dead_code)]
     pub fn new(witnessgen_url: &str) -> Self {
         let witnessgen_client = HttpClientBuilder::default()
             .max_request_body_size(300 * 1024 * 1024)
@@ -43,9 +44,12 @@ impl Default for TestClient {
 }
 
 impl TestClient {
-    pub async fn witnessgen_spec(&self) -> WitnessSpec {
+    pub async fn witnessgen_spec(&self) -> Result<WitnessSpec> {
         let params = rpc_params![];
-        self.witnessgen_client.request("spec", params).await.unwrap()
+        self.witnessgen_client
+            .request::<WitnessSpec, _>("spec", params)
+            .await
+            .map_err(|e| anyhow::anyhow!("the server is not ready: {:?}", e))
     }
 
     pub async fn request_witness(
@@ -66,6 +70,7 @@ impl TestClient {
         }
     }
 
+    #[allow(dead_code)]
     pub async fn execute_witness(witness_result: &WitnessResult) -> Result<ExecutionReport> {
         let prover = ProverClient::new();
         let mut sp1_stdin = SP1Stdin::new();

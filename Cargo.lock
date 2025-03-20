@@ -3696,25 +3696,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "integration-tests"
-version = "1.1.0"
-dependencies = [
- "alloy-primitives 0.8.12",
- "anyhow",
- "clap",
- "hex",
- "jsonrpsee",
- "jsonrpsee-core",
- "kroma-witnessgen",
- "log",
- "serde",
- "serde_json",
- "sp1-sdk 3.4.0",
- "tokio",
- "tracing",
-]
-
-[[package]]
 name = "interprocess"
 version = "2.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4352,6 +4333,7 @@ dependencies = [
  "jsonrpc-http-server",
  "jsonrpsee",
  "jsonrpsee-core",
+ "kona-host",
  "kroma-zkvm-common",
  "once_cell",
  "op-succinct-host-utils",
@@ -4360,6 +4342,7 @@ dependencies = [
  "serde_json",
  "sp1-build",
  "sp1-sdk 3.4.0",
+ "sysinfo 0.32.1",
  "tokio",
  "tracing",
  "tracing-subscriber",

@@ -43,8 +43,13 @@ sp1-sdk.workspace = true
 # kroma
 kroma-zkvm-common.workspace = true
 
+# kona
+kona-host.workspace = true
+
 [dev-dependencies]
 ctor = "0.2"
+cargo_metadata.workspace = true
+sysinfo = "0.32.0"
 
 [build-dependencies]
 cargo_metadata.workspace = true
