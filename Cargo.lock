@@ -1905,32 +1905,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "curve25519-dalek"
-version = "4.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97fb8b7c4503de7d6ae7b42ab72a5a59857b4c937ec27a3d4539dba95b5ab2be"
-dependencies = [
- "cfg-if 1.0.0",
- "cpufeatures",
- "curve25519-dalek-derive",
- "fiat-crypto",
- "rustc_version 0.4.1",
- "subtle",
- "zeroize",
-]
-
-[[package]]
-name = "curve25519-dalek-derive"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f46882e17999c6cc590af592290432be3bce0428cb0d5f8b6715e4dc7b383eb3"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.96",
-]
-
-[[package]]
 name = "darling"
 version = "0.20.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2696,12 +2670,6 @@ dependencies = [
  "quote",
  "syn 1.0.109",
 ]
-
-[[package]]
-name = "fiat-crypto"
-version = "0.2.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28dea519a9695b9977216879a3ebfddf92f1c08c05d984f8996aecd6ecdc811d"
 
 [[package]]
 name = "fixed-hash"
@@ -4341,7 +4309,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sp1-build",
- "sp1-sdk 3.4.0",
+ "sp1-sdk",
  "sysinfo 0.32.1",
  "tokio",
  "tracing",
@@ -4986,7 +4954,7 @@ dependencies = [
 [[package]]
 name = "op-succinct-client-utils"
 version = "0.1.0"
-source = "git+https://github.com/kroma-network/op-succinct?branch=feat/support-pectra#491a867cd9d83bfac70c9e07fbad5386a6390bc2"
+source = "git+https://github.com/kroma-network/op-succinct?branch=feat/support-pectra#057727de6e3b51d0479ad8542db61545f611984f"
 dependencies = [
  "alloy-consensus",
  "alloy-eips",
@@ -5021,7 +4989,7 @@ dependencies = [
 [[package]]
 name = "op-succinct-host-utils"
 version = "0.1.0"
-source = "git+https://github.com/kroma-network/op-succinct?branch=feat/support-pectra#491a867cd9d83bfac70c9e07fbad5386a6390bc2"
+source = "git+https://github.com/kroma-network/op-succinct?branch=feat/support-pectra#057727de6e3b51d0479ad8542db61545f611984f"
 dependencies = [
  "alloy",
  "alloy-consensus",
@@ -5047,7 +5015,7 @@ dependencies = [
  "serde",
  "serde_cbor",
  "serde_json",
- "sp1-sdk 3.0.0",
+ "sp1-sdk",
  "sysinfo 0.32.1",
  "tokio",
 ]
@@ -6893,7 +6861,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sp1-build",
- "sp1-sdk 3.4.0",
+ "sp1-sdk",
  "tokio",
 ]
 
@@ -7346,39 +7314,6 @@ dependencies = [
 
 [[package]]
 name = "sp1-core-executor"
-version = "3.0.0"
-source = "git+https://github.com/succinctlabs/sp1.git?rev=df1ed4b2c11e9f33f682f240c282cfba1c8bc453#df1ed4b2c11e9f33f682f240c282cfba1c8bc453"
-dependencies = [
- "bincode",
- "bytemuck",
- "elf",
- "enum-map",
- "eyre",
- "hashbrown 0.14.5",
- "hex",
- "itertools 0.13.0",
- "log",
- "nohash-hasher",
- "num",
- "p3-field 0.1.4-succinct",
- "p3-maybe-rayon 0.1.4-succinct",
- "rand 0.8.5",
- "rrs-succinct",
- "serde",
- "sp1-curves 3.0.0",
- "sp1-primitives 3.0.0",
- "sp1-stark 3.0.0",
- "strum",
- "strum_macros",
- "thiserror 1.0.69",
- "tiny-keccak",
- "tracing",
- "typenum",
- "vec_map",
-]
-
-[[package]]
-name = "sp1-core-executor"
 version = "3.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8324d09601526d2ddfb796efb24996d3cc33ea8802bbd085bdefe93a4989b4dd"
@@ -7399,9 +7334,9 @@ dependencies = [
  "rand 0.8.5",
  "rrs-succinct",
  "serde",
- "sp1-curves 3.4.0",
+ "sp1-curves",
  "sp1-primitives 3.4.0",
- "sp1-stark 3.4.0",
+ "sp1-stark",
  "strum",
  "strum_macros",
  "thiserror 1.0.69",
@@ -7409,54 +7344,6 @@ dependencies = [
  "tracing",
  "typenum",
  "vec_map",
-]
-
-[[package]]
-name = "sp1-core-machine"
-version = "3.0.0"
-source = "git+https://github.com/succinctlabs/sp1.git?rev=df1ed4b2c11e9f33f682f240c282cfba1c8bc453#df1ed4b2c11e9f33f682f240c282cfba1c8bc453"
-dependencies = [
- "bincode",
- "cfg-if 1.0.0",
- "elliptic-curve",
- "generic-array 1.1.0",
- "hashbrown 0.14.5",
- "hex",
- "itertools 0.13.0",
- "k256",
- "log",
- "num",
- "num_cpus",
- "p3-air",
- "p3-baby-bear 0.1.4-succinct",
- "p3-blake3",
- "p3-challenger",
- "p3-field 0.1.4-succinct",
- "p3-keccak-air",
- "p3-matrix 0.1.4-succinct",
- "p3-maybe-rayon 0.1.4-succinct",
- "p3-uni-stark",
- "p3-util 0.1.4-succinct",
- "rand 0.8.5",
- "serde",
- "size",
- "snowbridge-amcl",
- "sp1-core-executor 3.0.0",
- "sp1-curves 3.0.0",
- "sp1-derive 3.0.0",
- "sp1-primitives 3.0.0",
- "sp1-stark 3.0.0",
- "static_assertions",
- "strum",
- "strum_macros",
- "tempfile",
- "thiserror 1.0.69",
- "tracing",
- "tracing-forest",
- "tracing-subscriber",
- "typenum",
- "vec_map",
- "web-time",
 ]
 
 [[package]]
@@ -7490,11 +7377,11 @@ dependencies = [
  "serde",
  "size",
  "snowbridge-amcl",
- "sp1-core-executor 3.4.0",
- "sp1-curves 3.4.0",
- "sp1-derive 3.4.0",
+ "sp1-core-executor",
+ "sp1-curves",
+ "sp1-derive",
  "sp1-primitives 3.4.0",
- "sp1-stark 3.4.0",
+ "sp1-stark",
  "static_assertions",
  "strum",
  "strum_macros",
@@ -7505,27 +7392,6 @@ dependencies = [
  "tracing-subscriber",
  "typenum",
  "web-time",
-]
-
-[[package]]
-name = "sp1-curves"
-version = "3.0.0"
-source = "git+https://github.com/succinctlabs/sp1.git?rev=df1ed4b2c11e9f33f682f240c282cfba1c8bc453#df1ed4b2c11e9f33f682f240c282cfba1c8bc453"
-dependencies = [
- "cfg-if 1.0.0",
- "curve25519-dalek",
- "dashu",
- "elliptic-curve",
- "generic-array 1.1.0",
- "itertools 0.13.0",
- "k256",
- "num",
- "p3-field 0.1.4-succinct",
- "serde",
- "snowbridge-amcl",
- "sp1-primitives 3.0.0",
- "sp1-stark 3.0.0",
- "typenum",
 ]
 
 [[package]]
@@ -7545,17 +7411,8 @@ dependencies = [
  "serde",
  "snowbridge-amcl",
  "sp1-primitives 3.4.0",
- "sp1-stark 3.4.0",
+ "sp1-stark",
  "typenum",
-]
-
-[[package]]
-name = "sp1-derive"
-version = "3.0.0"
-source = "git+https://github.com/succinctlabs/sp1.git?rev=df1ed4b2c11e9f33f682f240c282cfba1c8bc453#df1ed4b2c11e9f33f682f240c282cfba1c8bc453"
-dependencies = [
- "quote",
- "syn 1.0.109",
 ]
 
 [[package]]
@@ -7578,23 +7435,6 @@ dependencies = [
  "elliptic-curve",
  "serde",
  "sp1-primitives 4.1.3",
-]
-
-[[package]]
-name = "sp1-primitives"
-version = "3.0.0"
-source = "git+https://github.com/succinctlabs/sp1.git?rev=df1ed4b2c11e9f33f682f240c282cfba1c8bc453#df1ed4b2c11e9f33f682f240c282cfba1c8bc453"
-dependencies = [
- "bincode",
- "hex",
- "lazy_static",
- "num-bigint 0.4.6",
- "p3-baby-bear 0.1.4-succinct",
- "p3-field 0.1.4-succinct",
- "p3-poseidon2 0.1.4-succinct",
- "p3-symmetric 0.1.4-succinct",
- "serde",
- "sha2",
 ]
 
 [[package]]
@@ -7635,47 +7475,6 @@ dependencies = [
 
 [[package]]
 name = "sp1-prover"
-version = "3.0.0"
-source = "git+https://github.com/succinctlabs/sp1.git?rev=df1ed4b2c11e9f33f682f240c282cfba1c8bc453#df1ed4b2c11e9f33f682f240c282cfba1c8bc453"
-dependencies = [
- "anyhow",
- "bincode",
- "clap",
- "dirs",
- "eyre",
- "itertools 0.13.0",
- "lazy_static",
- "lru",
- "num-bigint 0.4.6",
- "p3-baby-bear 0.1.4-succinct",
- "p3-bn254-fr",
- "p3-challenger",
- "p3-commit",
- "p3-field 0.1.4-succinct",
- "p3-matrix 0.1.4-succinct",
- "p3-symmetric 0.1.4-succinct",
- "rayon",
- "reqwest 0.11.27",
- "serde",
- "serde_json",
- "serial_test",
- "sp1-core-executor 3.0.0",
- "sp1-core-machine 3.0.0",
- "sp1-primitives 3.0.0",
- "sp1-recursion-circuit 3.0.0",
- "sp1-recursion-compiler 3.0.0",
- "sp1-recursion-core 3.0.0",
- "sp1-recursion-gnark-ffi 3.0.0",
- "sp1-stark 3.0.0",
- "subtle-encoding",
- "tempfile",
- "thiserror 1.0.69",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
-name = "sp1-prover"
 version = "3.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc363eda811717369513ca72abafbb5cdec0ed16cda12458ca5321e4167e97ff"
@@ -7701,52 +7500,19 @@ dependencies = [
  "serde",
  "serde_json",
  "serial_test",
- "sp1-core-executor 3.4.0",
- "sp1-core-machine 3.4.0",
+ "sp1-core-executor",
+ "sp1-core-machine",
  "sp1-primitives 3.4.0",
- "sp1-recursion-circuit 3.4.0",
- "sp1-recursion-compiler 3.4.0",
- "sp1-recursion-core 3.4.0",
- "sp1-recursion-gnark-ffi 3.4.0",
- "sp1-stark 3.4.0",
+ "sp1-recursion-circuit",
+ "sp1-recursion-compiler",
+ "sp1-recursion-core",
+ "sp1-recursion-gnark-ffi",
+ "sp1-stark",
  "subtle-encoding",
  "tempfile",
  "thiserror 1.0.69",
  "tracing",
  "tracing-subscriber",
-]
-
-[[package]]
-name = "sp1-recursion-circuit"
-version = "3.0.0"
-source = "git+https://github.com/succinctlabs/sp1.git?rev=df1ed4b2c11e9f33f682f240c282cfba1c8bc453#df1ed4b2c11e9f33f682f240c282cfba1c8bc453"
-dependencies = [
- "hashbrown 0.14.5",
- "itertools 0.13.0",
- "num-traits",
- "p3-air",
- "p3-baby-bear 0.1.4-succinct",
- "p3-bn254-fr",
- "p3-challenger",
- "p3-commit",
- "p3-dft 0.1.4-succinct",
- "p3-field 0.1.4-succinct",
- "p3-fri",
- "p3-matrix 0.1.4-succinct",
- "p3-symmetric 0.1.4-succinct",
- "p3-util 0.1.4-succinct",
- "rand 0.8.5",
- "rayon",
- "serde",
- "sp1-core-executor 3.0.0",
- "sp1-core-machine 3.0.0",
- "sp1-derive 3.0.0",
- "sp1-primitives 3.0.0",
- "sp1-recursion-compiler 3.0.0",
- "sp1-recursion-core 3.0.0",
- "sp1-recursion-gnark-ffi 3.0.0",
- "sp1-stark 3.0.0",
- "tracing",
 ]
 
 [[package]]
@@ -7772,36 +7538,15 @@ dependencies = [
  "rand 0.8.5",
  "rayon",
  "serde",
- "sp1-core-executor 3.4.0",
- "sp1-core-machine 3.4.0",
- "sp1-derive 3.4.0",
+ "sp1-core-executor",
+ "sp1-core-machine",
+ "sp1-derive",
  "sp1-primitives 3.4.0",
- "sp1-recursion-compiler 3.4.0",
- "sp1-recursion-core 3.4.0",
- "sp1-recursion-gnark-ffi 3.4.0",
- "sp1-stark 3.4.0",
+ "sp1-recursion-compiler",
+ "sp1-recursion-core",
+ "sp1-recursion-gnark-ffi",
+ "sp1-stark",
  "tracing",
-]
-
-[[package]]
-name = "sp1-recursion-compiler"
-version = "3.0.0"
-source = "git+https://github.com/succinctlabs/sp1.git?rev=df1ed4b2c11e9f33f682f240c282cfba1c8bc453#df1ed4b2c11e9f33f682f240c282cfba1c8bc453"
-dependencies = [
- "backtrace",
- "itertools 0.13.0",
- "p3-baby-bear 0.1.4-succinct",
- "p3-bn254-fr",
- "p3-field 0.1.4-succinct",
- "p3-symmetric 0.1.4-succinct",
- "serde",
- "sp1-core-machine 3.0.0",
- "sp1-primitives 3.0.0",
- "sp1-recursion-core 3.0.0",
- "sp1-recursion-derive 3.0.0",
- "sp1-stark 3.0.0",
- "tracing",
- "vec_map",
 ]
 
 [[package]]
@@ -7817,48 +7562,13 @@ dependencies = [
  "p3-field 0.1.4-succinct",
  "p3-symmetric 0.1.4-succinct",
  "serde",
- "sp1-core-machine 3.4.0",
+ "sp1-core-machine",
  "sp1-primitives 3.4.0",
- "sp1-recursion-core 3.4.0",
- "sp1-recursion-derive 3.4.0",
- "sp1-stark 3.4.0",
+ "sp1-recursion-core",
+ "sp1-recursion-derive",
+ "sp1-stark",
  "tracing",
  "vec_map",
-]
-
-[[package]]
-name = "sp1-recursion-core"
-version = "3.0.0"
-source = "git+https://github.com/succinctlabs/sp1.git?rev=df1ed4b2c11e9f33f682f240c282cfba1c8bc453#df1ed4b2c11e9f33f682f240c282cfba1c8bc453"
-dependencies = [
- "backtrace",
- "ff 0.13.0",
- "hashbrown 0.14.5",
- "itertools 0.13.0",
- "p3-air",
- "p3-baby-bear 0.1.4-succinct",
- "p3-bn254-fr",
- "p3-challenger",
- "p3-commit",
- "p3-dft 0.1.4-succinct",
- "p3-field 0.1.4-succinct",
- "p3-fri",
- "p3-matrix 0.1.4-succinct",
- "p3-maybe-rayon 0.1.4-succinct",
- "p3-merkle-tree",
- "p3-poseidon2 0.1.4-succinct",
- "p3-symmetric 0.1.4-succinct",
- "p3-util 0.1.4-succinct",
- "serde",
- "sp1-core-machine 3.0.0",
- "sp1-derive 3.0.0",
- "sp1-primitives 3.0.0",
- "sp1-stark 3.0.0",
- "static_assertions",
- "thiserror 1.0.69",
- "tracing",
- "vec_map",
- "zkhash",
 ]
 
 [[package]]
@@ -7886,24 +7596,15 @@ dependencies = [
  "p3-symmetric 0.1.4-succinct",
  "p3-util 0.1.4-succinct",
  "serde",
- "sp1-core-machine 3.4.0",
- "sp1-derive 3.4.0",
+ "sp1-core-machine",
+ "sp1-derive",
  "sp1-primitives 3.4.0",
- "sp1-stark 3.4.0",
+ "sp1-stark",
  "static_assertions",
  "thiserror 1.0.69",
  "tracing",
  "vec_map",
  "zkhash",
-]
-
-[[package]]
-name = "sp1-recursion-derive"
-version = "3.0.0"
-source = "git+https://github.com/succinctlabs/sp1.git?rev=df1ed4b2c11e9f33f682f240c282cfba1c8bc453#df1ed4b2c11e9f33f682f240c282cfba1c8bc453"
-dependencies = [
- "quote",
- "syn 1.0.109",
 ]
 
 [[package]]
@@ -7914,31 +7615,6 @@ checksum = "3125726165ff77fb2650ae031075ba747099a6e218e5c10f84ac2715545a2332"
 dependencies = [
  "quote",
  "syn 1.0.109",
-]
-
-[[package]]
-name = "sp1-recursion-gnark-ffi"
-version = "3.0.0"
-source = "git+https://github.com/succinctlabs/sp1.git?rev=df1ed4b2c11e9f33f682f240c282cfba1c8bc453#df1ed4b2c11e9f33f682f240c282cfba1c8bc453"
-dependencies = [
- "anyhow",
- "bincode",
- "bindgen 0.70.1",
- "cc",
- "cfg-if 1.0.0",
- "hex",
- "log",
- "num-bigint 0.4.6",
- "p3-baby-bear 0.1.4-succinct",
- "p3-field 0.1.4-succinct",
- "p3-symmetric 0.1.4-succinct",
- "serde",
- "serde_json",
- "sha2",
- "sp1-core-machine 3.0.0",
- "sp1-recursion-compiler 3.0.0",
- "sp1-stark 3.0.0",
- "tempfile",
 ]
 
 [[package]]
@@ -7961,50 +7637,10 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
- "sp1-core-machine 3.4.0",
- "sp1-recursion-compiler 3.4.0",
- "sp1-stark 3.4.0",
+ "sp1-core-machine",
+ "sp1-recursion-compiler",
+ "sp1-stark",
  "tempfile",
-]
-
-[[package]]
-name = "sp1-sdk"
-version = "3.0.0"
-source = "git+https://github.com/succinctlabs/sp1.git?rev=df1ed4b2c11e9f33f682f240c282cfba1c8bc453#df1ed4b2c11e9f33f682f240c282cfba1c8bc453"
-dependencies = [
- "alloy-sol-types 0.7.7",
- "anyhow",
- "async-trait",
- "bincode",
- "cfg-if 1.0.0",
- "dirs",
- "ethers",
- "futures 0.3.31",
- "hashbrown 0.14.5",
- "hex",
- "indicatif",
- "itertools 0.13.0",
- "log",
- "p3-baby-bear 0.1.4-succinct",
- "p3-field 0.1.4-succinct",
- "p3-fri",
- "prost",
- "reqwest 0.12.12",
- "reqwest-middleware",
- "serde",
- "sp1-core-executor 3.0.0",
- "sp1-core-machine 3.0.0",
- "sp1-primitives 3.0.0",
- "sp1-prover 3.0.0",
- "sp1-stark 3.0.0",
- "strum",
- "strum_macros",
- "tempfile",
- "thiserror 1.0.69",
- "tokio",
- "tracing",
- "twirp-rs",
- "vergen",
 ]
 
 [[package]]
@@ -8033,11 +7669,11 @@ dependencies = [
  "reqwest 0.12.12",
  "reqwest-middleware",
  "serde",
- "sp1-core-executor 3.4.0",
- "sp1-core-machine 3.4.0",
+ "sp1-core-executor",
+ "sp1-core-machine",
  "sp1-primitives 3.4.0",
- "sp1-prover 3.4.0",
- "sp1-stark 3.4.0",
+ "sp1-prover",
+ "sp1-stark",
  "strum",
  "strum_macros",
  "tempfile",
@@ -8046,41 +7682,6 @@ dependencies = [
  "tracing",
  "twirp-rs",
  "vergen",
-]
-
-[[package]]
-name = "sp1-stark"
-version = "3.0.0"
-source = "git+https://github.com/succinctlabs/sp1.git?rev=df1ed4b2c11e9f33f682f240c282cfba1c8bc453#df1ed4b2c11e9f33f682f240c282cfba1c8bc453"
-dependencies = [
- "arrayref",
- "getrandom 0.2.15",
- "hashbrown 0.14.5",
- "itertools 0.13.0",
- "num-traits",
- "p3-air",
- "p3-baby-bear 0.1.4-succinct",
- "p3-challenger",
- "p3-commit",
- "p3-dft 0.1.4-succinct",
- "p3-field 0.1.4-succinct",
- "p3-fri",
- "p3-matrix 0.1.4-succinct",
- "p3-maybe-rayon 0.1.4-succinct",
- "p3-merkle-tree",
- "p3-poseidon2 0.1.4-succinct",
- "p3-symmetric 0.1.4-succinct",
- "p3-uni-stark",
- "p3-util 0.1.4-succinct",
- "rayon-scan",
- "serde",
- "sp1-derive 3.0.0",
- "sp1-primitives 3.0.0",
- "strum",
- "strum_macros",
- "sysinfo 0.30.13",
- "thiserror 1.0.69",
- "tracing",
 ]
 
 [[package]]
@@ -8110,7 +7711,7 @@ dependencies = [
  "p3-util 0.1.4-succinct",
  "rayon-scan",
  "serde",
- "sp1-derive 3.4.0",
+ "sp1-derive",
  "sp1-primitives 3.4.0",
  "strum",
  "strum_macros",
