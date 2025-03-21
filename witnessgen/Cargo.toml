@@ -59,3 +59,4 @@ sp1-build.workspace = true
 [features]
 default = ["kroma"]
 kroma = []
+docker = []
