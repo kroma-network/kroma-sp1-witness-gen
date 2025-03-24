@@ -1,3 +1,7 @@
+# Stage 1: Builder base
+FROM ubuntu:latest as builder_base
+
+
 # Stage 1: Builder stage - build witnessgen using Ubuntu and Rust
 FROM ubuntu:latest as builder
 WORKDIR /app
