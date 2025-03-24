@@ -65,49 +65,18 @@ It returns the witness after finishing to generate it.
 }
 ```
 
-## Integration Test
+## Test
 
-The test client requests generating `Witness` to the `WitnessGenerator`.
+This online test requests generating `Witness` to the `WitnessGenerator`. 
+The test requires the `.env` file.
 
 ``` shell
-> just run-witness-scenario <0xL2Hash> <0xL1HeadHash>
+> just test-all
 ```
 
 ## Build Docker Images
 
-Inject the .env file described above.
-
 ``` shell
-> make build-witness-generator
-> docker build -f docker/Dockerfile.witnessgen.ubuntu -t witness-gen .
-> docker run -itd --env-file .env -p 3030:3030 witness-gen
+> docker build -f docker/Dockerfile.witnessgen.ubuntu -t kromanetwork/kroma-sp1-witness-gen .
+> docker run -itd --env-file .env -p 3030:3030 kromanetwork/kroma-sp1-witness-gen
 ```
-
-## Useful scripts
-
-### Preview script
-
-This script provides a general context corresponding to the specific l2 block in advance.
-
-```shell
-> cargo run --release --bin script -- --method preview --l2-block <L2Number>
-# - output_root: <OutputRootAtTheL2Block>
-# - parent_output_root: <OutputRootAtThePreviousL2Block>
-# - l1_origin_hash: <L1OriginBlockHashOfTheL2Block>
-# - l1_origin_number: <L1OriginBlockNumberOfTheL2Block>
-# - l1_head_number: <L1OriginBlockNumberOfTheL2Block> + 300
-```
-
-### Execute script
-
-Execute the specific l2 block.
-
-```shell
-> cargo run --release --bin script -- --method execute --l2-block <L2Number> --l1-head-number <L2HeadNumber>
-
-# Or
-> cargo run --release --bin script -- --method execute --l2-block <L2Number> --l1-head-hash <L2HeadHash>
-```
-
-
-
