@@ -39,36 +39,36 @@ pub async fn check_rollup_config_before_mpt_time() -> Result<()> {
         env::set_var("ROLLUP_CONFIG_FROM_FILE", "true");
         println!("It should be before MPT time. `ROLLUP_CONFIG_FROM_FILE` is set as true.");
     }
-    let _ = OPSuccinctDataFetcher::default();
+    let _ = OPSuccinctDataFetcher::new_with_rollup_config().await.unwrap();
 
     Ok(())
 }
 
 pub async fn assert_if_invalid_rpcs() -> Result<()> {
     dotenv::dotenv().ok();
-    let fetcher = OPSuccinctDataFetcher::default();
+    let fetcher = OPSuccinctDataFetcher::new_with_rollup_config().await.unwrap();
 
     // Check if L1 Geth is alive.
     let _: Value = fetcher
-        .fetch_rpc_data(RPCMode::L1, "net_version", vec![])
+        .fetch_rpc_data_with_mode(RPCMode::L1, "net_version", vec![])
         .await
         .expect("L1 Geth is not alive");
 
     // Check if L2 Geth is alive.
     let _: Value = fetcher
-        .fetch_rpc_data(RPCMode::L2, "net_version", vec![])
+        .fetch_rpc_data_with_mode(RPCMode::L2, "net_version", vec![])
         .await
         .expect("L2 Geth is not alive");
 
     // Check if L1 Geth is in debug mode
     let _: Value = fetcher
-        .fetch_rpc_data(RPCMode::L1, "debug_getRawHeader", vec!["latest".into()])
+        .fetch_rpc_data_with_mode(RPCMode::L1, "debug_getRawHeader", vec!["latest".into()])
         .await
         .expect("L1 Geth is not in debug mode");
 
     // Check L2 Geth is in debug mode
     let raw_header: Bytes = fetcher
-        .fetch_rpc_data(RPCMode::L2, "debug_getRawHeader", vec!["latest".into()])
+        .fetch_rpc_data_with_mode(RPCMode::L2, "debug_getRawHeader", vec!["latest".into()])
         .await
         .expect("L2 Geth is not in debug mode");
 
@@ -77,7 +77,7 @@ pub async fn assert_if_invalid_rpcs() -> Result<()> {
         .map_err(|e| anyhow!("Failed to decode header: {e}"))?;
     let latest = format!("0x{:x}", header.number - 1);
     let _: Value = fetcher
-        .fetch_rpc_data(RPCMode::L2Node, "optimism_outputAtBlock", vec![latest.into()])
+        .fetch_rpc_data_with_mode(RPCMode::L2Node, "optimism_outputAtBlock", vec![latest.into()])
         .await
         .expect("L2 Node is not alive");
 
@@ -95,7 +95,7 @@ mod tests {
     use super::{assert_if_invalid_rpcs, check_rollup_config_before_mpt_time};
 
     #[test]
-    fn test_rpc_valid() {
+    fn test_online_rpc_valid() {
         let rt = Runtime::new().unwrap();
         rt.block_on(async {
             assert_if_invalid_rpcs().await.unwrap();
@@ -103,7 +103,7 @@ mod tests {
     }
 
     #[test]
-    fn test_rollup_config() {
+    fn test_online_rollup_config() {
         let _ = Command::new("cp")
             .args(&["-r", "../configs", "."])
             .output()

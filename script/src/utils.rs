@@ -1,94 +1,84 @@
-use std::{env, path::PathBuf, str::FromStr};
+use alloy_eips::{BlockId, BlockNumberOrTag};
+use alloy_primitives::B256;
+use op_succinct_host_utils::fetcher::OPSuccinctDataFetcher;
+use serde::{Deserialize, Serialize};
 
-use alloy_primitives::{hex::FromHex, B256};
-use alloy_provider::Provider;
-use op_succinct_host_utils::{
-    fetcher::{OPSuccinctDataFetcher, RPCConfig, RPCMode},
-    stats::ExecutionStats,
-};
-use serde_json::Value;
-use sp1_sdk::{block_on, ExecutionReport};
+use crate::{get_l1_origin_of, get_output_at, init_fetcher};
 
-const REPORT_DIR: &str = "execution-reports";
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Block {
+    pub number_dec: u64,
+    pub number_hex: String,
+    pub hash: B256,
+}
 
-#[allow(clippy::too_many_arguments)]
-pub async fn report_execution(
-    data_fetcher: &OPSuccinctDataFetcher,
-    start: u64,
-    end: u64,
-    report: &ExecutionReport,
-    witness_generation_time_sec: std::time::Duration,
-    execution_duration: std::time::Duration,
-    l2_chain_id: u64,
-    l2_number: u64,
-) {
-    let mut stats = ExecutionStats::default();
-    stats.add_block_data(data_fetcher, start, end).await;
-    stats.add_report_data(report);
-    stats.add_aggregate_data();
-    stats.add_timing_data(execution_duration.as_secs(), witness_generation_time_sec.as_secs());
-    println!("{:#?}", stats);
-
-    let mut report_path = PathBuf::from_str(REPORT_DIR).unwrap();
-    report_path.push(l2_chain_id.to_string());
-    if !std::path::Path::new(&report_path).exists() {
-        std::fs::create_dir_all(&report_path).unwrap();
+impl Block {
+    pub fn new(number_dec: u64, number_hex: String, hash: B256) -> Self {
+        Self { number_dec, number_hex, hash }
     }
-    report_path.push(format!("{}.csv", l2_number));
 
-    // Write to CSV.
-    let mut csv_writer = csv::Writer::from_path(report_path).unwrap();
-    csv_writer.serialize(&stats).unwrap();
-    csv_writer.flush().unwrap();
+    pub async fn from_l1_block_id(
+        l1_number_or_hash: BlockId,
+        fetcher_opt: Option<&OPSuccinctDataFetcher>,
+    ) -> Self {
+        let fetcher = match fetcher_opt {
+            Some(fetcher) => fetcher,
+            _ => &init_fetcher().await.unwrap(),
+        };
+
+        let header = fetcher.get_l1_header(l1_number_or_hash.into()).await.unwrap();
+
+        Self {
+            number_dec: header.number,
+            number_hex: format!("{:x}", header.number),
+            hash: header.hash_slow(),
+        }
+    }
 }
 
-#[allow(dead_code)]
-pub fn get_l1_block_hash(block_number: u64) -> B256 {
-    let data_fetcher = OPSuccinctDataFetcher {
-        rpc_config: RPCConfig {
-            l1_rpc: env::var("L1_RPC").expect("L1_RPC is not set."),
-            ..Default::default()
-        },
-        ..Default::default()
-    };
-    let l1_provider = data_fetcher.l1_provider;
-    let l1_head_block = block_on(async move {
-        l1_provider
-            .get_block_by_number(block_number.into(), false)
-            .await?
-            .ok_or_else(|| anyhow::anyhow!("Block not found for block number {}", block_number))
-    })
-    .unwrap();
-    l1_head_block.header.hash
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PreviewReport {
+    l2_block_number: u64,
+    output_root: B256,
+    parent_output_root: B256,
+
+    l1_origin: Block,
 }
 
-fn get_output_at_impl(data_fetcher: &OPSuccinctDataFetcher, block_number: u64) -> Value {
-    let block_number_hex = format!("0x{:x}", block_number);
-    let result: Value = block_on(async {
-        data_fetcher
-            .fetch_rpc_data(
-                RPCMode::L2Node,
-                "optimism_outputAtBlock",
-                vec![block_number_hex.into()],
-            )
-            .await
-    })
-    .unwrap();
-    result
-}
+impl PreviewReport {
+    pub async fn from_fetcher(
+        l2_block_number: u64,
+        fetcher_opt: Option<&OPSuccinctDataFetcher>,
+    ) -> Self {
+        let (_, origin_number) = get_l1_origin_of(l2_block_number, fetcher_opt).await;
 
-pub fn get_output_at(data_fetcher: &OPSuccinctDataFetcher, block_number: u64) -> B256 {
-    let result = get_output_at_impl(data_fetcher, block_number);
-    let output_root = result["outputRoot"].as_str().unwrap().to_string();
-    B256::from_hex(output_root).unwrap()
-}
+        Self {
+            l2_block_number,
+            output_root: get_output_at(l2_block_number, fetcher_opt).await,
+            parent_output_root: get_output_at(l2_block_number - 1, fetcher_opt).await,
+            l1_origin: Block::from_l1_block_id(origin_number.into(), fetcher_opt).await,
+        }
+    }
 
-pub fn get_l1_origin_of(data_fetcher: &OPSuccinctDataFetcher, block_number: u64) -> (B256, u64) {
-    let result = get_output_at_impl(data_fetcher, block_number);
-    let l1_origin = &result["blockRef"]["l1origin"];
+    pub async fn l1_head(
+        &self,
+        distance: u64,
+        fetcher_opt: Option<&OPSuccinctDataFetcher>,
+    ) -> Block {
+        let l1_head_number = self.l1_origin.number_dec + distance;
 
-    let origin_hash = B256::from_hex(l1_origin["hash"].as_str().unwrap()).unwrap();
-    let origin_number = l1_origin["number"].as_u64().unwrap();
+        let fetcher = match fetcher_opt {
+            Some(fetcher) => fetcher,
+            _ => &init_fetcher().await.unwrap(),
+        };
 
-    (origin_hash, origin_number)
+        let latest_l1_header =
+            fetcher.get_l1_header(BlockId::Number(BlockNumberOrTag::Latest)).await.unwrap();
+
+        if latest_l1_header.number < l1_head_number {
+            panic!("L1 Head Number exceeds the latest L1 block number");
+        }
+
+        Block::from_l1_block_id(l1_head_number.into(), fetcher_opt).await
+    }
 }

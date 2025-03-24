@@ -1,3 +1,30 @@
+# Stage 1: Builder stage - build witnessgen using Ubuntu and Rust
+FROM ubuntu:latest as builder
+WORKDIR /app
+
+# Install necessary build dependencies
+RUN apt-get update && apt-get install -y \
+  build-essential curl pkg-config \
+  libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev \
+  libssl-dev llvm-dev cmake clang git
+
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH=/root/.cargo/bin:$PATH
+RUN rustup install 1.81.0 && rustup default 1.81.0
+
+# Install SP1
+RUN curl -L https://sp1.succinct.xyz | bash && \
+    ~/.sp1/bin/sp1up && \
+    ~/.sp1/bin/cargo-prove prove --version
+
+# Copy an entire source code into image
+COPY . .
+
+# Build witness generator
+RUN cargo build --release --bin witness-gen-server --features docker
+
+# Stage 2: Final stage - minimal Ubuntu image with only the executable
 FROM ubuntu:latest
 WORKDIR /app
 
@@ -8,11 +35,10 @@ RUN update-ca-certificates
 ENV NATIVE_HOST_RUNNER_PATH=./native_host_runner
 ENV WORKSPACE_ROOT=./
 
-COPY ./target/native_host_runner/release/native_host_runner .
-COPY ./target/release/witness-gen-server .
-COPY ./configs ./configs
+COPY --from=builder app/target/native_host_runner/release/native_host_runner .
+COPY --from=builder app/target/release/witness-gen-server .
 RUN mkdir -p target/release-client-lto/
-COPY ./target/release-client-lto/fault-proof target/release-client-lto/
+COPY --from=builder app/target/release-client-lto/fault-proof target/release-client-lto/
 
 EXPOSE 3030
 CMD ["./witness-gen-server","--data","./witness_store","--endpoint","0.0.0.0:3030"]

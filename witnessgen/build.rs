@@ -1,5 +1,6 @@
 use std::process::Command;
 
+#[cfg(not(feature = "docker"))]
 use sp1_build::{build_program_with_args, BuildArgs};
 
 /// Build a native program.
@@ -51,7 +52,7 @@ fn build_native_host_runner() {
 }
 
 /// Build a program for the zkVM.
-#[allow(dead_code)]
+#[cfg(not(feature = "docker"))]
 fn build_zkvm_program(
     program_path: &str,
     program_name: &str,
@@ -74,14 +75,9 @@ fn main() {
     // Note: Don't comment this out, because the Docker program depends on the native program
     // for range being built.
     build_native_program(program_name);
-
-    cfg_if::cfg_if! {
-        if #[cfg(feature = "kroma")] {
-            build_zkvm_program("../program", program_name, "../program/elf", vec!["kroma".to_string()]);
-        } else {
-            build_zkvm_program("../program", program_name, "../program/elf", vec!["".to_string()]);
-        }
-    }
+    
+    #[cfg(not(feature = "docker"))]
+    build_zkvm_program("../program", program_name, "../program/elf", vec!["kroma".to_string()]);
 
     // Note: Don't comment this out, because the Docker program depends on the native host runner
     // being built.

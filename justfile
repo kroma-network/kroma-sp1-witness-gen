@@ -5,22 +5,32 @@ set dotenv-load
 default:
     @just --list
 
-run-unit-tests:
-    cargo test --release --lib -- --show-output
-
-run-witness-scenario l2_hash l1_head_hash witness_store="/tmp/witness_store" witness_data="/tmp/witness.json":
+check-env-var name env_file=".env":
     #!/usr/bin/env sh
-    # build the witness generator.
-    cargo build --release --bin witness-gen-server
+    # find the non-commented line for the specified variable in the .env file and extract its value.
+    value=$(grep -E "^\s*{{name}}=" "{{env_file}}" | grep -v '^\s*#' | head -n 1 | cut -d '=' -f2-)
 
-    # Run the witness generator in the background.
-    ./target/release/witness-gen-server --data {{witness_store}} &
-    witness_pid=$!
-    
-    trap "kill $witness_pid; rm -rf {{witness_store}};" EXIT QUIT INT
+    if [ -z "$value" ]; then
+        echo "[env variable checker]: {{name}} should be set in .env"
+        exit 1
+    fi
 
-    # Do test
-    cargo run --bin witness-scenario --release -- \
-    --l2-hash {{l2_hash}} \
-    --l1-head-hash {{l1_head_hash}} \
-    --witness-data {{witness_data}}
+check-env-vars:
+    #!/usr/bin/env sh
+    just check-env-var L1_RPC
+    just check-env-var L1_BEACON_RPC
+    just check-env-var L2_RPC
+    just check-env-var L2_NODE_RPC
+
+# Only unittest
+test *args="-E '!test(test_online)'":
+    #!/usr/bin/env sh
+    cargo nextest run --release --workspace --all --all-features {{args}}
+
+# Run all tests including online tests
+test-all: 
+    #!/usr/bin/env sh
+    just check-env-vars
+
+    cargo nextest run --release --workspace --all --all-features
+

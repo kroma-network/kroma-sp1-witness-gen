@@ -1,170 +1,27 @@
-use jsonrpc_core::Result as JsonResult;
-use jsonrpc_derive::rpc;
-use kroma_zkvm_common::types::preprocessing;
-use std::sync::{Arc, RwLock};
+mod methods;
 
-use crate::errors::WitnessGenError;
-use crate::types::{RequestResult, SpecResult, TaskInfo, WitnessResult};
-use crate::utils::get_status_by_local_id;
-use crate::witness_db::WitnessDB;
+use crate::{types::TaskInfo, witness_db::WitnessDB};
+use jsonrpc_http_server::ServerBuilder;
+use methods::{Rpc, RpcImpl};
+use std::sync::Arc;
+use tokio::sync::mpsc::Sender;
 
-#[rpc]
-pub trait Rpc {
-    #[rpc(name = "spec")]
-    fn spec(&self) -> JsonResult<SpecResult>;
+pub static DEFAULT_WITNESS_STORE_PATH: &str = "data/witness_store";
+pub static DEFAULT_WITNESSGEN_RPC_ENDPOINT: &str = "0.0.0.0:3030";
 
-    #[rpc(name = "requestWitness")]
-    fn request_witness(&self, l2_hash: String, l1_head_hash: String) -> JsonResult<RequestResult>;
+pub async fn run<T: ToString>(db: Arc<WitnessDB>, tx: Sender<TaskInfo>, endpoint: T) {
+    // Run the server.
+    let mut io = jsonrpc_core::IoHandler::new();
+    io.extend_with(RpcImpl::new(tx, db).to_delegate());
 
-    #[rpc(name = "getWitness")]
-    fn get_witness(&self, l2_hash: String, l1_head_hash: String) -> JsonResult<WitnessResult>;
-}
+    tracing::info!("Starting Witness Generator at {:?}", endpoint.to_string());
+    // NOTE(Ethan): We don't want this v3 verification key hash to be used.
+    // tracing::info!("verification key hash: {:#?}", VERIFICATION_KEY_HASH.to_string());
+    let server = ServerBuilder::new(io)
+        .threads(3)
+        .max_request_body_size(200 * 1024 * 1024)
+        .start_http(&endpoint.to_string().parse().unwrap())
+        .unwrap();
 
-pub struct RpcImpl {
-    pub tx: tokio::sync::mpsc::Sender<TaskInfo>,
-    pub current_task: Arc<RwLock<TaskInfo>>,
-    pub witness_db: Arc<WitnessDB>,
-}
-
-impl RpcImpl {
-    pub fn new(tx: tokio::sync::mpsc::Sender<TaskInfo>, witness_db: Arc<WitnessDB>) -> Self {
-        RpcImpl { tx, current_task: Arc::new(RwLock::new(TaskInfo::default())), witness_db }
-    }
-
-    pub fn update_prev_req_status(&self) {
-        let mut current_task = self.current_task.write().unwrap();
-        if current_task.is_empty() {
-            return;
-        }
-
-        // Flush `current_task` if the previous request has been completed.
-        if self.witness_db.get(&current_task.l2_hash, &current_task.l2_hash).is_some() {
-            current_task.release();
-        }
-    }
-
-    // Release `current_task` if the witness related to the `current_task` is already generated.
-    pub fn release_current_task_if_completed(&self, current_task: &mut TaskInfo) {
-        if let Some(witness) =
-            self.witness_db.get(&current_task.l2_hash, &current_task.l1_head_hash)
-        {
-            if !witness.is_empty() {
-                current_task.release();
-            }
-        }
-    }
-
-    // Release `current_task` if the witness related to the `current_task` has been faild.
-    pub fn release_current_task_if_failed(&self, current_task: &mut TaskInfo) {
-        if let Some(witness) =
-            self.witness_db.get(&current_task.l2_hash, &current_task.l1_head_hash)
-        {
-            if witness.is_empty() {
-                current_task.release();
-            }
-        }
-    }
-}
-
-impl Rpc for RpcImpl {
-    fn spec(&self) -> JsonResult<SpecResult> {
-        let spec = SpecResult::default();
-        tracing::info!("Received sepc: {:?}", spec);
-        Ok(spec)
-    }
-
-    fn request_witness(&self, l2_hash: String, l1_head_hash: String) -> JsonResult<RequestResult> {
-        let (l2_hash, l1_head_hash, user_req_id) =
-            preprocessing(&l2_hash, &l1_head_hash).map_err(|e| {
-                tracing::error!(
-                    "Invalid parameters - \"l2_hash\": {:?}, \"l1_head_hash\": {:?}",
-                    l2_hash,
-                    l1_head_hash
-                );
-                WitnessGenError::invalid_input_hash(e.to_string()).to_json_error()
-            })?;
-        tracing::info!("Received request - user_req_id: {:?}", user_req_id);
-
-        self.update_prev_req_status();
-
-        let mut current_task = self.current_task.write().unwrap();
-        self.release_current_task_if_completed(&mut current_task);
-        self.release_current_task_if_failed(&mut current_task);
-
-        let req_status = get_status_by_local_id(
-            &mut current_task,
-            self.witness_db.clone(),
-            &l2_hash,
-            &l1_head_hash,
-            true,
-        );
-        tracing::info!("Check the status of the request: {:?}, {:?}", user_req_id, req_status);
-
-        match req_status {
-            Ok(RequestResult::Completed) => Ok(RequestResult::Completed),
-            Ok(RequestResult::Processing) => Ok(RequestResult::Processing),
-            Ok(RequestResult::Failed) | Ok(RequestResult::None) => {
-                tracing::info!("Start to generate witness");
-                current_task.set(l2_hash, l1_head_hash);
-
-                let tx = self.tx.clone();
-                tokio::task::spawn(async move {
-                    let task = TaskInfo { l2_hash, l1_head_hash };
-                    tx.send(task).await.unwrap();
-                });
-                Ok(RequestResult::Processing)
-            }
-            Err(e) => {
-                tracing::error!("{:?}", e);
-                Err(WitnessGenError::already_in_progress(e.to_string()).to_json_error())
-            }
-        }
-    }
-
-    fn get_witness(&self, l2_hash: String, l1_head_hash: String) -> JsonResult<WitnessResult> {
-        let (l2_hash, l1_head_hash, user_req_id) =
-            preprocessing(&l2_hash, &l1_head_hash).map_err(|e| {
-                tracing::error!(
-                    "Invalid parameters - \"l2_hash\": {:?}, \"l1_head_hash\": {:?}",
-                    l2_hash,
-                    l1_head_hash
-                );
-                WitnessGenError::invalid_input_hash(e.to_string()).to_json_error()
-            })?;
-        tracing::info!("Received get - user_req_id: {:?}", user_req_id);
-        self.update_prev_req_status();
-
-        // Return cached witness if it exists. Otherwise, start to generate witness.
-        let mut current_task = self.current_task.write().unwrap();
-        self.release_current_task_if_completed(&mut current_task);
-        self.release_current_task_if_failed(&mut current_task);
-
-        let req_status = get_status_by_local_id(
-            &mut current_task,
-            self.witness_db.clone(),
-            &l2_hash,
-            &l1_head_hash,
-            false,
-        );
-
-        match req_status {
-            Ok(RequestResult::Completed) => {
-                let witness = self.witness_db.get(&l2_hash, &l1_head_hash).unwrap();
-                tracing::info!("Witness was found in db: {:?}", user_req_id);
-                Ok(WitnessResult::new_from_witness_buf(RequestResult::Completed, witness))
-            }
-            Ok(status) => {
-                tracing::info!("Check the status of the request: {:?}, {:?}", user_req_id, status);
-                Ok(WitnessResult::new_with_status(status))
-            }
-            Err(_) => {
-                tracing::info!(
-                    "Check the status of the request: {:?}, {:?}",
-                    user_req_id,
-                    RequestResult::None
-                );
-                Ok(WitnessResult::new_with_status(RequestResult::None))
-            }
-        }
-    }
+    server.wait();
 }

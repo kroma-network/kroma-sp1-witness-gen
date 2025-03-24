@@ -1,9 +1,10 @@
 use alloy_consensus::{Header, Sealed};
 use alloy_primitives::{address, keccak256, Address, B256};
-use kona_mpt::{TrieDB, TrieDBError, TrieHinter, TrieProvider};
+use kona_executor::{TrieDB, TrieDBError, TrieDBProvider};
+use kona_mpt::TrieHinter;
 
 /// Fetches the storage root of the L2-to-L1 message passer contract at the specified height of block.
-fn get_storage_root<F: TrieProvider, H: TrieHinter>(
+fn get_storage_root<F: TrieDBProvider, H: TrieHinter>(
     header: &Sealed<Header>,
     provider: F,
     hinter: H,
@@ -25,7 +26,7 @@ fn get_storage_root<F: TrieProvider, H: TrieHinter>(
 }
 
 /// Computes the output root of the specified block header.
-pub fn compute_output_root_at<F: TrieProvider, H: TrieHinter>(
+pub fn compute_output_root_at<F: TrieDBProvider, H: TrieHinter>(
     header: &Sealed<Header>,
     provider: F,
     hinter: H,

@@ -1,16 +1,10 @@
 [workspace]
-members = [
-    "program",
-    "script",
-    "witnessgen",
-    "integration-tests",
-    "native_host_runner",
-]
+members = ["program", "script", "witnessgen", "native_host_runner"]
 resolver = "2"
 
 [workspace.package]
 edition = "2021"
-version = "1.1.0"
+version = "1.2.0"
 license = "MIT"
 authors = ["Ethan Yoo"]
 
@@ -35,33 +29,36 @@ jsonrpc-http-server = "18.0.0"
 once_cell = "1.20.1"
 reqwest = "0.12.7"
 serde = { version = "1.0.198", features = ["derive"] }
+
+# program tracing
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
 
 # ethreum
-alloy-consensus = { version = "0.4.2", default-features = false }
-alloy-eips = { version = "0.4.2", default-features = false }
-alloy-primitives = { version = "0.8.4", default-features = false, features = [
+alloy = { git = "https://github.com/kroma-network/alloy", default-features = false, features = [
+    "full",
+], branch = "feat/support-pectra" }
+alloy-consensus = { git = "https://github.com/kroma-network/alloy", default-features = false, branch = "feat/support-pectra" }
+alloy-eips = { git = "https://github.com/kroma-network/alloy", default-features = false, branch = "feat/support-pectra" }
+alloy-primitives = { version = "0.8.12", default-features = false, features = [
     "sha3-keccak",
 ] }
-alloy-provider = { version = "0.4.2", default-features = false }
 alloy-rlp = { version = "0.3.8", default-features = false }
 
 # optimism
-op-alloy-consensus = { version = "0.4.0", default-features = false }
-op-alloy-genesis = { version = "0.4.0", default-features = false, features = [
+op-alloy-consensus = { git = "https://github.com/kroma-network/op-alloy", default-features = false, branch = "feat/support-pectra" }
+op-alloy-genesis = { git = "https://github.com/kroma-network/op-alloy", default-features = false, features = [
     "serde",
-] }
-op-alloy-protocol = { version = "0.4.0", default-features = false }
+], branch = "feat/support-pectra" }
+op-alloy-protocol = { git = "https://github.com/kroma-network/op-alloy", default-features = false, branch = "feat/support-pectra" }
 
 # kona
-kona-primitives = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-12-06" }
-kona-executor = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-12-06" }
-kona-client = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-12-06" }
-kona-host = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-12-06" }
-kona-derive = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-12-06" }
-kona-mpt = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-12-06" }
-kona-providers = { git = "https://github.com/kroma-network/kona", branch = "kroma-patch-12-06" }
+kona-executor = { git = "https://github.com/kroma-network/kona", branch = "feat/support-pectra" }
+kona-client = { git = "https://github.com/kroma-network/kona", branch = "feat/support-pectra" }
+kona-host = { git = "https://github.com/kroma-network/kona", branch = "feat/support-pectra" }
+kona-derive = { git = "https://github.com/kroma-network/kona", branch = "feat/support-pectra" }
+kona-mpt = { git = "https://github.com/kroma-network/kona", branch = "feat/support-pectra" }
+kona-proof = { git = "https://github.com/kroma-network/kona", branch = "feat/support-pectra" }
 
 # sp1
 sp1-zkvm = { version = "4.0.1", features = ["verify"] }
@@ -69,8 +66,8 @@ sp1-sdk = { version = "3.0.0" }
 sp1-build = { version = "4.0.1" }
 
 # op-succinct
-op-succinct-client-utils = { git = "https://github.com/kroma-network/op-succinct", branch = "kroma-patch-01-09" }
-op-succinct-host-utils = { git = "https://github.com/kroma-network/op-succinct", branch = "kroma-patch-01-09" }
+op-succinct-client-utils = { git = "https://github.com/kroma-network/op-succinct", branch = "feat/support-pectra" }
+op-succinct-host-utils = { git = "https://github.com/kroma-network/op-succinct", branch = "feat/support-pectra" }
 
 # kroma
 kroma-zkvm-common = { git = "https://github.com/kroma-network/zkvm-common", branch = "feat/release-v1.0.0" }
