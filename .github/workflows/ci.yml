@@ -1,0 +1,40 @@
+name: Cargo Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 1.81.0
+
+      - name: Install SP1 toolchain
+        run: curl -L https://sp1.succinct.xyz | bash && ~/.sp1/bin/sp1up && ~/.sp1/bin/cargo-prove prove --version
+
+      - name: Install nextest
+        run: curl -LsSf https://get.nexte.st/latest/linux | tar zxf - -C ${CARGO_HOME:-~/.cargo}/bin
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build native host runner
+        run: cargo build --workspace --bin native_host_runner --release --target-dir target/native_host_runner
+
+      - name: Test
+        run: cargo nextest run --release --workspace --all --features docker
+        env:
+          L2_NODE_RPC: ${{ secrets.L2_NODE_RPC }}
+          L1_RPC: ${{ secrets.L1_RPC }}
+          L1_BEACON_RPC: ${{ secrets.L1_BEACON_RPC }}
+          L2_RPC: ${{ secrets.L2_RPC }}
