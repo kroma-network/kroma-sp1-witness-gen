@@ -43,4 +43,4 @@ jobs:
           context: .
           file: docker/Dockerfile.witnessgen.ubuntu
           push: true
-          tags: kromanetwork/sp1-wit-gen:${{ needs.prepare.outputs.docker-tag }}
+          tags: kromanetwork/sp1-wit-gen:${{ needs.prepare.outputs.docker-tag }},kromanetwork/sp1-wit-gen:latest
